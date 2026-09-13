@@ -281,3 +281,12 @@ button, [role="button"], a.btn, input[type="button"], input[type="submit"] {
   font-feature-settings: "ss05" 1, "cv05" 1;
   letter-spacing: -0.04em !important;
 }
+
+@keyframes wensity-shimmer-bg {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

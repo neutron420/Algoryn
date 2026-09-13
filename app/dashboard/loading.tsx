@@ -17,7 +17,7 @@ export default function DashboardLoading() {
       {/* Problem Cards Grid Skeleton - ONLY problem cards have skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-4">
         {Array.from({ length: 9 }).map((_, i) => (
-          <ProblemCardSkeleton key={i} />
+          <ProblemCardSkeleton key={i} delay={i * 80} />
         ))}
       </div>
     </div>
