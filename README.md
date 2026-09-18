@@ -54,9 +54,8 @@ Beyond problem curation, Algoryn features an active **Community Hub** with inter
   * Instant tab toggle between Write and live Markdown Preview.
 * **Threaded Commenting & Nested Replies:**
   * Multi-level threaded comment discussions with formatting and preview.
-* **Likes, Views, & Bookmarks:**
+* **Likes & Bookmarks:**
   * Instant optimistic like toggling with like counters.
-  * Post view counter tracking.
   * Discussion bookmarking with a dedicated **"Saved"** filter tab to view bookmarked posts anytime.
 * **Topic & Category Filtering:**
   * Filter discussions by category: *Discussion*, *Study Guide*, *Interview Experience*, *System Design*, *DSA Tips*, *Career*, *Showcase*, *Events*.

@@ -3710,12 +3710,6 @@ function CommunityPostCard({
             <MessageCircle className="size-3 sm:size-3.5" />
             <span>{formatNumber(commentsCount)}</span>
           </button>
-
-          {/* Views Pill */}
-          <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium bg-muted/30 text-muted-foreground border border-border/30 shrink-0">
-            <Eye className="size-3 sm:size-3.5" />
-            <span>{formatNumber(post.viewsCount || 0)}</span>
-          </div>
         </div>
 
         <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
