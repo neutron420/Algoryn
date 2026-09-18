@@ -2443,9 +2443,9 @@ export default function DiscussionsPage() {
           </main>
 
           {/* ======================================================== */}
-          {/* RIGHT SIDEBAR (Desktop: Sticky Column)                   */}
+          {/* RIGHT SIDEBAR (Desktop: Fixed Sticky Column)             */}
           {/* ======================================================== */}
-          <aside className="w-80 shrink-0 hidden lg:block space-y-6 sticky top-6">
+          <aside className="w-80 shrink-0 hidden lg:block self-start sticky top-[4.5rem] space-y-6 max-h-[calc(100vh-5.5rem)] overflow-y-auto no-scrollbar pb-6 pr-0.5">
             <DiscussionsSidebarWidgets
               tagPages={tagPages}
               tagsPageIndex={tagsPageIndex}
