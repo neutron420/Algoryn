@@ -104,6 +104,9 @@ model User {
   solved      UserSolvedProblem[]
   bookmarks   UserBookmarkProblem[]
   submissions CommunityProblem[]
+  discussionPosts DiscussionPost[]
+  discussionComments DiscussionComment[]
+  platformAccounts UserPlatformAccount[]
 }
 
 model UserTargetCompany {
@@ -167,3 +170,139 @@ model CommunityProblem {
   @@index([companyId])
   @@index([createdAt])
 }
+
+model DiscussionPost {
+  id             String   @id @default(cuid())
+  userId         String?
+  authorName     String   @default("Coder")
+  authorHandle   String?
+  avatarUrl      String?
+  content        String
+  imageUrl       String?
+  category       String   @default("General")
+  likesCount     Int      @default(0)
+  bookmarksCount Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  likes          DiscussionLike[]
+  bookmarks      DiscussionBookmark[]
+  comments       DiscussionComment[]
+
+  @@index([createdAt])
+  @@index([category])
+}
+
+model DiscussionComment {
+  id           String   @id @default(cuid())
+  postId       String
+  userId       String?
+  authorName   String   @default("Coder")
+  authorHandle String?
+  avatarUrl    String?
+  content      String
+  parentId     String?
+  likesCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  post         DiscussionPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user         User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  parent       DiscussionComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      DiscussionComment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([parentId])
+  @@index([createdAt])
+}
+
+model DiscussionLike {
+  id        Int      @id @default(autoincrement())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post      DiscussionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId])
+}
+
+model DiscussionBookmark {
+  id        Int      @id @default(autoincrement())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post      DiscussionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId])
+}
+
+model UserPlatformAccount {
+  id           Int            @id @default(autoincrement())
+  userId       String
+  platform     CodingPlatform
+  username     String
+  isVerified   Boolean        @default(false)
+  lastSyncedAt DateTime?
+  syncError    String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@index([userId])
+}
+
+model UserPlatformStats {
+  id            Int            @id @default(autoincrement())
+  accountId     Int
+  platform      CodingPlatform
+  totalSolved   Int            @default(0)
+  easySolved    Int            @default(0)
+  mediumSolved  Int            @default(0)
+  hardSolved    Int            @default(0)
+  rating        Int?
+  rank          String?
+  contestsCount Int?
+  contributions Int?
+  score         Int?
+  rawData       Json?
+  fetchedAt     DateTime       @default(now())
+}
+
+model LeaderboardEntry {
+  id                Int      @id @default(autoincrement())
+  userId            String
+  displayName       String?
+  photoUrl          String?
+  leetcodeScore     Int      @default(0)
+  codeforcesScore   Int      @default(0)
+  codechefScore     Int      @default(0)
+  atcoderScore      Int      @default(0)
+  gfgScore          Int      @default(0)
+  hackerrankScore   Int      @default(0)
+  hackerearthScore  Int      @default(0)
+  interviewbitScore Int      @default(0)
+  totalScore        Int      @default(0)
+  globalRank        Int      @default(0)
+  updatedAt         DateTime @updatedAt
+
+  @@index([globalRank])
+}
+
+model LeaderboardRun {
+  id        Int      @id @default(autoincrement())
+  runId     String   @unique
+  label     String
+  fromDate  DateTime
+  toDate    DateTime
+  snapshot  Json
+  createdAt DateTime @default(now())
+}
+
+
