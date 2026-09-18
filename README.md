@@ -7,11 +7,11 @@
 **The Modern Technical Interview Preparation & Developer Community Platform**
 
 <p>
-  <a href="https://www.algoryn.me"><strong>🌐 Explore Live Platform (algoryn.me)</strong></a>
+  <a href="https://www.algoryn.me"><strong>Explore Live Platform (algoryn.me)</strong></a>
   &nbsp;&middot;&nbsp;
-  <a href="https://github.com/neutron420/Algoryn/issues"><strong>🐛 Report Bug</strong></a>
+  <a href="https://github.com/neutron420/Algoryn/issues"><strong>Report Bug</strong></a>
   &nbsp;&middot;&nbsp;
-  <a href="https://github.com/neutron420/Algoryn/issues"><strong>✨ Request Feature</strong></a>
+  <a href="https://github.com/neutron420/Algoryn/issues"><strong>Request Feature</strong></a>
 </p>
 
 <p>
@@ -29,19 +29,19 @@
 
 ---
 
-## 📖 About Algoryn
+## About Algoryn
 
-**Algoryn** is a high-performance, company-targeted technical interview preparation platform designed for engineers aiming for top-tier tech firms. Instead of practicing randomly on disconnected platforms, Algoryn curates **15,000+ verified interview questions** across **690+ companies** categorized into **18 industry verticals** — including FAANG, High-Frequency Trading (HFT), Artificial Intelligence & Machine Learning, FinTech, and Cloud Infrastructure.
+**Algoryn** is a high-performance, company-targeted technical interview preparation platform designed for software engineers targeting top-tier tech companies. Instead of practicing randomly on disconnected platforms, Algoryn curates **15,000+ verified interview questions** across **690+ companies** categorized into **18 industry verticals** — including FAANG, High-Frequency Trading (HFT), Artificial Intelligence & Machine Learning, FinTech, and Cloud Infrastructure.
 
 Beyond problem curation, Algoryn features an active **Community Hub** with interactive discussions, verified interview experiences, multi-photo posts, and threaded discussions.
 
-🌐 **Production Website**: [https://algoryn.me](https://algoryn.me)
+**Production Website**: [https://algoryn.me](https://algoryn.me)
 
 ---
 
-## ⚡ What Is Done (Current Implemented Features)
+## Current Features (Implemented)
 
-### 1. 💬 Community Discussion Board & Forum
+### 1. Community Discussion Board & Forum
 * **LinkedIn-Style Sliding Photo Carousel:**
   * Displays single photos cleanly, and multi-photo uploads (up to 10 photos) in an interactive horizontal sliding gallery.
   * Frosted glass counter badge (`1/5`, `4/5`), navigation arrows (`<` and `>`), touch-swipe support on mobile, and subtle pagination dots.
@@ -64,57 +64,57 @@ Beyond problem curation, Algoryn features an active **Community Hub** with inter
 * **Trending Sidebar & Leaderboards:**
   * Pinned trending posts and active community discussions.
 
-### 2. 🏢 Company Problem Explorer (690+ Companies)
+### 2. Company Problem Explorer (690+ Companies)
 * **15,000+ Real Interview Questions:** Company-specific questions gathered from real technical interview rounds.
 * **18 Industry Categories:** FAANG, Quant / HFT, FinTech, AI & ML, Cloud Infrastructure, E-Commerce, Security, and more.
 * **Advanced Multi-Filter Engine:** Filter questions in real time by Difficulty (*Easy*, *Medium*, *Hard*), Timeframe (*30 Days*, *3 Months*, *6 Months*, *All Time*), and Topic Tags.
 * **Instant Two-Way Bookmarks:** Save problems with one click; bi-directional URL parameter synchronization (`/dashboard?status=BOOKMARKED`) and cloud sync across devices.
 * **Direct Coding Platform Links:** Quick navigation to LeetCode, Codeforces, GeeksforGeeks, and HackerRank.
 
-### 3. ☁️ Cloudflare R2 Media Storage
+### 3. Cloudflare R2 Media Storage
 * High-performance, S3-compatible cloud object storage for image uploads.
 * Multi-photo batch uploading with automated file validation (size, MIME type).
 * Zero egress fees and ultra-fast global CDN delivery.
 
-### 4. 🔐 Authentication & Session Persistence
+### 4. Authentication & Session Persistence
 * Google & GitHub OAuth powered by Firebase Authentication.
 * Automatic user profile synchronization to Neon PostgreSQL.
 * 7-day session persistence with secure token refresh.
 
-### 5. ⚡ Performance & Caching Architecture
+### 5. Performance & Caching Architecture
 * **Multi-Tier Caching:** In-memory LRU cache coupled with Upstash Redis.
 * **Hover Prefetching:** Sub-millisecond page transitions and instant category browsing.
-* **Next.js 16 & Turbopack:** Blazing-fast compilation and static generation with zero runtime overhead.
+* **Next.js 16 & Turbopack:** Fast compilation and static generation with zero runtime overhead.
 
 ---
 
-## 🔮 What Is To Be Made (Roadmap)
+## Roadmap & Upcoming Features
 
 The following features are currently planned and in active development:
 
-- [ ] **💻 In-Browser Code Execution Sandbox:**
+- [ ] **In-Browser Code Execution Sandbox:**
   * Embedded Monaco Editor (VS Code engine) with syntax highlighting, auto-complete, and dark mode.
   * Multi-language execution engine (Python, JavaScript, TypeScript, C++, Java, Go) with custom test case runner.
-- [ ] **🤖 AI Interview Coach & Code Reviewer:**
+- [ ] **AI Interview Coach & Code Reviewer:**
   * LLM-powered feedback analyzing Big-O time and space complexity.
   * Hints and progressive solution nudges without giving away full answers.
   * Automated code quality, readability, and edge-case reviews.
-- [ ] **👥 Peer-to-Peer Mock Interviews:**
+- [ ] **Peer-to-Peer Mock Interviews:**
   * 1-on-1 collaborative mock interview matching between peers.
   * Integrated WebRTC audio/video calling with synchronized whiteboard and shared code editor.
-- [ ] **📊 Application & Interview Tracker (Kanban Board):**
-  * Personal interview pipeline manager (*Wishlist* ➔ *Applied* ➔ *Online Assessment* ➔ *Technical Screen* ➔ *System Design* ➔ *Offer*).
+- [ ] **Application & Interview Tracker (Kanban Board):**
+  * Personal interview pipeline manager (*Wishlist* -> *Applied* -> *Online Assessment* -> *Technical Screen* -> *System Design* -> *Offer*).
   * Compensation, notes, and question logging per application.
-- [ ] **🏆 Global Solver Streaks & Leaderboards:**
+- [ ] **Global Solver Streaks & Leaderboards:**
   * Daily problem challenges with streak tracking.
   * Verified submission badges, GitHub-style contribution heatmaps, and ranking leaderboards.
-- [ ] **📱 Offline-First Progressive Web App (PWA):**
+- [ ] **Offline-First Progressive Web App (PWA):**
   * Offline question caching for study on the go.
   * Native desktop and mobile home-screen install support.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 <table>
   <tr>
@@ -177,7 +177,7 @@ The following features are currently planned and in active development:
 
 ---
 
-## 🗄️ Database Architecture
+## Database Architecture
 
 ```
                                     ┌──────────────────────┐
@@ -218,7 +218,7 @@ The following features are currently planned and in active development:
 
 ---
 
-## 🌐 API Reference
+## API Reference
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -240,7 +240,7 @@ The following features are currently planned and in active development:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 * **Node.js 20+** or **Bun 1.3+**
@@ -312,7 +312,7 @@ Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 📦 Project Directory Structure
+## Project Directory Structure
 
 ```
 algoryn/
@@ -344,7 +344,7 @@ algoryn/
 
 ---
 
-## 📜 Available Scripts
+## Available Scripts
 
 | Script | Command | Purpose |
 |---|---|---|
@@ -357,7 +357,7 @@ algoryn/
 
 ---
 
-## 🌍 Production Deployment
+## Production Deployment
 
 * **Platform:** [Vercel](https://vercel.com)
 * **Custom Domain:** [https://algoryn.me](https://algoryn.me) & [https://www.algoryn.me](https://www.algoryn.me)
@@ -365,10 +365,10 @@ algoryn/
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the **MIT License**. See `LICENSE` for more information.
 
 <div align="center">
-  <sub>Engineered with ❤️ by <a href="https://github.com/neutron420">neutron420</a> &middot; Built for engineers, by engineers</sub>
+  <sub>Engineered by <a href="https://github.com/neutron420">neutron420</a> &middot; Built for engineers, by engineers</sub>
 </div>
