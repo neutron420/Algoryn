@@ -1526,8 +1526,18 @@ export default function DiscussionsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showFab, setShowFab] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Scroll listener to only show mobile FAB when scrolled past the top composer
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowFab(window.scrollY > 280);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Apply Markdown formatting (Bold, Italic, Code, List, Quote, etc.)
   const handleFormat = (type: FormatAction) => {
@@ -1754,7 +1764,7 @@ export default function DiscussionsPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-6 pb-24 sm:pb-8">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
           
           {/* ======================================================== */}
@@ -1762,9 +1772,15 @@ export default function DiscussionsPage() {
           {/* ======================================================== */}
           <main className="flex-1 w-full min-w-0 max-w-3xl mx-auto space-y-4 sm:space-y-6">
             
-            {/* 1. Quick Composer with Bold/Italic/Code Toolbar */}
-            <div className="bg-card border border-border/80 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-2xs transition-all focus-within:border-blue-500/50">
-              <div className="flex items-start gap-2.5 sm:gap-3">
+            {/* 1. Quick Composer: Sleek Collapsible Pill on Mobile/Desktop */}
+            {!isExpanded ? (
+              <div
+                onClick={() => {
+                  setIsExpanded(true);
+                  setTimeout(() => textareaRef.current?.focus(), 50);
+                }}
+                className="flex items-center gap-2.5 sm:gap-3 p-3 sm:p-3.5 bg-card border border-border/80 rounded-xl sm:rounded-2xl shadow-2xs cursor-pointer hover:border-blue-500/40 hover:bg-muted/25 transition-all group select-none"
+              >
                 <UserAvatar
                   src={user?.photoURL}
                   name={user?.displayName || "User"}
@@ -1772,271 +1788,313 @@ export default function DiscussionsPage() {
                   className="sm:size-10 shrink-0"
                 />
 
-                <div className="flex-1 min-w-0 space-y-2">
-                  {/* Optional Title field when expanded */}
-                  {isExpanded && (
-                    <input
-                      type="text"
-                      placeholder="Post Title (e.g. How I Built A Real-Time Whiteboard...)"
-                      value={composerTitle}
-                      onChange={(e) => setComposerTitle(e.target.value)}
-                      className="w-full bg-transparent text-xs sm:text-sm font-semibold placeholder:text-muted-foreground/60 focus:outline-none border-b border-border/40 pb-1.5"
-                    />
-                  )}
+                <div className="flex-1 min-w-0 flex items-center justify-between px-3.5 py-2 rounded-xl bg-muted/40 group-hover:bg-muted/60 border border-border/50 text-muted-foreground text-xs sm:text-sm font-medium transition-colors">
+                  <span className="truncate">Share your experience, guide, or ask a question...</span>
+                  <Pencil className="size-3.5 text-blue-500 shrink-0 ml-1.5" />
+                </div>
 
-                  {/* Write vs Preview Mode */}
-                  {composerTab === "write" ? (
-                    <textarea
-                      ref={textareaRef}
-                      placeholder="What are you working on ?"
-                      value={composerContent}
-                      onFocus={() => setIsExpanded(true)}
-                      onChange={(e) => setComposerContent(e.target.value)}
-                      onKeyDown={(e) =>
-                        handleMarkdownKeyDown(e, textareaRef.current, composerContent, setComposerContent)
-                      }
-                      rows={isExpanded ? 3 : 1}
-                      className="w-full bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none leading-relaxed"
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(true);
+                    setTimeout(() => fileInputRef.current?.click(), 50);
+                  }}
+                  className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-xl transition-colors cursor-pointer shrink-0"
+                  title="Add photo"
+                  aria-label="Add photo"
+                >
+                  <ImageIcon className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="bg-card border border-border/80 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-2xs transition-all focus-within:border-blue-500/50 space-y-3 animate-in fade-in duration-150">
+                {/* Header with Avatar, User Name and Close Button */}
+                <div className="flex items-center justify-between pb-2 border-b border-border/40">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <UserAvatar
+                      src={user?.photoURL}
+                      name={user?.displayName || "User"}
+                      size={32}
+                      className="shrink-0"
                     />
-                  ) : (
-                    <div className="min-h-[72px] p-3 rounded-xl bg-muted/30 border border-border/40 text-xs sm:text-sm">
-                      {composerContent.trim() ? (
-                        <MarkdownViewer content={composerContent} />
-                      ) : (
-                        <p className="text-xs text-muted-foreground italic">
-                          Nothing to preview yet. Switch back to Write to compose your post.
-                        </p>
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-foreground block truncate">
+                        {user?.displayName || "New Discussion Post"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">Posting publicly</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsExpanded(false);
+                      setComposerTab("write");
+                    }}
+                    className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors cursor-pointer"
+                    title="Close"
+                    aria-label="Close"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+
+                {/* Optional Post Title */}
+                <input
+                  type="text"
+                  placeholder="Post title (e.g. How I Built A Real-Time Whiteboard...)"
+                  value={composerTitle}
+                  onChange={(e) => setComposerTitle(e.target.value)}
+                  className="w-full bg-transparent text-xs sm:text-sm font-semibold placeholder:text-muted-foreground/60 focus:outline-none border-b border-border/40 pb-2"
+                />
+
+                {/* Write vs Preview Mode */}
+                {composerTab === "write" ? (
+                  <textarea
+                    ref={textareaRef}
+                    placeholder="What are you working on or want to share? (Markdown supported)"
+                    value={composerContent}
+                    onChange={(e) => setComposerContent(e.target.value)}
+                    onKeyDown={(e) =>
+                      handleMarkdownKeyDown(e, textareaRef.current, composerContent, setComposerContent)
+                    }
+                    rows={4}
+                    className="w-full bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none leading-relaxed"
+                  />
+                ) : (
+                  <div className="min-h-[80px] p-3 rounded-xl bg-muted/30 border border-border/40 text-xs sm:text-sm">
+                    {composerContent.trim() ? (
+                      <MarkdownViewer content={composerContent} />
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">
+                        Nothing to preview yet. Switch back to Write to compose your post.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Attached Photos Preview in Composer (up to 10 photos) */}
+                {composerImages.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+                      <span>Attached Photos ({composerImages.length}/10)</span>
+                      {composerImages.length < 10 && (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          className="text-blue-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                        >
+                          <Plus className="size-3" />
+                          <span>Add more</span>
+                        </button>
                       )}
                     </div>
-                  )}
 
-                  {/* Attached Photos Preview in Composer (up to 10 photos) */}
-                  {composerImages.length > 0 && (
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
-                        <span>Attached Photos ({composerImages.length}/10)</span>
-                        {composerImages.length < 10 && (
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 p-2 rounded-xl bg-muted/40 border border-border/60">
+                      {composerImages.map((imgUrl, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-border/60 group bg-muted/30">
+                          <img src={imgUrl} alt={`Attached ${idx + 1}`} className="size-full object-cover" />
                           <button
                             type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                            className="text-blue-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            onClick={() => setComposerImages((prev) => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 size-5 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-90"
+                            title="Remove photo"
+                            aria-label="Remove photo"
                           >
-                            <Plus className="size-3" />
-                            <span>Add more</span>
+                            <X className="size-3" />
                           </button>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 p-2 rounded-xl bg-muted/40 border border-border/60">
-                        {composerImages.map((imgUrl, idx) => (
-                          <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-border/60 group bg-muted/30">
-                            <img src={imgUrl} alt={`Attached ${idx + 1}`} className="size-full object-cover" />
-                            {/* Cross Button to remove from composer */}
-                            <button
-                              type="button"
-                              onClick={() => setComposerImages((prev) => prev.filter((_, i) => i !== idx))}
-                              className="absolute top-1 right-1 size-5 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-90"
-                              title="Remove photo"
-                              aria-label="Remove photo"
-                            >
-                              <X className="size-3" />
-                            </button>
-                            <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-white font-medium">
-                              {idx + 1}
-                            </div>
+                          <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-white font-medium">
+                            {idx + 1}
                           </div>
-                        ))}
-                        {composerImages.length < 10 && (
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                            className="aspect-square rounded-lg border-2 border-dashed border-border/80 hover:border-blue-500/60 bg-background/50 hover:bg-muted/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
-                            title="Add another photo"
-                          >
-                            {isUploading ? (
-                              <Loader2 className="size-4 animate-spin text-blue-500" />
-                            ) : (
-                              <>
-                                <Plus className="size-4 text-blue-500" />
-                                <span className="text-[10px] font-semibold">Add</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </div>
+                        </div>
+                      ))}
+                      {composerImages.length < 10 && (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          className="aspect-square rounded-lg border-2 border-dashed border-border/80 hover:border-blue-500/60 bg-background/50 hover:bg-muted/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
+                          title="Add another photo"
+                        >
+                          {isUploading ? (
+                            <Loader2 className="size-4 animate-spin text-blue-500" />
+                          ) : (
+                            <>
+                              <Plus className="size-4 text-blue-500" />
+                              <span className="text-[10px] font-semibold">Add</span>
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Category & Tags Selector when expanded */}
-                  {isExpanded && (
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <select
-                        value={composerCategory}
-                        onChange={(e) => setComposerCategory(e.target.value)}
-                        className="text-xs bg-muted/70 hover:bg-muted border border-border/60 text-foreground rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer font-medium"
-                      >
-                        <option value="Discussion">Discussion</option>
-                        <option value="Study Guide">Study Guide</option>
-                        <option value="Interview Experience">Interview Experience</option>
-                        <option value="Events">Events</option>
-                        <option value="System Design">System Design</option>
-                        <option value="DSA Tips">DSA Tips</option>
-                        <option value="Career">Career</option>
-                        <option value="Showcase">Showcase</option>
-                      </select>
+                {/* Category & Tags Selector (Mobile responsive stack) */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground font-medium sm:hidden shrink-0">Category:</span>
+                    <select
+                      value={composerCategory}
+                      onChange={(e) => setComposerCategory(e.target.value)}
+                      className="text-xs bg-muted/70 hover:bg-muted border border-border/60 text-foreground rounded-lg px-2.5 py-1.5 focus:outline-none cursor-pointer font-medium w-full sm:w-auto"
+                    >
+                      <option value="Discussion">Discussion</option>
+                      <option value="Study Guide">Study Guide</option>
+                      <option value="Interview Experience">Interview Experience</option>
+                      <option value="Events">Events</option>
+                      <option value="System Design">System Design</option>
+                      <option value="DSA Tips">DSA Tips</option>
+                      <option value="Career">Career</option>
+                      <option value="Showcase">Showcase</option>
+                    </select>
+                  </div>
 
-                      <input
-                        type="text"
-                        placeholder="Tags (comma separated: React, AWS, Leetcode)"
-                        value={composerTags}
-                        onChange={(e) => setComposerTags(e.target.value)}
-                        className="text-xs bg-muted/40 border border-border/50 text-foreground rounded-lg px-2.5 py-1 focus:outline-none flex-1 min-w-0"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Composer Bottom Row: Rich Formatting Toolbar, Write/Preview Tabs & Post Button */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-3 mt-2 border-t border-border/40">
-                {/* Left: Rich Text Toolbar (horizontally scrollable on mobile) */}
-                <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar py-0.5 max-w-full -mx-1 px-1">
-                  {/* Photo Attachment */}
                   <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageSelect}
-                    className="hidden"
+                    type="text"
+                    placeholder="Tags (comma separated: React, AWS, DSA)"
+                    value={composerTags}
+                    onChange={(e) => setComposerTags(e.target.value)}
+                    className="text-xs bg-muted/40 border border-border/50 text-foreground rounded-lg px-2.5 py-1.5 focus:outline-none flex-1 min-w-0"
                   />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer shrink-0"
-                    title="Attach Image"
-                  >
-                    {isUploading ? (
-                      <Loader2 className="size-4 animate-spin text-blue-500" />
-                    ) : (
-                      <ImageIcon className="size-4" />
-                    )}
-                  </button>
-
-                  <div className="h-3.5 w-px bg-border/60 mx-1 shrink-0" />
-
-                  {/* Formatting buttons */}
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("bold")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer font-bold text-xs shrink-0"
-                    title="Bold (**text**, Ctrl+B)"
-                  >
-                    <Bold className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("italic")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                    title="Italic (*text*, Ctrl+I)"
-                  >
-                    <Italic className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("underline")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                    title="Underline (<u>text</u>, Ctrl+U)"
-                  >
-                    <Underline className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("strikethrough")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                    title="Strikethrough (~~text~~)"
-                  >
-                    <Strikethrough className="size-3.5" />
-                  </button>
-
-                  <div className="h-3.5 w-px bg-border/60 mx-1 shrink-0" />
-
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("h1")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs font-semibold shrink-0"
-                    title="Heading 1 (# text)"
-                  >
-                    <Heading1 className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("h2")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs font-semibold shrink-0"
-                    title="Heading 2 (## text)"
-                  >
-                    <Heading2 className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("code")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs font-mono shrink-0"
-                    title="Inline Code (`code`, Ctrl+E)"
-                  >
-                    <Code className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("codeblock")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs font-mono shrink-0"
-                    title="Code Block (```ts)"
-                  >
-                    <Code2 className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("quote")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                    title="Quote (> text)"
-                  >
-                    <Quote className="size-3.5" />
-                  </button>
-
-                  <div className="h-3.5 w-px bg-border/60 mx-1 shrink-0" />
-
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("list")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                    title="Bullet List (- item)"
-                  >
-                    <List className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("listordered")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                    title="Numbered List (1. item)"
-                  >
-                    <ListOrdered className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFormat("link")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                    title="Add Link ([text](url), Ctrl+K)"
-                  >
-                    <Link2 className="size-3.5" />
-                  </button>
                 </div>
 
-                {/* Right: Write/Preview Tabs + Post Button */}
-                <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-1 sm:pt-0">
-                  {/* Write / Preview Tab Pill */}
-                  {isExpanded && (
+                {/* Composer Bottom Row: Rich Formatting Toolbar, Write/Preview Tabs & Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-3 border-t border-border/40">
+                  {/* Left: Rich Text Toolbar (horizontally scrollable with touch-friendly paddings) */}
+                  <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar py-0.5 max-w-full -mx-1 px-1">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer shrink-0"
+                      title="Attach Image"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="size-4 animate-spin text-blue-500" />
+                      ) : (
+                        <ImageIcon className="size-4" />
+                      )}
+                    </button>
+
+                    <div className="h-3.5 w-px bg-border/60 mx-1 shrink-0" />
+
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("bold")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer font-bold text-xs shrink-0"
+                      title="Bold (**text**, Ctrl+B)"
+                    >
+                      <Bold className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("italic")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
+                      title="Italic (*text*, Ctrl+I)"
+                    >
+                      <Italic className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("underline")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
+                      title="Underline (<u>text</u>, Ctrl+U)"
+                    >
+                      <Underline className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("strikethrough")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
+                      title="Strikethrough (~~text~~)"
+                    >
+                      <Strikethrough className="size-3.5" />
+                    </button>
+
+                    <div className="h-3.5 w-px bg-border/60 mx-1 shrink-0" />
+
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("h1")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs font-semibold shrink-0"
+                      title="Heading 1 (# text)"
+                    >
+                      <Heading1 className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("h2")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs font-semibold shrink-0"
+                      title="Heading 2 (## text)"
+                    >
+                      <Heading2 className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("code")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs font-mono shrink-0"
+                      title="Inline Code (`code`, Ctrl+E)"
+                    >
+                      <Code className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("codeblock")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs font-mono shrink-0"
+                      title="Code Block (```ts)"
+                    >
+                      <Code2 className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("quote")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
+                      title="Quote (> text)"
+                    >
+                      <Quote className="size-3.5" />
+                    </button>
+
+                    <div className="h-3.5 w-px bg-border/60 mx-1 shrink-0" />
+
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("list")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
+                      title="Bullet List (- item)"
+                    >
+                      <List className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("listordered")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
+                      title="Numbered List (1. item)"
+                    >
+                      <ListOrdered className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFormat("link")}
+                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
+                      title="Add Link ([text](url), Ctrl+K)"
+                    >
+                      <Link2 className="size-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Right: Write/Preview Tabs + Cancel + Post Button */}
+                  <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-1 sm:pt-0">
                     <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/40">
                       <button
                         type="button"
@@ -2063,27 +2121,39 @@ export default function DiscussionsPage() {
                         <span>Preview</span>
                       </button>
                     </div>
-                  )}
 
-                  {/* Post Button */}
-                  <button
-                    type="button"
-                    onClick={handleCreatePost}
-                    disabled={isSubmitting || isUploading || !composerContent.trim()}
-                    className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 disabled:opacity-40 disabled:pointer-events-none text-white text-xs sm:text-sm font-semibold px-5 sm:px-6 py-1.5 sm:py-2 rounded-full transition-all shadow-sm hover:shadow-md hover:shadow-blue-500/25 active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="size-3.5 animate-spin" />
-                        <span>Posting...</span>
-                      </>
-                    ) : (
-                      <span>Post</span>
-                    )}
-                  </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsExpanded(false);
+                          setComposerTab("write");
+                        }}
+                        className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleCreatePost}
+                        disabled={isSubmitting || isUploading || !composerContent.trim()}
+                        className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 disabled:opacity-40 disabled:pointer-events-none text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all shadow-sm hover:shadow-md hover:shadow-blue-500/25 active:scale-95 flex items-center gap-1.5 cursor-pointer shrink-0"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="size-3.5 animate-spin" />
+                            <span>Posting...</span>
+                          </>
+                        ) : (
+                          <span>Post</span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* 2. Search & Category Filter */}
             <CategoryFilterSlider
@@ -2200,22 +2270,24 @@ export default function DiscussionsPage() {
         </div>
       </div>
 
-      {/* Floating "New Post" Button for Mobile */}
-      <button
-        type="button"
-        onClick={() => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          setIsExpanded(true);
-          setTimeout(() => {
-            textareaRef.current?.focus();
-          }, 300);
-        }}
-        className="lg:hidden fixed bottom-6 right-5 z-40 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3.5 rounded-full shadow-lg shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
-        title="Create New Post"
-        aria-label="Create New Post"
-      >
-        <Pencil className="size-5" />
-      </button>
+      {/* Floating "New Post" Button for Mobile (Only shown after scrolling down past the top composer) */}
+      {showFab && (
+        <button
+          type="button"
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            setIsExpanded(true);
+            setTimeout(() => {
+              textareaRef.current?.focus();
+            }, 300);
+          }}
+          className="lg:hidden fixed bottom-6 right-5 z-40 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3.5 rounded-full shadow-xl shadow-blue-500/35 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer animate-in fade-in zoom-in duration-200"
+          title="Create New Post"
+          aria-label="Create New Post"
+        >
+          <Pencil className="size-5" />
+        </button>
+      )}
 
       {/* Mobile Slide-over Drawer for Trending & Tags */}
       {mobileSidebarOpen && (
