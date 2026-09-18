@@ -100,13 +100,13 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  targets     UserTargetCompany[]
-  solved      UserSolvedProblem[]
-  bookmarks   UserBookmarkProblem[]
-  submissions CommunityProblem[]
-  discussionPosts DiscussionPost[]
+  targets            UserTargetCompany[]
+  solved             UserSolvedProblem[]
+  bookmarks          UserBookmarkProblem[]
+  submissions        CommunityProblem[]
+  discussionPosts    DiscussionPost[]
   discussionComments DiscussionComment[]
-  platformAccounts UserPlatformAccount[]
+  platformAccounts   UserPlatformAccount[]
 }
 
 model UserTargetCompany {
@@ -185,10 +185,10 @@ model DiscussionPost {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  likes          DiscussionLike[]
-  bookmarks      DiscussionBookmark[]
-  comments       DiscussionComment[]
+  user      User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  likes     DiscussionLike[]
+  bookmarks DiscussionBookmark[]
+  comments  DiscussionComment[]
 
   @@index([createdAt])
   @@index([category])
@@ -207,10 +207,10 @@ model DiscussionComment {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  post         DiscussionPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user         User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
-  parent       DiscussionComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies      DiscussionComment[] @relation("CommentReplies")
+  post    DiscussionPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user    User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  parent  DiscussionComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies DiscussionComment[] @relation("CommentReplies")
 
   @@index([postId])
   @@index([parentId])
@@ -223,7 +223,7 @@ model DiscussionLike {
   userId    String
   createdAt DateTime @default(now())
 
-  post      DiscussionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post DiscussionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([postId, userId])
   @@index([userId])
@@ -235,7 +235,7 @@ model DiscussionBookmark {
   userId    String
   createdAt DateTime @default(now())
 
-  post      DiscussionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post DiscussionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([postId, userId])
   @@index([userId])
@@ -252,7 +252,7 @@ model UserPlatformAccount {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, platform])
   @@index([userId])
@@ -304,5 +304,3 @@ model LeaderboardRun {
   snapshot  Json
   createdAt DateTime @default(now())
 }
-
-
