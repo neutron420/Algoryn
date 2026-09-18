@@ -838,7 +838,7 @@ function HeroSearchField({
   value,
   onChange,
   onClear,
-  placeholder = "Type to search discussions...",
+  placeholder = "Search discussions...",
   className = "",
 }: {
   value: string;
@@ -874,8 +874,8 @@ function HeroSearchField({
     <div className={`relative flex items-center ${className}`}>
       <div className="relative w-full flex items-center">
         {/* Search icon */}
-        <div className="absolute left-3.5 flex items-center pointer-events-none text-muted-foreground">
-          <Search className="size-4" />
+        <div className="absolute left-3 flex items-center pointer-events-none text-muted-foreground">
+          <Search className="size-3.5 sm:size-4" />
         </div>
 
         {/* Input */}
@@ -885,7 +885,7 @@ function HeroSearchField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full h-10 pl-9.5 pr-20 bg-muted/40 hover:bg-muted/60 focus:bg-background text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 rounded-xl border border-border/70 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-2xs"
+          className="w-full h-10 pl-8.5 pr-16 bg-muted/40 hover:bg-muted/60 focus:bg-background text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 rounded-xl border border-border/70 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-2xs"
           aria-label="Search discussions"
         />
 
@@ -934,21 +934,6 @@ interface ComboBoxContextType {
 
 const ComboBoxContext = createContext<ComboBoxContextType | null>(null);
 
-function Label({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <label
-      className={`block text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1 select-none ${className}`}
-    >
-      {children}
-    </label>
-  );
-}
 
 function Input({
   placeholder = "Type to search...",
@@ -1244,6 +1229,10 @@ function CategoryFilterSlider({
   searchQuery,
   onSearchChange,
   onClearSearch,
+  showBookmarkedOnly,
+  onToggleBookmarked,
+  bookmarkedCount,
+  isAuthenticated,
 }: {
   activeTab: string;
   onSelectTab: (tab: string) => void;
@@ -1254,34 +1243,67 @@ function CategoryFilterSlider({
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onClearSearch: () => void;
+  showBookmarkedOnly: boolean;
+  onToggleBookmarked: (val: boolean) => void;
+  bookmarkedCount: number;
+  isAuthenticated: boolean;
 }) {
   return (
-    <div className="space-y-3">
-      {/* 1. Mobile View: Search Bar + HeroUI ComboBox (Contains all 9 categories) + Trending Button */}
-      <div className="block sm:hidden space-y-2.5">
-        {/* Mobile Search Bar */}
-        <HeroSearchField
-          value={searchQuery}
-          onChange={onSearchChange}
-          onClear={onClearSearch}
-          placeholder="Search discussions (Shift+S)..."
-          className="w-full"
-        />
+    <div className="space-y-2.5">
+      {/* 1. Mobile View: Compact Search + Saved Button (Row 1), Category + Trending (Row 2) */}
+      <div className="block sm:hidden space-y-2">
+        {/* Row 1: Search Field + Saved Posts Button */}
+        <div className="flex items-center gap-2">
+          <HeroSearchField
+            value={searchQuery}
+            onChange={onSearchChange}
+            onClear={onClearSearch}
+            placeholder="Search discussions..."
+            className="flex-1 min-w-0"
+          />
 
-        {/* Row with HeroUI ComboBox & Trending Button */}
-        <div className="flex items-end gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (!isAuthenticated) {
+                toast.error("Please log in to view your saved discussions");
+                return;
+              }
+              onToggleBookmarked(!showBookmarkedOnly);
+            }}
+            className={`h-10 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs flex items-center gap-1.5 shrink-0 select-none active:scale-95 ${
+              showBookmarkedOnly
+                ? "bg-blue-600 border-blue-600 text-white shadow-blue-500/20 shadow-xs font-semibold"
+                : "bg-muted/40 hover:bg-muted/70 text-muted-foreground hover:text-foreground border-border/70"
+            }`}
+            title="Saved discussions"
+          >
+            <Bookmark className={`size-3.5 ${showBookmarkedOnly ? "fill-current" : ""}`} />
+            <span>Saved</span>
+            {bookmarkedCount > 0 && (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${
+                  showBookmarkedOnly
+                    ? "bg-white/25 text-white"
+                    : "bg-muted-foreground/15 text-foreground"
+                }`}
+              >
+                {bookmarkedCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Row 2: Category Selector + Trending Button */}
+        <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
             <ComboBox
               className="w-full"
               selectedKey={activeTab}
               onSelectionChange={onSelectTab}
             >
-              <Label className="flex items-center gap-1.5 text-muted-foreground">
-                <SlidersHorizontal className="size-3.5 text-blue-500" />
-                <span>Category Filter</span>
-              </Label>
               <ComboBox.InputGroup>
-                <Input placeholder="Search category..." />
+                <Input placeholder="Filter category..." />
                 <ComboBox.Trigger />
               </ComboBox.InputGroup>
               <ComboBox.Popover>
@@ -1300,7 +1322,7 @@ function CategoryFilterSlider({
           <button
             type="button"
             onClick={onOpenMobileTrending}
-            className="h-10 px-3.5 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all cursor-pointer shadow-2xs active:scale-95 shrink-0 flex items-center gap-1.5 mb-px"
+            className="h-10 px-3.5 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all cursor-pointer shadow-2xs active:scale-95 shrink-0 flex items-center gap-1.5"
             title="Trending Topics"
           >
             <Flame className="size-3.5 fill-amber-500/20 text-amber-500" />
@@ -1312,42 +1334,92 @@ function CategoryFilterSlider({
         </div>
       </div>
 
-      {/* 2. PC / Desktop View: Search Bar + HeroUI ComboBox Category Selector (No ribbon buttons) */}
-      <div className="hidden sm:flex items-center gap-3">
-        {/* HeroUI SearchField */}
-        <HeroSearchField
-          value={searchQuery}
-          onChange={onSearchChange}
-          onClear={onClearSearch}
-          className="flex-1 max-w-md"
-        />
+      {/* 2. PC / Desktop View: Search Bar (Compact) + Category Selector + Saved Posts Button */}
+      <div className="hidden sm:flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          {/* Compact Search Field (Compact width, NOT oversized) */}
+          <HeroSearchField
+            value={searchQuery}
+            onChange={onSearchChange}
+            onClear={onClearSearch}
+            placeholder="Search discussions..."
+            className="w-60 lg:w-68 shrink-0"
+          />
 
-        {/* HeroUI ComboBox Category Selector (No dots, clean list) */}
-        <ComboBox
-          className="w-64 shrink-0"
-          selectedKey={activeTab}
-          onSelectionChange={onSelectTab}
+          {/* HeroUI ComboBox Category Selector */}
+          <ComboBox
+            className="w-56 shrink-0"
+            selectedKey={activeTab}
+            onSelectionChange={onSelectTab}
+          >
+            <ComboBox.InputGroup>
+              <Input placeholder="Filter category..." />
+              <ComboBox.Trigger />
+            </ComboBox.InputGroup>
+            <ComboBox.Popover>
+              <ListBox>
+                {CATEGORY_ITEMS.map((item) => (
+                  <ListBox.Item key={item.id} id={item.id} textValue={item.name}>
+                    <span>{item.name}</span>
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </ComboBox.Popover>
+          </ComboBox>
+        </div>
+
+        {/* Right: Saved / Bookmarked Posts Filter Button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (!isAuthenticated) {
+              toast.error("Please log in to view your saved discussions");
+              return;
+            }
+            onToggleBookmarked(!showBookmarkedOnly);
+          }}
+          className={`h-10 px-3.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs flex items-center gap-2 shrink-0 select-none active:scale-95 ${
+            showBookmarkedOnly
+              ? "bg-blue-600 border-blue-600 text-white shadow-blue-500/20 shadow-xs font-semibold"
+              : "bg-muted/40 hover:bg-muted/70 text-muted-foreground hover:text-foreground border-border/70"
+          }`}
+          title={showBookmarkedOnly ? "Showing saved discussions (click to show all)" : "View your saved discussions"}
         >
-          <ComboBox.InputGroup>
-            <Input placeholder="Filter category..." />
-            <ComboBox.Trigger />
-          </ComboBox.InputGroup>
-          <ComboBox.Popover>
-            <ListBox>
-              {CATEGORY_ITEMS.map((item) => (
-                <ListBox.Item key={item.id} id={item.id} textValue={item.name}>
-                  <span>{item.name}</span>
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </ComboBox.Popover>
-        </ComboBox>
+          <Bookmark className={`size-3.5 ${showBookmarkedOnly ? "fill-current" : ""}`} />
+          <span>Saved Posts</span>
+          {bookmarkedCount > 0 && (
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${
+                showBookmarkedOnly
+                  ? "bg-white/25 text-white"
+                  : "bg-muted-foreground/15 text-foreground"
+              }`}
+            >
+              {bookmarkedCount}
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* Active Filter Pills (Search query or Tag) */}
-      {(selectedTag || searchQuery) && (
+      {/* Active Filter Pills (Search query, Tag, or Saved posts) */}
+      {(selectedTag || searchQuery || showBookmarkedOnly) && (
         <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+          {showBookmarkedOnly && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-xs font-semibold animate-in fade-in duration-100">
+              <Bookmark className="size-3 fill-current" />
+              <span>Saved posts ({bookmarkedCount})</span>
+              <button
+                type="button"
+                onClick={() => onToggleBookmarked(false)}
+                className="p-0.5 hover:text-blue-700 hover:bg-blue-500/20 rounded-full transition-colors cursor-pointer"
+                title="Show all discussions"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          )}
+
           {searchQuery && (
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-xs font-semibold">
               <span>Search: &quot;{searchQuery}&quot;</span>
@@ -1381,6 +1453,7 @@ function CategoryFilterSlider({
             onClick={() => {
               onClearSearch();
               onClearTag();
+              onToggleBookmarked(false);
             }}
             className="text-[11px] text-muted-foreground hover:text-foreground underline cursor-pointer"
           >
@@ -1403,12 +1476,17 @@ export default function DiscussionsPage() {
   const [activeTab, setActiveTab] = useState("All posts");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
 
-  // Instant client-side search filtering across title, content, author, tags, category
+  // Instant client-side search and bookmark filtering across title, content, author, tags, category
   const displayedPosts = React.useMemo(() => {
-    if (!searchQuery.trim()) return posts;
+    let result = posts;
+    if (showBookmarkedOnly) {
+      result = result.filter((p) => p.isBookmarked);
+    }
+    if (!searchQuery.trim()) return result;
     const q = searchQuery.toLowerCase().trim();
-    return posts.filter((p) => {
+    return result.filter((p) => {
       const titleMatch = p.title?.toLowerCase().includes(q);
       const contentMatch = p.content.toLowerCase().includes(q);
       const authorMatch =
@@ -1418,7 +1496,17 @@ export default function DiscussionsPage() {
       const categoryMatch = p.category.toLowerCase().includes(q);
       return titleMatch || contentMatch || authorMatch || tagMatch || categoryMatch;
     });
-  }, [posts, searchQuery]);
+  }, [posts, searchQuery, showBookmarkedOnly]);
+
+  const bookmarkedPostsCount = React.useMemo(() => {
+    return posts.filter((p) => p.isBookmarked).length;
+  }, [posts]);
+
+  const handleBookmarkChange = (postId: string, isBookmarked: boolean) => {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, isBookmarked } : p))
+    );
+  };
 
   // Dynamic Sidebar State (Fetched 100% from PostgreSQL database)
   const [tagPages, setTagPages] = useState<string[][]>([]);
@@ -1456,6 +1544,7 @@ export default function DiscussionsPage() {
       if (activeTab !== "All posts") params.set("category", activeTab);
       if (selectedTag) params.set("tag", selectedTag);
       if (user?.uid) params.set("userId", user.uid);
+      if (showBookmarkedOnly) params.set("bookmarked", "true");
 
       const res = await fetch(`/api/discussions?${params.toString()}`);
       const data = await res.json();
@@ -1479,6 +1568,7 @@ export default function DiscussionsPage() {
         if (activeTab !== "All posts") params.set("category", activeTab);
         if (selectedTag) params.set("tag", selectedTag);
         if (user?.uid) params.set("userId", user.uid);
+        if (showBookmarkedOnly) params.set("bookmarked", "true");
 
         const res = await fetch(`/api/discussions?${params.toString()}`);
         const data = await res.json();
@@ -1499,7 +1589,7 @@ export default function DiscussionsPage() {
     return () => {
       ignore = true;
     };
-  }, [activeTab, selectedTag, user?.uid]);
+  }, [activeTab, selectedTag, user?.uid, showBookmarkedOnly]);
 
   // Fetch dynamic sidebar widgets from DB (for manual refresh / mutation)
   const fetchSidebarData = async () => {
@@ -2009,6 +2099,10 @@ export default function DiscussionsPage() {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onClearSearch={() => setSearchQuery("")}
+              showBookmarkedOnly={showBookmarkedOnly}
+              onToggleBookmarked={setShowBookmarkedOnly}
+              bookmarkedCount={bookmarkedPostsCount}
+              isAuthenticated={Boolean(user)}
             />
 
             {/* 3. Posts Feed */}
@@ -2035,26 +2129,35 @@ export default function DiscussionsPage() {
             ) : displayedPosts.length === 0 ? (
               <div className="bg-card border border-border/70 rounded-xl sm:rounded-2xl p-8 sm:p-10 text-center space-y-3">
                 <div className="size-12 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mx-auto">
-                  <MessageCircle className="size-6" />
+                  {showBookmarkedOnly ? (
+                    <Bookmark className="size-6 fill-blue-500/20" />
+                  ) : (
+                    <MessageCircle className="size-6" />
+                  )}
                 </div>
-                <h3 className="font-semibold text-base">No discussions found</h3>
+                <h3 className="font-semibold text-base">
+                  {showBookmarkedOnly ? "No saved discussions yet" : "No discussions found"}
+                </h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  {searchQuery
+                  {showBookmarkedOnly
+                    ? "You haven't bookmarked any discussions yet. Click the bookmark icon on any post to save it here for quick access!"
+                    : searchQuery
                     ? `No discussions match "${searchQuery}". Try a different keyword.`
                     : selectedTag
                     ? `No posts found with tag #${selectedTag}. Try clearing the filter.`
                     : "Be the first to share an interview experience, ask a question, or post a study guide!"}
                 </p>
-                {(selectedTag || searchQuery) && (
+                {(selectedTag || searchQuery || showBookmarkedOnly) && (
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedTag(null);
                       setSearchQuery("");
+                      setShowBookmarkedOnly(false);
                     }}
                     className="text-xs text-blue-600 font-semibold hover:underline cursor-pointer"
                   >
-                    Clear filters
+                    Clear filters & view all discussions
                   </button>
                 )}
               </div>
@@ -2070,6 +2173,7 @@ export default function DiscussionsPage() {
                       setPosts((prev) => prev.filter((p) => p.id !== post.id));
                       fetchSidebarData();
                     }}
+                    onBookmarkChange={handleBookmarkChange}
                   />
                 ))}
               </div>
@@ -2292,135 +2396,132 @@ function PostImageGallery({
   images: string[];
   onImageClick: (index: number) => void;
 }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef<number>(0);
+
   if (!images || images.length === 0) return null;
 
-  // Single Image
+  // Single Image: Display directly without slider controls
   if (images.length === 1) {
     return (
       <div
         onClick={() => onImageClick(0)}
-        className="relative rounded-2xl overflow-hidden my-3 border border-border/50 max-h-[440px] w-full bg-muted/30 cursor-pointer group shadow-2xs"
+        className="relative rounded-2xl overflow-hidden my-3 border border-border/60 max-h-[460px] w-full bg-muted/20 cursor-pointer group shadow-2xs"
       >
         <img
           src={images[0]}
           alt="Post photo"
-          className="w-full object-cover max-h-[440px] transition-transform duration-300 group-hover:scale-[1.01]"
+          className="w-full object-cover max-h-[460px] transition-transform duration-300 group-hover:scale-[1.01]"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
       </div>
     );
   }
 
-  // Two Images: stacked up and down
-  if (images.length === 2) {
-    return (
-      <div className="grid grid-rows-2 gap-1.5 sm:gap-2 rounded-2xl overflow-hidden my-3 border border-border/50 h-72 sm:h-88 bg-muted/20 shadow-2xs">
-        {images.map((img, i) => (
+  // Multiple Images: LinkedIn-Style Horizontal Sliding Carousel
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => Math.min(images.length - 1, prev + 1));
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null) return;
+    if (touchDeltaX.current < -40 && currentIndex < images.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    } else if (touchDeltaX.current > 40 && currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+    }
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+  };
+
+  return (
+    <div
+      className="relative rounded-2xl overflow-hidden my-3 border border-border/60 bg-black/5 dark:bg-black/40 shadow-2xs select-none group/slider"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Top Right Counter Badge (LinkedIn Style: "1/5", "4/5", etc.) */}
+      <div className="absolute top-3 right-3 z-20 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] sm:text-xs font-bold tracking-wide shadow-md pointer-events-none">
+        {currentIndex + 1}/{images.length}
+      </div>
+
+      {/* Sliding Images Track */}
+      <div
+        className="flex transition-transform duration-300 ease-out"
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+      >
+        {images.map((img, idx) => (
           <div
-            key={i}
-            onClick={() => onImageClick(i)}
-            className="relative size-full overflow-hidden cursor-pointer group bg-muted/40"
+            key={idx}
+            onClick={() => onImageClick(idx)}
+            className="w-full shrink-0 relative h-72 sm:h-[420px] flex items-center justify-center bg-muted/20 cursor-pointer overflow-hidden"
           >
             <img
               src={img}
-              alt={`Photo ${i + 1}`}
-              className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              alt={`Photo ${idx + 1}`}
+              className="size-full object-cover transition-transform duration-300 group-hover/slider:scale-[1.005]"
             />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors pointer-events-none" />
           </div>
         ))}
       </div>
-    );
-  }
 
-  // Three Images: 1 large on left, 2 stacked up and down on right
-  if (images.length === 3) {
-    return (
-      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 rounded-2xl overflow-hidden my-3 border border-border/50 h-72 sm:h-96 bg-muted/20 shadow-2xs">
-        <div
-          onClick={() => onImageClick(0)}
-          className="relative row-span-2 size-full overflow-hidden cursor-pointer group bg-muted/40"
+      {/* Left Navigation Arrow Button (<) */}
+      {currentIndex > 0 && (
+        <button
+          type="button"
+          onClick={handlePrev}
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 size-8 sm:size-9 rounded-full bg-black/65 hover:bg-black/85 text-white flex items-center justify-center shadow-lg transition-all active:scale-90 cursor-pointer hover:scale-105"
+          title="Previous photo"
+          aria-label="Previous photo"
         >
-          <img
-            src={images[0]}
-            alt="Photo 1"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
-        </div>
-        <div className="grid grid-rows-2 gap-1.5 sm:gap-2 size-full">
-          {images.slice(1, 3).map((img, i) => (
-            <div
-              key={i + 1}
-              onClick={() => onImageClick(i + 1)}
-              className="relative size-full overflow-hidden cursor-pointer group bg-muted/40"
-            >
-              <img
-                src={img}
-                alt={`Photo ${i + 2}`}
-                className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+          <ChevronLeft className="size-5" />
+        </button>
+      )}
 
-  // Four or More Images (LinkedIn Style):
-  // 1 large photo on left, and 2 photos stacked up and down on right
-  // with the bottom-right photo featuring a frosted "+N" overlay badge
-  const remainingCount = images.length - 3;
-  return (
-    <div className="grid grid-cols-2 gap-1.5 sm:gap-2 rounded-2xl overflow-hidden my-3 border border-border/50 h-72 sm:h-96 bg-muted/20 shadow-2xs">
-      {/* 1st photo - large left tile */}
-      <div
-        onClick={() => onImageClick(0)}
-        className="relative row-span-2 size-full overflow-hidden cursor-pointer group bg-muted/40"
-      >
-        <img
-          src={images[0]}
-          alt="Photo 1"
-          className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
-      </div>
-
-      {/* Right column with 2 photos stacked up and down */}
-      <div className="grid grid-rows-2 gap-1.5 sm:gap-2 size-full">
-        {/* Top right photo (2nd image) */}
-        <div
-          onClick={() => onImageClick(1)}
-          className="relative size-full overflow-hidden cursor-pointer group bg-muted/40"
+      {/* Right Navigation Arrow Button (>) */}
+      {currentIndex < images.length - 1 && (
+        <button
+          type="button"
+          onClick={handleNext}
+          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 size-8 sm:size-9 rounded-full bg-black/65 hover:bg-black/85 text-white flex items-center justify-center shadow-lg transition-all active:scale-90 cursor-pointer hover:scale-105"
+          title="Next photo"
+          aria-label="Next photo"
         >
-          <img
-            src={images[1]}
-            alt="Photo 2"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
-        </div>
+          <ChevronRight className="size-5" />
+        </button>
+      )}
 
-        {/* Bottom right photo (3rd image) with +N overlay */}
-        <div
-          onClick={() => onImageClick(2)}
-          className="relative size-full overflow-hidden cursor-pointer group bg-muted/40"
-        >
-          <img
-            src={images[2]}
-            alt="Photo 3"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+      {/* Bottom Dot Indicators */}
+      <div className="absolute bottom-2.5 inset-x-0 z-20 flex items-center justify-center gap-1.5 pointer-events-none">
+        {images.map((_, idx) => (
+          <span
+            key={idx}
+            className={`transition-all duration-200 rounded-full shadow-xs ${
+              idx === currentIndex
+                ? "w-4 h-1.5 bg-white"
+                : "size-1.5 bg-white/50"
+            }`}
           />
-          <div className="absolute inset-0 bg-black/65 backdrop-blur-[2px] flex flex-col items-center justify-center text-white transition-all group-hover:bg-black/50">
-            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight drop-shadow-md">
-              +{remainingCount}
-            </span>
-            <span className="text-[11px] sm:text-xs font-semibold text-white/90 mt-0.5 tracking-wide">
-              {remainingCount === 1 ? "more photo" : "more photos"}
-            </span>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -2514,6 +2615,7 @@ interface CommunityPostCardProps {
   currentUser: CurrentUserType | null | undefined;
   onTagClick: (tag: string) => void;
   onPostDeleted: () => void;
+  onBookmarkChange?: (postId: string, isBookmarked: boolean) => void;
 }
 
 function CommunityPostCard({
@@ -2521,6 +2623,7 @@ function CommunityPostCard({
   currentUser,
   onTagClick,
   onPostDeleted,
+  onBookmarkChange,
 }: CommunityPostCardProps) {
   const currentUserId = currentUser?.uid;
   const [postData, setPostData] = useState(post);
@@ -2771,6 +2874,7 @@ function CommunityPostCard({
   const handleToggleBookmark = async () => {
     const nextBookmarked = !bookmarked;
     setBookmarked(nextBookmarked);
+    onBookmarkChange?.(post.id, nextBookmarked);
     toast.success(nextBookmarked ? "Post bookmarked" : "Bookmark removed");
 
     try {
@@ -2782,9 +2886,11 @@ function CommunityPostCard({
       const data = await res.json();
       if (data.success) {
         setBookmarked(data.bookmarked);
+        onBookmarkChange?.(post.id, data.bookmarked);
       }
     } catch {
       setBookmarked(!nextBookmarked);
+      onBookmarkChange?.(post.id, !nextBookmarked);
     }
   };
 

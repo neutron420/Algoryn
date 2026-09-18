@@ -8,6 +8,7 @@ export async function GET(req: Request) {
     const tag = searchParams.get("tag");
     const sort = searchParams.get("sort") || "latest";
     const currentUserId = searchParams.get("userId");
+    const bookmarkedOnly = searchParams.get("bookmarked") === "true";
     const limit = Math.min(Number(searchParams.get("limit")) || 40, 100);
 
     const whereClause: Record<string, unknown> = {};
@@ -16,6 +17,11 @@ export async function GET(req: Request) {
     }
     if (tag && tag.trim().length > 0) {
       whereClause["tags"] = { has: tag.trim() };
+    }
+    if (bookmarkedOnly && currentUserId) {
+      whereClause["bookmarks"] = {
+        some: { userId: currentUserId },
+      };
     }
 
     const orderByClause =
