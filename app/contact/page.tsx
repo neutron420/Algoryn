@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { HeroHeader } from "@/components/templates/nova/sections/header";
 import Footer from "@/components/templates/nova/sections/footer-1";
-import { Mail, MessageSquare, Send, CheckCircle2, HelpCircle, MapPin, Sparkles } from "lucide-react";
+import { Mail, MessageSquare, Send, CheckCircle2, HelpCircle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ContactPage() {
@@ -81,13 +82,13 @@ export default function ContactPage() {
                 <p className="text-xs sm:text-sm text-muted-foreground mb-3">
                   Check out our curated interview preparation guides and frequently asked questions for immediate answers.
                 </p>
-                <a
+                <Link
                   href="/#faqs"
                   className="text-xs font-medium text-orange-500 hover:underline inline-flex items-center gap-1"
                 >
                   <span>Browse Landing FAQs</span>
                   <span>&rarr;</span>
-                </a>
+                </Link>
               </div>
 
               <div className="bg-card/40 border border-border/70 rounded-2xl p-6 backdrop-blur-sm shadow-xs">

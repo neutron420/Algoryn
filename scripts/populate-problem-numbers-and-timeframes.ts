@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { readdirSync, statSync, readFileSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { parseCsvFile } from "./lib/csv";
 import { chunk, normalizeProblemUrl, slugifyCompanyName } from "./lib/normalize";
@@ -105,7 +105,7 @@ async function main(): Promise<void> {
         }
       }
     }
-  } catch (e) {
+  } catch {
     // optional
   }
 

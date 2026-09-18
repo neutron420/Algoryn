@@ -176,10 +176,14 @@ model DiscussionPost {
   userId         String?
   authorName     String   @default("Coder")
   authorHandle   String?
+  authorRole     String?
   avatarUrl      String?
+  title          String?
   content        String
   imageUrl       String?
   category       String   @default("General")
+  tags           String[] @default([])
+  viewsCount     Int      @default(0)
   likesCount     Int      @default(0)
   bookmarksCount Int      @default(0)
   createdAt      DateTime @default(now())
@@ -195,17 +199,18 @@ model DiscussionPost {
 }
 
 model DiscussionComment {
-  id           String   @id @default(cuid())
-  postId       String
-  userId       String?
-  authorName   String   @default("Coder")
-  authorHandle String?
-  avatarUrl    String?
-  content      String
-  parentId     String?
-  likesCount   Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  postId        String
+  userId        String?
+  authorName    String   @default("Coder")
+  authorHandle  String?
+  avatarUrl     String?
+  content       String
+  parentId      String?
+  likesCount    Int      @default(0)
+  dislikesCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   post    DiscussionPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
   user    User?               @relation(fields: [userId], references: [id], onDelete: SetNull)

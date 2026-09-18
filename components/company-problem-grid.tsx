@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   ExternalLink,
@@ -32,7 +32,6 @@ import {
   Star,
   ThumbsUp,
   Clock,
-  SlidersHorizontal,
   Settings2,
   ArrowUpDown,
   X,
@@ -283,7 +282,7 @@ export function CompanyProblemGrid({ problems, companyName, companySlug }: Compa
   const pageSize = 12;
 
   // Card-only Skeleton & Switching Transition State (zero artificial delay)
-  const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const [isInitialLoading] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const prevCompanySlug = useRef(companySlug);
 
@@ -577,7 +576,7 @@ export function CompanyProblemGrid({ problems, companyName, companySlug }: Compa
   };
 
   // Random question picker (Shuffle)
-  const handlePickRandomProblem = () => {
+  const handlePickRandomProblem = useCallback(() => {
     if (filteredProblems.length === 0) {
       toast.error("No questions match the current filters");
       return;
@@ -597,7 +596,7 @@ export function CompanyProblemGrid({ problems, companyName, companySlug }: Compa
     if (picked.leetcodeUrl) {
       window.open(picked.leetcodeUrl, "_blank");
     }
-  };
+  }, [filteredProblems, setIsFilterSheetOpen]);
 
   // Keyboard shortcut listener for / (search), Escape (close modal), and R (shuffle/random)
   useEffect(() => {
@@ -631,7 +630,7 @@ export function CompanyProblemGrid({ problems, companyName, companySlug }: Compa
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFilterSheetOpen, filteredProblems]);
+  }, [isFilterSheetOpen, handlePickRandomProblem]);
 
   return (
     <div className="space-y-3 sm:space-y-4">

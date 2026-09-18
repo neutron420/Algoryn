@@ -54,11 +54,12 @@ export async function POST(req: Request) {
       fileName: file.name,
       fileSize: file.size,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Cloudflare R2 upload error:", error);
+    const message = error instanceof Error ? error.message : "Failed to upload image to Cloudflare R2 storage";
     return NextResponse.json(
       {
-        error: error?.message || "Failed to upload image to Cloudflare R2 storage",
+        error: message,
       },
       { status: 500 }
     );

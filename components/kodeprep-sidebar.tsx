@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+
 import {
   Sidebar,
   SidebarContent,
@@ -124,19 +125,18 @@ export function KodePrepSidebar({ companies, selectedCompanySlug }: KodePrepSide
   const { isMobile, setOpenMobile, toggleSidebar } = useSidebar();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [pendingCompanySlug, setPendingCompanySlug] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const isBookmarksActive = searchParams.get("status") === "BOOKMARKED";
   const activeCompanySlug = searchParams.get("company") || selectedCompanySlug || "google";
   const displayedCompanySlug = pendingCompanySlug || activeCompanySlug;
 
   // Clear pending state once searchParams reflects the new company
-  useEffect(() => {
-    if (searchParams.get("company") === pendingCompanySlug) {
-      setPendingCompanySlug(null);
-    }
-  }, [searchParams, pendingCompanySlug]);
+  if (pendingCompanySlug && searchParams.get("company") === pendingCompanySlug) {
+    setPendingCompanySlug(null);
+  }
 
   // Group companies into defined categories
   const categorizedCompanies = useMemo(() => {
@@ -316,7 +316,6 @@ export function KodePrepSidebar({ companies, selectedCompanySlug }: KodePrepSide
             <div className="space-y-1 pt-1">
               {filteredDrilldownItems.map((company) => {
                 const isActive = displayedCompanySlug === company.slug;
-                const isSelectedPending = pendingCompanySlug === company.slug;
                 return (
                   <button
                     key={company.id}
@@ -600,15 +599,17 @@ export function KodePrepSidebar({ companies, selectedCompanySlug }: KodePrepSide
           </div>
 
           {/* Discussions */}
-          <button
-            type="button"
+          <Link
+            href="/dashboard/discussions"
             onClick={() => {
-              toast.info("Discussions is coming soon!", {
-                description: "Community discussion board, interview pattern Q&A, and preparation threads are currently in development.",
-              });
+              if (isMobile) setOpenMobile(false);
             }}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 text-foreground/90"
-            title="Discussions - Coming Soon"
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 ${
+              pathname === "/dashboard/discussions"
+                ? "bg-muted text-foreground font-semibold"
+                : "text-foreground/90"
+            }`}
+            title="Discussions"
           >
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
               <MessagesSquare className="size-4 shrink-0 text-cyan-500 group-hover:scale-105 transition-transform" />
@@ -616,13 +617,13 @@ export function KodePrepSidebar({ companies, selectedCompanySlug }: KodePrepSide
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-xs text-foreground leading-tight">Discussions</span>
                   <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[3px] bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-                    Soon
+                    NEW
                   </span>
                 </div>
                 <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Q&amp;A &amp; Strategy</span>
               </div>
             </div>
-          </button>
+          </Link>
 
           {/* Interview Experience */}
           <button

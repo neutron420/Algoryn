@@ -14,7 +14,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const sidebarCompanies = await getOrSetCache(
+  let sidebarCompanies = await getOrSetCache(
     "cache:companies:sidebar",
     async () => {
       let allCompaniesRaw: {
@@ -49,6 +49,31 @@ export default async function DashboardLayout({
     },
     86400 // 24 hours TTL
   );
+
+  // Safety fallback: If cache returned empty, fetch directly from DB to prevent "0 Total"
+  if (!sidebarCompanies || sidebarCompanies.length === 0) {
+    try {
+      const directCompanies = await prisma.company.findMany({
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          _count: { select: { problems: true, communityProblems: true } },
+        },
+        orderBy: { problems: { _count: "desc" } },
+      });
+      if (directCompanies.length > 0) {
+        sidebarCompanies = directCompanies.map((c) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          problemCount: (c._count.problems ?? 0) + (c._count.communityProblems ?? 0),
+        }));
+      }
+    } catch (err) {
+      console.warn("Direct fallback for sidebar companies failed:", err);
+    }
+  }
 
   return (
     <AuthGuard>

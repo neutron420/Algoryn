@@ -14,6 +14,7 @@ export const r2Client = new S3Client({
     accessKeyId: accessKeyId || "",
     secretAccessKey: secretAccessKey || "",
   },
+  forcePathStyle: true,
 });
 
 export interface UploadResult {

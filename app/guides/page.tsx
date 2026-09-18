@@ -7,10 +7,8 @@ import {
   Code2,
   Cpu,
   Layers,
-  Sparkles,
   ArrowRight,
   TrendingUp,
-  CheckCircle2,
   Clock,
   Compass,
 } from "lucide-react";

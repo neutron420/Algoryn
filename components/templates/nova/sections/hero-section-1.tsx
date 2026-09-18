@@ -13,8 +13,13 @@ import { AtCoder } from "../svgs/atcoder";
 import { CSES } from "../svgs/cses";
 import { GeeksForGeeks } from "../svgs/geeksforgeeks";
 import { TopCoder } from "../svgs/topcoder";
-import { Plus } from "lucide-react";
+import { ArrowUpRightIcon } from "lucide-react";
 import { HighlightText } from "@/components/ui/highlight-text";
+import {
+  Announcement,
+  AnnouncementTag,
+  AnnouncementTitle,
+} from "@/components/kibo-ui/announcement";
 
 export default function HeroSection() {
   const router = useRouter();
@@ -50,15 +55,23 @@ export default function HeroSection() {
           <div className="relative z-10 pt-28 pb-16 sm:pt-36 sm:pb-20 md:pt-40 md:pb-24">
             {/* 1. Centered Header: Announcement Badge, Title, Description & CTA */}
             <div className="mx-auto max-w-4xl px-6 text-center">
-              {/* Top Announcement Badge: Thin, delicate orangish-white background with warm dotted border */}
-              <div className="flex justify-center mb-6 sm:mb-8">
+              {/* Top Announcement Badges */}
+              <div className="flex flex-col items-center justify-center gap-2 sm:gap-2.5 mb-6 sm:mb-8">
+                <Announcement href="/dashboard/discussions">
+                  <AnnouncementTag>Latest update</AnnouncementTag>
+                  <AnnouncementTitle>
+                    Discussions are now live!
+                    <ArrowUpRightIcon className="shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" size={14} />
+                  </AnnouncementTitle>
+                </Announcement>
+
                 <a
                   href="https://x.com/RiteshS18572143"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border-[1.5px] border-dotted border-orange-300/90 hover:border-orange-500 bg-[#fffaf3] hover:bg-[#fff4e6] text-zinc-900 transition-all shadow-xs group"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-orange-300/80 hover:border-orange-500 bg-[#fffaf3] dark:bg-orange-950/20 hover:bg-[#fff4e6] text-zinc-900 dark:text-zinc-100 transition-all shadow-2xs group text-xs"
                 >
-                  <span className="text-zinc-600 group-hover:text-zinc-900 text-[11.5px] sm:text-[12px] font-normal transition-colors leading-none">
+                  <span className="text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200 text-[11px] font-normal transition-colors leading-none">
                     Advertise with
                   </span>
                   <Image
@@ -66,10 +79,10 @@ export default function HeroSection() {
                     alt="Ritesh Singh"
                     width={16}
                     height={16}
-                    className="size-4 rounded-full object-cover border border-orange-200 shrink-0"
+                    className="size-3.5 rounded-full object-cover border border-orange-200 shrink-0"
                   />
-                  <span className="text-zinc-950 group-hover:text-orange-950 text-[11.5px] sm:text-[12px] font-medium transition-colors leading-none">
-                    Algoryn in Low Budget
+                  <span className="text-zinc-950 dark:text-zinc-100 group-hover:text-orange-950 dark:group-hover:text-orange-300 text-[11px] font-medium transition-colors leading-none">
+                    Algoryn
                   </span>
                 </a>
               </div>
