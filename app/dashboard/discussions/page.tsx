@@ -474,7 +474,76 @@ function renderInlineMarkdown(text: string): React.ReactNode {
   });
 }
 
+function htmlToMarkdown(html: string): string {
+  if (!html) return "";
+  if (typeof window === "undefined") return html;
 
+  const div = document.createElement("div");
+  div.innerHTML = html;
+
+  function traverse(node: Node): string {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent || "";
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return "";
+    }
+
+    const el = node as HTMLElement;
+    const tag = el.tagName.toLowerCase();
+    const children = Array.from(el.childNodes).map(traverse).join("");
+
+    switch (tag) {
+      case "b":
+      case "strong":
+        return children.trim() ? `**${children.trim()}**` : "";
+      case "i":
+      case "em":
+        return children.trim() ? `*${children.trim()}*` : "";
+      case "u":
+        return children.trim() ? `<u>${children.trim()}</u>` : "";
+      case "s":
+      case "strike":
+      case "del":
+        return children.trim() ? `~~${children.trim()}~~` : "";
+      case "h1":
+        return `\n# ${children.trim()}\n`;
+      case "h2":
+        return `\n## ${children.trim()}\n`;
+      case "h3":
+        return `\n### ${children.trim()}\n`;
+      case "blockquote":
+        return `\n> ${children.trim()}\n`;
+      case "ul":
+        return `\n${children.trim()}\n`;
+      case "ol":
+        return `\n${children.trim()}\n`;
+      case "li":
+        return `- ${children.trim()}\n`;
+      case "code":
+        if (el.parentElement?.tagName.toLowerCase() === "pre") {
+          return children;
+        }
+        return `\`${children.trim()}\``;
+      case "pre":
+        return `\n\`\`\`ts\n${children.trim()}\n\`\`\`\n`;
+      case "a": {
+        const href = el.getAttribute("href") || "#";
+        return `[${children.trim()}](${href})`;
+      }
+      case "br":
+        return "\n";
+      case "div":
+      case "p":
+        return children ? `\n${children}` : "";
+      default:
+        return children;
+    }
+  }
+
+  const result = Array.from(div.childNodes).map(traverse).join("").trim();
+  return result.replace(/\n{3,}/g, "\n\n");
+}
 
 type FormatAction =
   | "bold"
@@ -1528,7 +1597,30 @@ export default function DiscussionsPage() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showFab, setShowFab] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [activeStyles, setActiveStyles] = useState<{ bold?: boolean; italic?: boolean; underline?: boolean; strike?: boolean }>({});
+
+  const updateActiveStyles = () => {
+    if (typeof document !== "undefined") {
+      setActiveStyles({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+        strike: document.queryCommandState("strikeThrough"),
+      });
+    }
+  };
+
+  const handleEditorInput = () => {
+    if (!editorRef.current) return;
+    const html = editorRef.current.innerHTML;
+    if (!editorRef.current.textContent?.trim() && !html.includes("<img")) {
+      setComposerContent("");
+    } else {
+      setComposerContent(htmlToMarkdown(html));
+    }
+    updateActiveStyles();
+  };
 
   // Scroll listener to only show mobile FAB when scrolled past the top composer
   useEffect(() => {
@@ -1539,11 +1631,74 @@ export default function DiscussionsPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Apply Markdown formatting (Bold, Italic, Code, List, Quote, etc.)
+  // Visual WYSIWYG Rich Text formatting (no raw stars or asterisks)
   const handleFormat = (type: FormatAction) => {
     setIsExpanded(true);
     setComposerTab("write");
-    applyMarkdownFormat(textareaRef.current, composerContent, setComposerContent, type);
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+
+    switch (type) {
+      case "bold":
+        document.execCommand("bold", false);
+        break;
+      case "italic":
+        document.execCommand("italic", false);
+        break;
+      case "underline":
+        document.execCommand("underline", false);
+        break;
+      case "strikethrough":
+        document.execCommand("strikeThrough", false);
+        break;
+      case "h1":
+        document.execCommand("formatBlock", false, "<h2>");
+        break;
+      case "h2":
+        document.execCommand("formatBlock", false, "<h3>");
+        break;
+      case "quote":
+        document.execCommand("formatBlock", false, "<blockquote>");
+        break;
+      case "list":
+        document.execCommand("insertUnorderedList", false);
+        break;
+      case "listordered":
+        document.execCommand("insertOrderedList", false);
+        break;
+      case "code": {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const codeEl = document.createElement("code");
+          codeEl.textContent = range.toString() || "code";
+          range.deleteContents();
+          range.insertNode(codeEl);
+        }
+        break;
+      }
+      case "codeblock": {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const preEl = document.createElement("pre");
+          const codeEl = document.createElement("code");
+          codeEl.textContent = range.toString() || "// write code here";
+          preEl.appendChild(codeEl);
+          range.deleteContents();
+          range.insertNode(preEl);
+        }
+        break;
+      }
+      case "link": {
+        const url = window.prompt("Enter link URL (e.g. https://example.com):", "https://");
+        if (url) {
+          document.execCommand("createLink", false, url);
+        }
+        break;
+      }
+    }
+    handleEditorInput();
   };
 
   // Fetch discussions feed from DB (for manual refresh / mutation)
@@ -1745,6 +1900,7 @@ export default function DiscussionsPage() {
         setComposerTitle("");
         setComposerTags("");
         setComposerImages([]);
+        if (editorRef.current) editorRef.current.innerHTML = "";
         setIsExpanded(false);
         // Refresh feed & sidebar
         fetchPosts();
@@ -1777,7 +1933,7 @@ export default function DiscussionsPage() {
               <div
                 onClick={() => {
                   setIsExpanded(true);
-                  setTimeout(() => textareaRef.current?.focus(), 50);
+                  setTimeout(() => editorRef.current?.focus(), 50);
                 }}
                 className="flex items-center gap-2.5 sm:gap-3 p-3 sm:p-3.5 bg-card border border-border/80 rounded-xl sm:rounded-2xl shadow-2xs cursor-pointer hover:border-blue-500/40 hover:bg-muted/25 transition-all group select-none"
               >
@@ -1851,17 +2007,27 @@ export default function DiscussionsPage() {
 
                 {/* Write vs Preview Mode */}
                 {composerTab === "write" ? (
-                  <textarea
-                    ref={textareaRef}
-                    placeholder="What are you working on or want to share? (Markdown supported)"
-                    value={composerContent}
-                    onChange={(e) => setComposerContent(e.target.value)}
-                    onKeyDown={(e) =>
-                      handleMarkdownKeyDown(e, textareaRef.current, composerContent, setComposerContent)
-                    }
-                    rows={4}
-                    className="w-full bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none leading-relaxed"
-                  />
+                  <div className="relative min-h-[95px] py-1">
+                    {!composerContent.trim() && (
+                      <div
+                        onClick={() => editorRef.current?.focus()}
+                        className="absolute top-1 left-0 text-xs sm:text-sm text-muted-foreground/60 pointer-events-none select-none"
+                      >
+                        What are you working on or want to share?
+                      </div>
+                    )}
+                    <div
+                      ref={editorRef}
+                      contentEditable
+                      suppressContentEditableWarning
+                      role="textbox"
+                      aria-multiline="true"
+                      onInput={handleEditorInput}
+                      onKeyUp={updateActiveStyles}
+                      onMouseUp={updateActiveStyles}
+                      className="w-full min-h-[95px] max-h-[320px] overflow-y-auto bg-transparent text-xs sm:text-sm text-foreground focus:outline-none leading-relaxed select-text [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&_s]:line-through [&_del]:line-through [&_h2]:text-base [&_h2]:font-bold [&_h2]:my-1.5 [&_h3]:text-sm [&_h3]:font-bold [&_h3]:my-1 [&_blockquote]:border-l-2 [&_blockquote]:border-blue-500 [&_blockquote]:pl-2.5 [&_blockquote]:italic [&_blockquote]:my-1 [&_ul]:list-disc [&_ul]:list-inside [&_ol]:list-decimal [&_ol]:list-inside [&_code]:bg-muted/80 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-xs [&_code]:text-blue-500 [&_a]:text-blue-600 [&_a]:underline"
+                    />
+                  </div>
                 ) : (
                   <div className="min-h-[80px] p-3 rounded-xl bg-muted/30 border border-border/40 text-xs sm:text-sm">
                     {composerContent.trim() ? (
@@ -1991,33 +2157,61 @@ export default function DiscussionsPage() {
 
                     <button
                       type="button"
-                      onClick={() => handleFormat("bold")}
-                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer font-bold text-xs shrink-0"
-                      title="Bold (**text**, Ctrl+B)"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleFormat("bold");
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer font-bold text-xs shrink-0 ${
+                        activeStyles.bold
+                          ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 font-extrabold shadow-2xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                      }`}
+                      title="Bold (Ctrl+B)"
                     >
                       <Bold className="size-3.5" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleFormat("italic")}
-                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                      title="Italic (*text*, Ctrl+I)"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleFormat("italic");
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer text-xs shrink-0 ${
+                        activeStyles.italic
+                          ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold shadow-2xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                      }`}
+                      title="Italic (Ctrl+I)"
                     >
                       <Italic className="size-3.5" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleFormat("underline")}
-                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                      title="Underline (<u>text</u>, Ctrl+U)"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleFormat("underline");
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer text-xs shrink-0 ${
+                        activeStyles.underline
+                          ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold shadow-2xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                      }`}
+                      title="Underline (Ctrl+U)"
                     >
                       <Underline className="size-3.5" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleFormat("strikethrough")}
-                      className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors cursor-pointer text-xs shrink-0"
-                      title="Strikethrough (~~text~~)"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleFormat("strikethrough");
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer text-xs shrink-0 ${
+                        activeStyles.strike
+                          ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold shadow-2xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                      }`}
+                      title="Strikethrough"
                     >
                       <Strikethrough className="size-3.5" />
                     </button>
@@ -2128,6 +2322,8 @@ export default function DiscussionsPage() {
                         onClick={() => {
                           setIsExpanded(false);
                           setComposerTab("write");
+                          if (editorRef.current) editorRef.current.innerHTML = "";
+                          setComposerContent("");
                         }}
                         className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors cursor-pointer"
                       >
@@ -2278,7 +2474,7 @@ export default function DiscussionsPage() {
             window.scrollTo({ top: 0, behavior: "smooth" });
             setIsExpanded(true);
             setTimeout(() => {
-              textareaRef.current?.focus();
+              editorRef.current?.focus();
             }, 300);
           }}
           className="lg:hidden fixed bottom-6 right-5 z-40 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3.5 rounded-full shadow-xl shadow-blue-500/35 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer animate-in fade-in zoom-in duration-200"
