@@ -835,10 +835,6 @@ function DiscussionsSidebarWidgets({
                           <MessageCircle className="size-3" />
                           {item.comments}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Eye className="size-3" />
-                          {formatNumber(item.views)}
-                        </span>
                       </div>
                     </div>
                   </div>
