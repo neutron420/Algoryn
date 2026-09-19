@@ -437,9 +437,9 @@ function ExpandablePostContent({ content }: { content: string }) {
         <button
           type="button"
           onClick={() => setIsExpanded(true)}
-          className="text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground hover:underline transition-colors cursor-pointer mt-1 inline-flex items-center gap-0.5"
+          className="text-xs sm:text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline transition-colors cursor-pointer mt-0.5 inline-flex items-center gap-0.5"
         >
-          <span>...more</span>
+          <span>see more</span>
         </button>
       )}
 
@@ -454,6 +454,18 @@ function ExpandablePostContent({ content }: { content: string }) {
       )}
     </div>
   );
+}
+
+function parseTagsInput(input: string): string[] {
+  if (!input || !input.trim()) return [];
+  const rawParts = input.includes(",")
+    ? input.split(",")
+    : input.trim().split(/\s+/);
+
+  return rawParts
+    .flatMap((part) => part.trim().split(/\s+/))
+    .map((tag) => tag.trim().replace(/^#+/, ""))
+    .filter((tag) => tag.length > 0);
 }
 
 function cleanTrendingTitle(titleOrContent: string): string {
@@ -1907,10 +1919,7 @@ export default function DiscussionsPage() {
 
     try {
       setIsSubmitting(true);
-      const tagList = composerTags
-        .split(",")
-        .map((t) => t.trim().replace(/^#/, ""))
-        .filter(Boolean);
+      const tagList = parseTagsInput(composerTags);
 
       const resolvedImageUrl =
         composerImages.length === 1
@@ -2769,7 +2778,7 @@ function PostImageGallery({
 
   return (
     <div
-      className="relative rounded-2xl overflow-hidden my-3 border border-border/60 bg-black/5 dark:bg-black/40 shadow-2xs select-none group/slider"
+      className="relative rounded-2xl overflow-hidden my-3 border border-border/60 bg-black/95 dark:bg-black/90 shadow-2xs select-none group/slider"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -2788,7 +2797,7 @@ function PostImageGallery({
           <div
             key={idx}
             onClick={() => onImageClick(idx)}
-            className="w-full shrink-0 relative h-72 sm:h-[460px] flex items-center justify-center bg-black/[0.03] dark:bg-black/30 cursor-pointer overflow-hidden"
+            className="w-full shrink-0 relative aspect-[16/10] sm:aspect-[16/9] max-h-[460px] flex items-center justify-center bg-black/95 dark:bg-black/90 cursor-pointer overflow-hidden"
           >
             <img
               src={img}
@@ -3087,10 +3096,7 @@ function CommunityPostCard({
 
     try {
       setIsSavingEdit(true);
-      const tagList = editTags
-        .split(",")
-        .map((t) => t.trim().replace(/^#/, ""))
-        .filter(Boolean);
+      const tagList = parseTagsInput(editTags);
 
       const resolvedImageUrl =
         editImages.length === 1
@@ -3668,22 +3674,37 @@ function CommunityPostCard({
       {/* 2. Post Content (or Inline Editor when isEditing) */}
       {isEditing ? (
         <div className="space-y-3 pt-2 bg-muted/20 p-4 rounded-2xl border border-border/80">
-          <div className="flex items-center justify-between pb-1 border-b border-border/40">
+          <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
             <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              <Pencil className="size-3.5 text-blue-500" />
-              Edit Discussion Post
+              <Pencil className="size-3.5 text-blue-500 shrink-0" />
+              <span>Edit Discussion Post</span>
             </span>
-            <button
-              type="button"
-              onClick={() => {
-                setIsEditing(false);
-                setEditTitle(postData.title || "");
-                setEditContent(postData.content);
-              }}
-              className="p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
-            >
-              <X className="size-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={isSavingEdit || !editContent.trim()}
+                className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition-all shadow-xs cursor-pointer flex items-center gap-1 sm:hidden active:scale-95"
+              >
+                {isSavingEdit ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <span>Save</span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditTitle(postData.title || "");
+                  setEditContent(postData.content);
+                }}
+                className="p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
+                title="Cancel edit"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
           </div>
 
           <input
@@ -3821,9 +3842,9 @@ function CommunityPostCard({
 
           {/* Edit Post Photos Preview & Management (up to 10 photos) */}
           <div className="space-y-2 pt-1">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-foreground flex items-center gap-1.5">
-                <ImageIcon className="size-3.5 text-blue-500" />
+            <div className="flex items-center justify-between text-xs gap-2">
+              <span className="font-semibold text-foreground flex items-center gap-1.5 truncate">
+                <ImageIcon className="size-3.5 text-blue-500 shrink-0" />
                 <span>Attached Photos ({editImages.length}/10)</span>
               </span>
               {editImages.length < 10 && (
@@ -3831,9 +3852,9 @@ function CommunityPostCard({
                   type="button"
                   onClick={() => editFileInputRef.current?.click()}
                   disabled={isUploadingEditImages}
-                  className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
                 >
-                  <Plus className="size-3.5" />
+                  <Plus className="size-3.5 shrink-0" />
                   <span>Add Photo</span>
                 </button>
               )}
