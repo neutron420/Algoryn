@@ -3601,104 +3601,94 @@ function CommunityPostCard({
         </div>
       </div>
 
-      {/* 2. Post Content (or Inline Editor when isEditing) */}
+      {/* 2. Post Content (Direct In-Place Edit OR Normal View) */}
       {isEditing ? (
-        <div className="space-y-3 pt-2 bg-muted/20 p-3 sm:p-4 rounded-2xl border border-border/80">
-          <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
-            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              <Pencil className="size-3.5 text-blue-500 shrink-0" />
-              <span>Edit Discussion Post</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setIsEditing(false);
-                setEditTitle(postData.title || "");
-                setEditContent(postData.content);
-              }}
-              className="p-1.5 text-muted-foreground hover:text-foreground rounded cursor-pointer active:scale-95 transition-all"
-              title="Cancel edit"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-
+        <div className="space-y-3 pt-0.5">
+          {/* Direct In-place Title Input */}
           <input
             type="text"
             placeholder="Post Title (optional)..."
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
-            className="w-full bg-background border border-border/70 rounded-xl px-3 py-2 text-sm font-semibold text-foreground focus:outline-none focus:border-blue-500"
+            className="w-full bg-transparent border-b border-border/60 focus:border-blue-500 text-base font-bold text-foreground tracking-tight px-0 py-1 focus:outline-none transition-colors placeholder:text-muted-foreground/60"
           />
 
+          {/* Direct In-place Body Content Textarea */}
           <textarea
             ref={editTextareaRef}
-            rows={5}
+            rows={4}
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
             placeholder="What do you want to talk about?"
-            className="w-full bg-background border border-border/70 rounded-xl p-3 text-sm text-foreground focus:outline-none focus:border-blue-500 leading-relaxed resize-y"
+            className="w-full bg-transparent text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:outline-none border-b border-border/40 focus:border-blue-500 px-0 py-1 resize-y min-h-[90px] transition-colors"
           />
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <select
-              value={editCategory}
-              onChange={(e) => setEditCategory(e.target.value)}
-              className="w-full sm:w-auto text-xs bg-background border border-border/60 text-foreground rounded-lg px-2.5 py-2 sm:py-1.5 focus:outline-none cursor-pointer font-medium shrink-0"
-            >
-              <option value="Discussion">Discussion</option>
-              <option value="Study Guide">Study Guide</option>
-              <option value="Interview Experience">Interview Experience</option>
-              <option value="Events">Events</option>
-              <option value="System Design">System Design</option>
-              <option value="DSA Tips">DSA Tips</option>
-              <option value="Career">Career</option>
-              <option value="Showcase">Showcase</option>
-            </select>
-
-            <input
-              type="text"
-              placeholder="Tags (comma separated: React, AWS, Leetcode)..."
-              value={editTags}
-              onChange={(e) => setEditTags(e.target.value)}
-              className="flex-1 bg-background border border-border/60 text-foreground rounded-lg px-2.5 py-2 sm:py-1.5 text-xs focus:outline-none min-w-0"
-            />
-          </div>
-
-          {/* Edit Post Photos Preview & Management (up to 10 photos) */}
-          <div className="space-y-2 pt-1">
-            <div className="flex items-center justify-between text-xs gap-2">
-              <span className="font-semibold text-foreground flex items-center gap-1.5 truncate">
-                <ImageIcon className="size-3.5 text-blue-500 shrink-0" />
-                <span>Attached Photos ({editImages.length}/10)</span>
-              </span>
-              {editImages.length < 10 && (
-                <button
-                  type="button"
-                  onClick={() => editFileInputRef.current?.click()}
-                  disabled={isUploadingEditImages}
-                  className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
-                >
-                  <Plus className="size-3.5 shrink-0" />
-                  <span>Add Photo</span>
-                </button>
-              )}
+          {/* Direct In-place Category & Tags Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-0.5">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+              <span className="font-medium text-muted-foreground">Category:</span>
+              <select
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+                className="text-xs bg-muted/60 hover:bg-muted border border-border/60 text-foreground rounded-lg px-2.5 py-1.5 focus:outline-none cursor-pointer font-medium"
+              >
+                <option value="Discussion">Discussion</option>
+                <option value="Study Guide">Study Guide</option>
+                <option value="Interview Experience">Interview Experience</option>
+                <option value="Events">Events</option>
+                <option value="System Design">System Design</option>
+                <option value="DSA Tips">DSA Tips</option>
+                <option value="Career">Career</option>
+                <option value="Showcase">Showcase</option>
+              </select>
             </div>
 
-            <input
-              ref={editFileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleEditImagesSelect}
-              className="hidden"
-            />
+            <div className="flex-1 flex items-center gap-1.5 min-w-0">
+              <span className="text-xs font-medium text-muted-foreground shrink-0">Tags:</span>
+              <input
+                type="text"
+                placeholder="React, Nextjs, System Design..."
+                value={editTags}
+                onChange={(e) => setEditTags(e.target.value)}
+                className="flex-1 bg-muted/40 border border-border/60 text-foreground rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-blue-500 min-w-0 placeholder:text-muted-foreground/60"
+              />
+            </div>
+          </div>
 
-            {/* Thumbnails of attached images with Cross Button to remove */}
-            {editImages.length > 0 ? (
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 p-2 rounded-xl bg-background border border-border/70">
+          {/* Hidden File Input for Image Upload */}
+          <input
+            ref={editFileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleEditImagesSelect}
+            className="hidden"
+          />
+
+          {/* Direct In-place Attached Photos Grid with instant delete X button */}
+          {editImages.length > 0 && (
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="font-medium text-foreground flex items-center gap-1.5">
+                  <ImageIcon className="size-3.5 text-blue-500" />
+                  <span>Photos ({editImages.length}/10)</span>
+                </span>
+                {editImages.length < 10 && (
+                  <button
+                    type="button"
+                    onClick={() => editFileInputRef.current?.click()}
+                    disabled={isUploadingEditImages}
+                    className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  >
+                    <Plus className="size-3.5" />
+                    <span>Add photo</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-0.5">
                 {editImages.map((imgUrl, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-border/60 group bg-muted/30">
+                  <div key={idx} className="relative aspect-video sm:aspect-square rounded-xl overflow-hidden border border-border/70 group bg-muted/20">
                     <img
                       src={imgUrl}
                       alt={`Photo ${idx + 1}`}
@@ -3709,19 +3699,19 @@ function CommunityPostCard({
                       className="size-full object-cover cursor-pointer hover:scale-105 transition-transform"
                       title="Click to view full photo"
                     />
-                    {/* Cross Button to delete this image from post */}
+                    {/* Delete Photo X Button */}
                     <button
                       type="button"
                       onClick={() => handleRemoveEditImage(idx)}
-                      className="absolute top-1 right-1 size-5 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-90"
+                      className="absolute top-1.5 right-1.5 size-6 rounded-full bg-black/75 hover:bg-red-600 text-white flex items-center justify-center transition-colors cursor-pointer shadow-md active:scale-90"
                       title="Remove photo"
                       aria-label="Remove photo"
                     >
-                      <X className="size-3" />
+                      <X className="size-3.5" />
                     </button>
-                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-white font-medium">
+                    <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-white font-medium">
                       {idx + 1}
-                    </div>
+                    </span>
                   </div>
                 ))}
                 {editImages.length < 10 && (
@@ -3729,7 +3719,7 @@ function CommunityPostCard({
                     type="button"
                     onClick={() => editFileInputRef.current?.click()}
                     disabled={isUploadingEditImages}
-                    className="aspect-square rounded-lg border-2 border-dashed border-border/80 hover:border-blue-500/60 bg-muted/20 hover:bg-muted/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
+                    className="aspect-video sm:aspect-square rounded-xl border-2 border-dashed border-border/80 hover:border-blue-500/60 bg-muted/20 hover:bg-muted/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
                     title="Add another photo"
                   >
                     {isUploadingEditImages ? (
@@ -3737,46 +3727,65 @@ function CommunityPostCard({
                     ) : (
                       <>
                         <Plus className="size-4 text-blue-500" />
-                        <span className="text-[10px] font-semibold">Add</span>
+                        <span className="text-[10px] font-semibold">Add Photo</span>
                       </>
                     )}
                   </button>
                 )}
               </div>
-            ) : (
-              <div
-                onClick={() => editFileInputRef.current?.click()}
-                className="p-3 rounded-xl border border-dashed border-border/70 hover:border-blue-500/50 bg-muted/20 hover:bg-muted/40 text-center cursor-pointer transition-all flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <ImageIcon className="size-4 text-blue-500" />
-                <span>No photos attached. Click to add photos (up to 10)</span>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="text-xs font-medium px-4 py-1.5 rounded-full border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveEdit}
-              disabled={isSavingEdit || !editContent.trim()}
-              className="text-xs font-semibold px-5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition-all shadow-xs cursor-pointer flex items-center gap-1.5 active:scale-95"
-            >
-              {isSavingEdit ? (
-                <>
-                  <Loader2 className="size-3 animate-spin" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <span>Save Changes</span>
+          {/* In-place Edit Action Controls */}
+          <div className="flex items-center justify-between pt-2 border-t border-border/40">
+            <div className="flex items-center gap-1.5">
+              {editImages.length < 10 && (
+                <button
+                  type="button"
+                  onClick={() => editFileInputRef.current?.click()}
+                  disabled={isUploadingEditImages}
+                  className="px-2.5 py-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5 text-xs font-medium active:scale-95"
+                  title="Add photos"
+                >
+                  {isUploadingEditImages ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <ImageIcon className="size-4" />
+                  )}
+                  <span>{editImages.length === 0 ? "Add Photo" : "Add More"}</span>
+                </button>
               )}
-            </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditTitle(postData.title || "");
+                  setEditContent(postData.content);
+                  setEditImages(getPostImages(postData));
+                }}
+                className="text-xs font-medium px-4 py-1.5 rounded-full border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={isSavingEdit || !editContent.trim()}
+                className="text-xs font-semibold px-5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition-all shadow-xs cursor-pointer flex items-center gap-1.5 active:scale-95"
+              >
+                {isSavingEdit ? (
+                  <>
+                    <Loader2 className="size-3 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <span>Save Changes</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       ) : (
@@ -3818,8 +3827,9 @@ function CommunityPostCard({
         </>
       )}
 
-      {/* 6. Actions Bar (Reply, Like with GSAP, Bookmark, Share) */}
-      <div className="flex items-center justify-between w-full pt-2 border-t border-border/40 text-muted-foreground">
+      {/* 6. Actions Bar (Reply, Like with GSAP, Bookmark, Share) - Only when NOT editing */}
+      {!isEditing && (
+        <div className="flex items-center justify-between w-full pt-2 border-t border-border/40 text-muted-foreground">
         {/* Reply / Comment */}
         <button
           onClick={handleToggleComments}
@@ -3914,6 +3924,7 @@ function CommunityPostCard({
           </button>
         </div>
       </div>
+      )}
 
       {/* ======================================================== */}
       {/* 7. THREADED COMMENTS SECTION                             */}
