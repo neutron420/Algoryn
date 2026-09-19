@@ -608,127 +608,6 @@ function htmlToMarkdown(html: string): string {
   return result.replace(/\n{3,}/g, "\n\n");
 }
 
-type FormatAction =
-  | "bold"
-  | "italic"
-  | "underline"
-  | "strikethrough"
-  | "code"
-  | "codeblock"
-  | "h1"
-  | "h2"
-  | "list"
-  | "listordered"
-  | "quote"
-  | "link";
-
-function applyMarkdownFormat(
-  textarea: HTMLTextAreaElement | null,
-  content: string,
-  setContent: (val: string) => void,
-  type: FormatAction
-) {
-  if (!textarea) return;
-
-  const start = textarea.selectionStart ?? content.length;
-  const end = textarea.selectionEnd ?? content.length;
-  const selected = content.substring(start, end);
-
-  let replacement = "";
-  let newCursorPos = start;
-
-  switch (type) {
-    case "bold":
-      replacement = selected ? `**${selected}**` : "**bold text**";
-      newCursorPos = selected ? end + 4 : start + 2;
-      break;
-    case "italic":
-      replacement = selected ? `*${selected}*` : "*italic text*";
-      newCursorPos = selected ? end + 2 : start + 1;
-      break;
-    case "underline":
-      replacement = selected ? `<u>${selected}</u>` : "<u>underlined text</u>";
-      newCursorPos = selected ? end + 7 : start + 3;
-      break;
-    case "strikethrough":
-      replacement = selected ? `~~${selected}~~` : "~~strikethrough~~";
-      newCursorPos = selected ? end + 4 : start + 2;
-      break;
-    case "code":
-      replacement = selected ? `\`${selected}\`` : "`code`";
-      newCursorPos = selected ? end + 2 : start + 1;
-      break;
-    case "codeblock":
-      if (selected.includes("\n")) {
-        replacement = `\`\`\`ts\n${selected}\n\`\`\``;
-        newCursorPos = end + 10;
-      } else {
-        replacement = selected ? `\`\`\`ts\n${selected}\n\`\`\`` : "\n```ts\n// write code here\n```\n";
-        newCursorPos = start + replacement.length;
-      }
-      break;
-    case "h1":
-      replacement = selected ? `\n# ${selected}\n` : "\n# Heading\n";
-      newCursorPos = start + replacement.length;
-      break;
-    case "h2":
-      replacement = selected ? `\n## ${selected}\n` : "\n## Subheading\n";
-      newCursorPos = start + replacement.length;
-      break;
-    case "list":
-      replacement = selected ? `\n- ${selected.split("\n").join("\n- ")}` : "\n- List item";
-      newCursorPos = start + replacement.length;
-      break;
-    case "listordered":
-      replacement = selected ? `\n1. ${selected.split("\n").join("\n1. ")}` : "\n1. Numbered item";
-      newCursorPos = start + replacement.length;
-      break;
-    case "quote":
-      replacement = selected ? `\n> ${selected}` : "\n> Quote";
-      newCursorPos = start + replacement.length;
-      break;
-    case "link":
-      replacement = selected ? `[${selected}](https://)` : "[Link Title](https://example.com)";
-      newCursorPos = selected ? end + 11 : start + 12;
-      break;
-  }
-
-  const updated = content.substring(0, start) + replacement + content.substring(end);
-  setContent(updated);
-
-  setTimeout(() => {
-    textarea.focus();
-    textarea.setSelectionRange(newCursorPos, newCursorPos);
-  }, 10);
-}
-
-function handleMarkdownKeyDown(
-  e: React.KeyboardEvent<HTMLTextAreaElement>,
-  textarea: HTMLTextAreaElement | null,
-  content: string,
-  setContent: (val: string) => void
-) {
-  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
-    const key = e.key.toLowerCase();
-    if (key === "b") {
-      e.preventDefault();
-      applyMarkdownFormat(textarea, content, setContent, "bold");
-    } else if (key === "i") {
-      e.preventDefault();
-      applyMarkdownFormat(textarea, content, setContent, "italic");
-    } else if (key === "u") {
-      e.preventDefault();
-      applyMarkdownFormat(textarea, content, setContent, "underline");
-    } else if (key === "k") {
-      e.preventDefault();
-      applyMarkdownFormat(textarea, content, setContent, "link");
-    } else if (key === "e") {
-      e.preventDefault();
-      applyMarkdownFormat(textarea, content, setContent, "code");
-    }
-  }
-}
-
 /* ------------------------------------------------------------------ */
 /* Dynamic Sidebar Widgets Component (Used in Desktop & Mobile Drawer) */
 /* ------------------------------------------------------------------ */
@@ -1689,6 +1568,20 @@ export default function DiscussionsPage() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+type FormatAction =
+  | "bold"
+  | "italic"
+  | "underline"
+  | "strikethrough"
+  | "code"
+  | "codeblock"
+  | "h1"
+  | "h2"
+  | "list"
+  | "listordered"
+  | "quote"
+  | "link";
 
   // Visual WYSIWYG Rich Text formatting (no raw stars or asterisks)
   const handleFormat = (type: FormatAction) => {
