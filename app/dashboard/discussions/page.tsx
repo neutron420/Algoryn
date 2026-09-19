@@ -2996,7 +2996,6 @@ function CommunityPostCard({
   const [editContent, setEditContent] = useState(post.content);
   const [editCategory, setEditCategory] = useState(post.category);
   const [editTags, setEditTags] = useState(post.tags?.join(", ") || "");
-  const [editTab, setEditTab] = useState<"write" | "preview">("write");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -3142,21 +3141,10 @@ function CommunityPostCard({
     }
   };
 
-  const handleEditFormat = (type: FormatAction) => {
-    setEditTab("write");
-    applyMarkdownFormat(editTextareaRef.current, editContent, setEditContent, type);
-  };
-
   // New root comment input
   const [newCommentText, setNewCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [commentTab, setCommentTab] = useState<"write" | "preview">("write");
   const commentTextareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handleCommentFormat = (type: FormatAction) => {
-    setCommentTab("write");
-    applyMarkdownFormat(commentTextareaRef.current, newCommentText, setNewCommentText, type);
-  };
 
   // Active reply to comment ID
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
@@ -3679,141 +3667,36 @@ function CommunityPostCard({
               <Pencil className="size-3.5 text-blue-500 shrink-0" />
               <span>Edit Discussion Post</span>
             </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleSaveEdit}
-                disabled={isSavingEdit || !editContent.trim()}
-                className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition-all shadow-xs cursor-pointer flex items-center gap-1 sm:hidden active:scale-95"
-              >
-                {isSavingEdit ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : (
-                  <span>Save</span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditTitle(postData.title || "");
-                  setEditContent(postData.content);
-                }}
-                className="p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
-                title="Cancel edit"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditing(false);
+                setEditTitle(postData.title || "");
+                setEditContent(postData.content);
+              }}
+              className="p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
+              title="Cancel edit"
+            >
+              <X className="size-4" />
+            </button>
           </div>
 
           <input
             type="text"
-            placeholder="Post Title..."
+            placeholder="Post Title (optional)..."
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
             className="w-full bg-background border border-border/70 rounded-xl px-3 py-2 text-sm font-semibold text-foreground focus:outline-none focus:border-blue-500"
           />
 
-          {/* Edit Tabs (Write / Preview) */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar py-0.5 max-w-full">
-              <button
-                type="button"
-                onClick={() => handleEditFormat("bold")}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
-                title="Bold (Ctrl+B)"
-              >
-                <Bold className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleEditFormat("italic")}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
-                title="Italic (Ctrl+I)"
-              >
-                <Italic className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleEditFormat("underline")}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
-                title="Underline (Ctrl+U)"
-              >
-                <Underline className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleEditFormat("code")}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded font-mono transition-colors cursor-pointer shrink-0"
-                title="Code (Ctrl+E)"
-              >
-                <Code className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleEditFormat("list")}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
-                title="List"
-              >
-                <List className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleEditFormat("quote")}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
-                title="Quote"
-              >
-                <Quote className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleEditFormat("link")}
-                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer shrink-0"
-                title="Link (Ctrl+K)"
-              >
-                <Link2 className="size-3.5" />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-end bg-muted/60 p-0.5 rounded-lg border border-border/40 shrink-0 self-start sm:self-auto">
-              <button
-                type="button"
-                onClick={() => setEditTab("write")}
-                className={`text-xs px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                  editTab === "write" ? "bg-background text-foreground font-semibold shadow-2xs" : "text-muted-foreground"
-                }`}
-              >
-                Write
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditTab("preview")}
-                className={`text-xs px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                  editTab === "preview" ? "bg-background text-foreground font-semibold shadow-2xs" : "text-muted-foreground"
-                }`}
-              >
-                Preview
-              </button>
-            </div>
-          </div>
-
-          {editTab === "write" ? (
-            <textarea
-              ref={editTextareaRef}
-              rows={4}
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              onKeyDown={(e) =>
-                handleMarkdownKeyDown(e, editTextareaRef.current, editContent, setEditContent)
-              }
-              className="w-full bg-background border border-border/70 rounded-xl p-3 text-sm text-foreground focus:outline-none focus:border-blue-500 leading-relaxed resize-y"
-            />
-          ) : (
-            <div className="min-h-[100px] p-3 rounded-xl bg-background border border-border/70 text-sm">
-              <MarkdownViewer content={editContent || "*Nothing to preview*"} />
-            </div>
-          )}
+          <textarea
+            ref={editTextareaRef}
+            rows={5}
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            placeholder="What do you want to talk about?"
+            className="w-full bg-background border border-border/70 rounded-xl p-3 text-sm text-foreground focus:outline-none focus:border-blue-500 leading-relaxed resize-y"
+          />
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <select
@@ -4104,116 +3987,42 @@ function CommunityPostCard({
               size={36}
             />
 
-            <div className="flex-1 bg-muted/40 border border-border/70 rounded-2xl p-3 focus-within:border-blue-500/50 transition-all space-y-2">
-              {/* Write vs Preview for Comment */}
-              {commentTab === "write" ? (
-                <textarea
-                  ref={commentTextareaRef}
-                  placeholder="Share your mind... (supports **bold**, *italic*, `code`...)"
-                  value={newCommentText}
-                  onChange={(e) => setNewCommentText(e.target.value)}
-                  onKeyDown={(e) =>
-                    handleMarkdownKeyDown(e, commentTextareaRef.current, newCommentText, setNewCommentText)
-                  }
-                  rows={2}
-                  className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none leading-relaxed"
-                />
-              ) : (
-                <div className="min-h-[50px] p-2.5 rounded-xl bg-background/50 border border-border/40 text-xs sm:text-sm">
-                  {newCommentText.trim() ? (
-                    <MarkdownViewer content={newCommentText} />
+            <div className="flex-1 bg-muted/40 border border-border/70 rounded-2xl p-3 focus-within:border-blue-500/50 transition-all space-y-2.5">
+              <textarea
+                ref={commentTextareaRef}
+                placeholder="Add a comment..."
+                value={newCommentText}
+                onChange={(e) => setNewCommentText(e.target.value)}
+                rows={2}
+                className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none leading-relaxed"
+              />
+
+              <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/30">
+                {newCommentText.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => setNewCommentText("")}
+                    className="text-xs text-muted-foreground hover:text-foreground font-medium px-3 py-1 rounded-full hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleAddComment}
+                  disabled={isSubmittingComment || !newCommentText.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold px-5 py-1.5 rounded-full transition-all shadow-xs cursor-pointer flex items-center gap-1 active:scale-95"
+                >
+                  {isSubmittingComment ? (
+                    <>
+                      <Loader2 className="size-3 animate-spin" />
+                      <span>Posting...</span>
+                    </>
                   ) : (
-                    <p className="text-xs text-muted-foreground italic">Nothing to preview yet.</p>
+                    <span>Comment</span>
                   )}
-                </div>
-              )}
-
-              {/* Formatting Toolbar & Comment Post Button */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t border-border/40">
-                <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar py-0.5 max-w-full">
-                  <button
-                    type="button"
-                    onClick={() => handleCommentFormat("bold")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded transition-colors cursor-pointer shrink-0"
-                    title="Bold (**text**, Ctrl+B)"
-                  >
-                    <Bold className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCommentFormat("italic")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded transition-colors cursor-pointer shrink-0"
-                    title="Italic (*text*, Ctrl+I)"
-                  >
-                    <Italic className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCommentFormat("underline")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded transition-colors cursor-pointer shrink-0"
-                    title="Underline (<u>text</u>, Ctrl+U)"
-                  >
-                    <Underline className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCommentFormat("code")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded transition-colors cursor-pointer font-mono shrink-0"
-                    title="Code (`code`, Ctrl+E)"
-                  >
-                    <Code className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCommentFormat("quote")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded transition-colors cursor-pointer shrink-0"
-                    title="Quote (> text)"
-                  >
-                    <Quote className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCommentFormat("list")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded transition-colors cursor-pointer shrink-0"
-                    title="Bullet List (- item)"
-                  >
-                    <List className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCommentFormat("link")}
-                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded transition-colors cursor-pointer shrink-0"
-                    title="Link ([title](url), Ctrl+K)"
-                  >
-                    <Link2 className="size-3.5" />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-0.5 sm:pt-0">
-                  <button
-                    type="button"
-                    onClick={() => setCommentTab((t) => (t === "write" ? "preview" : "write"))}
-                    className="text-xs text-muted-foreground hover:text-foreground font-medium px-2.5 py-1 rounded-md hover:bg-muted transition-colors cursor-pointer"
-                  >
-                    {commentTab === "write" ? "Preview" : "Write"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleAddComment}
-                    disabled={isSubmittingComment || !newCommentText.trim()}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold px-5 py-1.5 rounded-full transition-all shadow-xs cursor-pointer flex items-center gap-1 active:scale-95"
-                  >
-                    {isSubmittingComment ? (
-                      <>
-                        <Loader2 className="size-3 animate-spin" />
-                        <span>Posting...</span>
-                      </>
-                    ) : (
-                      <span>Post</span>
-                    )}
-                  </button>
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -4698,60 +4507,37 @@ function ThreadedCommentRow({
                 input.setSelectionRange(len, len);
               }
             }}
-            placeholder={`Reply to ${comment.author?.name || "user"}... (supports **bold**, *italic*, \`code\`...)`}
+            placeholder={`Reply to ${comment.author?.name || "user"}...`}
             value={replyText}
             onChange={(e) => onReplyTextChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && replyText.trim() && !isSubmittingReply) {
+                e.preventDefault();
+                onSubmitReply(comment.id);
+              }
+            }}
             className="w-full bg-transparent px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
-          <div className="flex items-center justify-between pt-1 border-t border-border/40">
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => onReplyTextChange(replyText ? `**${replyText}**` : "**bold**")}
-                className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
-                title="Bold"
-              >
-                <Bold className="size-3" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onReplyTextChange(replyText ? `*${replyText}*` : "*italic*")}
-                className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
-                title="Italic"
-              >
-                <Italic className="size-3" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onReplyTextChange(replyText ? `\`${replyText}\`` : "`code`")}
-                className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer font-mono"
-                title="Code"
-              >
-                <Code className="size-3" />
-              </button>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={onCancelReply}
-                className="p-1 text-muted-foreground hover:text-foreground rounded-lg cursor-pointer"
-                title="Cancel"
-              >
-                <X className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onSubmitReply(comment.id)}
-                disabled={isSubmittingReply || !replyText.trim()}
-                className="bg-blue-600 text-white text-xs font-semibold px-3.5 py-1 rounded-full disabled:opacity-50 hover:bg-blue-700 transition-all cursor-pointer flex items-center gap-1 active:scale-95"
-              >
-                {isSubmittingReply ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : (
-                  "Reply"
-                )}
-              </button>
-            </div>
+          <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-border/40">
+            <button
+              type="button"
+              onClick={onCancelReply}
+              className="text-xs text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => onSubmitReply(comment.id)}
+              disabled={isSubmittingReply || !replyText.trim()}
+              className="bg-blue-600 text-white text-xs font-semibold px-3.5 py-1 rounded-full disabled:opacity-50 hover:bg-blue-700 transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+            >
+              {isSubmittingReply ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                "Reply"
+              )}
+            </button>
           </div>
         </div>
       )}
