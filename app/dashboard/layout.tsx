@@ -1,4 +1,4 @@
-import { KodePrepSidebar } from "@/components/kodeprep-sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardNavbar } from "@/components/dashboard-navbar";
 import { AuthGuard } from "@/components/auth-guard";
@@ -84,10 +84,12 @@ export default async function DashboardLayout({
           } as React.CSSProperties
         }
       >
-        <KodePrepSidebar companies={sidebarCompanies} selectedCompanySlug="google" />
+        <AppSidebar companies={sidebarCompanies} selectedCompanySlug="google" />
         <SidebarInset>
           <DashboardNavbar companies={sidebarCompanies} />
-          {children}
+          <main className="flex-1 min-w-0">
+            {children}
+          </main>
         </SidebarInset>
       </SidebarProvider>
     </AuthGuard>

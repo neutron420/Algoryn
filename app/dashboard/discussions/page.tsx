@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import Image from "next/image";
+import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
 import {
   Heart,
   MessageCircle,
   Eye,
-  Share2,
   Bookmark,
   ImageIcon,
   ThumbsUp,
@@ -70,6 +71,7 @@ interface DiscussionPostItem {
   authorName: string;
   authorHandle: string;
   authorRole: string;
+  authorEmail?: string | null;
   avatarUrl?: string | null;
   title?: string | null;
   content: string;
@@ -401,6 +403,55 @@ function MarkdownViewer({ content, className = "" }: { content: string; classNam
           </React.Fragment>
         );
       })}
+    </div>
+  );
+}
+
+function ExpandablePostContent({ content }: { content: string }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [canExpand, setCanExpand] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const isLikelyLong = content.length > 220 || content.includes("\n\n") || content.includes("```");
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (el) {
+      const hasOverflow = el.scrollHeight > el.clientHeight + 4;
+      setCanExpand(hasOverflow);
+    }
+  }, [content, isExpanded]);
+
+  const showToggle = canExpand || isLikelyLong;
+
+  return (
+    <div className="relative">
+      <div
+        ref={containerRef}
+        className={!isExpanded ? "line-clamp-3 overflow-hidden" : ""}
+      >
+        <MarkdownViewer content={content} />
+      </div>
+
+      {!isExpanded && showToggle && (
+        <button
+          type="button"
+          onClick={() => setIsExpanded(true)}
+          className="text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground hover:underline transition-colors cursor-pointer mt-1 inline-flex items-center gap-0.5"
+        >
+          <span>...more</span>
+        </button>
+      )}
+
+      {isExpanded && showToggle && (
+        <button
+          type="button"
+          onClick={() => setIsExpanded(false)}
+          className="text-xs sm:text-sm font-semibold text-muted-foreground hover:text-foreground hover:underline transition-colors cursor-pointer mt-1.5 block"
+        >
+          <span>see less</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -2666,19 +2717,20 @@ function PostImageGallery({
 
   if (!images || images.length === 0) return null;
 
-  // Single Image: Display directly without slider controls
+  // Single Image: Display directly with full natural aspect ratio (no cut off or cropping)
   if (images.length === 1) {
     return (
       <div
         onClick={() => onImageClick(0)}
-        className="relative rounded-2xl overflow-hidden my-3 border border-border/60 max-h-[460px] w-full bg-muted/20 cursor-pointer group shadow-2xs"
+        className="relative rounded-2xl overflow-hidden my-3 border border-border/60 w-full max-h-[620px] sm:max-h-[700px] flex items-center justify-center bg-black/[0.02] dark:bg-black/30 cursor-pointer group shadow-2xs"
       >
         <img
           src={images[0]}
           alt="Post photo"
-          className="w-full object-cover max-h-[460px] transition-transform duration-300 group-hover:scale-[1.01]"
+          className="w-auto max-w-full h-auto max-h-[620px] sm:max-h-[700px] object-contain transition-transform duration-300 group-hover:scale-[1.008]"
+          loading="lazy"
         />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
       </div>
     );
   }
@@ -2736,12 +2788,13 @@ function PostImageGallery({
           <div
             key={idx}
             onClick={() => onImageClick(idx)}
-            className="w-full shrink-0 relative h-72 sm:h-[420px] flex items-center justify-center bg-muted/20 cursor-pointer overflow-hidden"
+            className="w-full shrink-0 relative h-72 sm:h-[460px] flex items-center justify-center bg-black/[0.03] dark:bg-black/30 cursor-pointer overflow-hidden"
           >
             <img
               src={img}
               alt={`Photo ${idx + 1}`}
-              className="size-full object-cover transition-transform duration-300 group-hover/slider:scale-[1.005]"
+              className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-300 group-hover/slider:scale-[1.01]"
+              loading="lazy"
             />
             <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors pointer-events-none" />
           </div>
@@ -2898,6 +2951,31 @@ function CommunityPostCard({
   const [comments, setComments] = useState<DiscussionCommentItem[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount);
+  // GSAP Animation Context
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { contextSafe } = useGSAP({ scope: containerRef });
+
+  const animateIcon = contextSafe((target: Element | null) => {
+    if (target) {
+      gsap.fromTo(
+        target,
+        { scale: 1 },
+        {
+          scale: 1.25,
+          duration: 0.12,
+          ease: "power2.out",
+          onComplete: () => {
+            gsap.to(target, {
+              scale: 1,
+              duration: 0.15,
+              ease: "power2.out",
+            });
+          },
+        }
+      );
+    }
+  });
 
   // 3-dots dropdown menu state
   const [menuOpen, setMenuOpen] = useState(false);
@@ -3110,11 +3188,15 @@ function CommunityPostCard({
   };
 
   // Toggle Like on Post
-  const handleToggleLike = async () => {
+  const handleToggleLike = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.stopPropagation();
     const nextLiked = !liked;
     const nextCount = nextLiked ? likesCount + 1 : Math.max(0, likesCount - 1);
     setLiked(nextLiked);
     setLikesCount(nextCount);
+    if (nextLiked && e?.currentTarget) {
+      animateIcon(e.currentTarget.querySelector("svg"));
+    }
 
     try {
       const res = await fetch(`/api/discussions/${post.id}/like`, {
@@ -3448,35 +3530,53 @@ function CommunityPostCard({
 
   return (
     <article
+      ref={containerRef}
       id={post.id}
-      className="bg-card border border-border/70 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 shadow-2xs space-y-3.5 sm:space-y-4 hover:border-border transition-colors"
+      className="w-full bg-card border border-border/70 rounded-2xl p-3.5 sm:p-4.5 shadow-2xs hover:border-border transition-colors flex gap-3 sm:gap-3.5 group/card"
+      style={{
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      }}
     >
-      {/* 1. Header (Avatar, Author, Role, Category, Date) */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <UserAvatar
-            src={post.avatarUrl}
-            name={post.authorName}
-            size={36}
-            className="sm:size-10 shrink-0"
-          />
+      {/* Profile Image Column (Left) */}
+      <div className="shrink-0 pt-0.5">
+        <UserAvatar
+          src={post.avatarUrl}
+          name={post.authorName}
+          size={40}
+          className="size-10 rounded-full object-cover shrink-0 ring-1 ring-border/50"
+        />
+      </div>
 
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="font-bold text-foreground text-sm truncate">
-                {post.authorName}
+      {/* Main Content Column (Right) */}
+      <div className="flex-1 min-w-0 space-y-2.5">
+        {/* Header (Author, Badge, Handle, Date, Category, 3-dots) */}
+        <div className="flex items-start justify-between gap-1">
+          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+            <span className="font-bold text-foreground text-sm sm:text-[15px] hover:underline cursor-pointer truncate">
+              {post.authorName}
+            </span>
+            {/* Twitter Verified Checkmark */}
+            <svg viewBox="0 0 22 22" aria-label="Verified account" className="w-4 h-4 fill-[#1d9bf0] shrink-0">
+              <g>
+                <path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"></path>
+              </g>
+            </svg>
+            <span className="text-muted-foreground text-xs truncate">
+              {post.authorHandle || (post.authorEmail ? `@${post.authorEmail.split("@")[0]}` : `@${post.authorName.toLowerCase().replace(/\s+/g, "")}`)}
+            </span>
+            <span className="text-muted-foreground/60 text-xs">·</span>
+            <span className="text-muted-foreground hover:underline cursor-pointer text-xs shrink-0">
+              {formatRelativeTime(post.createdAt)}
+            </span>
+            {post.category && (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0 ml-1">
+                {post.category}
               </span>
-              <span className="text-muted-foreground/60">•</span>
-              <span className="text-muted-foreground">{formatRelativeTime(post.createdAt)}</span>
-            </div>
-            <div className="text-xs text-muted-foreground truncate">
-              {post.authorRole || "Software Engineer"}
-            </div>
+            )}
           </div>
-        </div>
 
-        {/* Three-Dot Menu (More Options: Edit, Delete, Copy Link, Bookmark, Report) */}
-        <div className="relative" ref={menuRef}>
+          {/* Three-Dot Menu (More Options: Edit, Delete, Copy Link, Bookmark, Report) */}
+          <div className="relative shrink-0" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -3842,8 +3942,8 @@ function CommunityPostCard({
             </h2>
           )}
 
-          {/* Rich Markdown Content */}
-          <MarkdownViewer content={postData.content} />
+          {/* Rich Markdown Content with LinkedIn-style ...more / see less */}
+          <ExpandablePostContent content={postData.content} />
 
           {/* Post Images Gallery (1-10 Images with LinkedIn-style Grid) */}
           <PostImageGallery
@@ -3872,61 +3972,99 @@ function CommunityPostCard({
         </>
       )}
 
-      {/* 6. Engagement Bar (Like, Comments, Views, Share, Bookmark) */}
-      <div className="flex items-center justify-between pt-2 border-t border-border/40 gap-1.5 sm:gap-3">
-        <div className="flex items-center gap-1.5 sm:gap-3 overflow-x-auto no-scrollbar py-0.5">
-          {/* Likes Pill */}
-          <button
-            type="button"
-            onClick={handleToggleLike}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all cursor-pointer shrink-0 ${
-              liked
-                ? "bg-pink-500/10 text-pink-600 border border-pink-500/30"
-                : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/40"
-            }`}
-          >
-            <Heart className={`size-3 sm:size-3.5 ${liked ? "fill-pink-500 text-pink-500" : ""}`} />
-            <span>{formatNumber(likesCount)}</span>
-          </button>
+      {/* 6. Actions Bar (Reply, Like with GSAP, Bookmark, Share) */}
+      <div className="flex items-center justify-between w-full pt-2 border-t border-border/40 text-muted-foreground">
+        {/* Reply / Comment */}
+        <button
+          onClick={handleToggleComments}
+          className={`group/action flex items-center gap-1.5 text-xs transition-colors cursor-pointer ${
+            commentsOpen ? "text-[#1d9bf0]" : "hover:text-[#1d9bf0]"
+          }`}
+          type="button"
+          title="Reply"
+        >
+          <div className="p-2 -m-1 rounded-full group-hover/action:bg-[#1d9bf0]/10 transition-colors">
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="w-[18px] h-[18px] fill-current">
+              <g><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></g>
+            </svg>
+          </div>
+          {commentsCount > 0 && (
+            <span className="font-normal text-xs">{formatNumber(commentsCount)}</span>
+          )}
+        </button>
 
-          {/* Comments Pill */}
-          <button
-            type="button"
-            onClick={handleToggleComments}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-all cursor-pointer shrink-0 ${
-              commentsOpen
-                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30"
-                : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/40"
-            }`}
-          >
-            <MessageCircle className="size-3 sm:size-3.5" />
-            <span>{formatNumber(commentsCount)}</span>
-          </button>
-        </div>
+        {/* Like (GSAP Animated) */}
+        <button
+          onClick={handleToggleLike}
+          className={`group/action flex items-center gap-1.5 text-xs transition-colors cursor-pointer ${
+            liked ? "text-[#f91880]" : "hover:text-[#f91880]"
+          }`}
+          type="button"
+          title="Like"
+        >
+          <div className="p-2 -m-1 rounded-full group-hover/action:bg-[#f91880]/10 transition-colors">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="w-[18px] h-[18px] fill-current"
+              style={{ transformOrigin: "center center" }}
+            >
+              {liked ? (
+                <g><path d="M20.884 13.19c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path></g>
+              ) : (
+                <g><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path></g>
+              )}
+            </svg>
+          </div>
+          {likesCount > 0 && (
+            <span className="font-normal text-xs">{formatNumber(likesCount)}</span>
+          )}
+        </button>
 
-        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-          {/* Share Button */}
+        {/* Bookmark & Share Tray */}
+        <div className="flex items-center gap-0.5">
+          {/* Bookmark */}
           <button
-            type="button"
-            onClick={handleShare}
-            className="p-1.5 sm:p-2 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-full transition-colors cursor-pointer"
-            title="Share Link"
-          >
-            <Share2 className="size-3.5 sm:size-4" />
-          </button>
-
-          {/* Bookmark Button */}
-          <button
-            type="button"
-            onClick={handleToggleBookmark}
-            className={`p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer ${
-              bookmarked
-                ? "text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleBookmark();
+            }}
+            className={`group/action transition-colors cursor-pointer ${
+              bookmarked ? "text-[#1d9bf0]" : "hover:text-[#1d9bf0]"
             }`}
+            type="button"
             title="Bookmark"
           >
-            <Bookmark className={`size-3.5 sm:size-4 ${bookmarked ? "fill-current" : ""}`} />
+            <div className="p-2 -m-1 rounded-full group-hover/action:bg-[#1d9bf0]/10 transition-colors">
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="w-[18px] h-[18px] fill-current"
+              >
+                {bookmarked ? (
+                  <path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5z"></path>
+                ) : (
+                  <path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z"></path>
+                )}
+              </svg>
+            </div>
+          </button>
+
+          {/* Share */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleShare();
+            }}
+            className="group/action hover:text-[#1d9bf0] transition-colors cursor-pointer"
+            type="button"
+            title="Share"
+          >
+            <div className="p-2 -m-1 rounded-full group-hover/action:bg-[#1d9bf0]/10 transition-colors">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="w-[18px] h-[18px] fill-current">
+                <g><path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"></path></g>
+              </svg>
+            </div>
           </button>
         </div>
       </div>
@@ -4120,6 +4258,7 @@ function CommunityPostCard({
           )}
         </div>
       )}
+      </div>
 
       {/* Custom In-App Delete Confirmation Modal (Using HeroUI Card pattern) */}
       {deleteModalState.isOpen && (
