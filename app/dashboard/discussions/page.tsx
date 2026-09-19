@@ -2494,6 +2494,9 @@ function ImageLightbox({
   onClose: () => void;
   onChangeIndex: (index: number) => void;
 }) {
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef<number>(0);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -2513,8 +2516,34 @@ function ImageLightbox({
 
   const currentSrc = images[currentIndex] || images[0];
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null) return;
+    if (touchDeltaX.current < -40 && images.length > 1) {
+      onChangeIndex((currentIndex + 1) % images.length);
+    } else if (touchDeltaX.current > 40 && images.length > 1) {
+      onChangeIndex((currentIndex - 1 + images.length) % images.length);
+    }
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 sm:p-6 animate-in fade-in duration-200 select-none">
+    <div
+      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 sm:p-6 animate-in fade-in duration-200 select-none touch-pan-y"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Top Header Bar */}
       <div className="flex items-center justify-between gap-4 z-10">
         <div className="flex items-center gap-2">
@@ -2603,7 +2632,7 @@ function ImageLightbox({
 }
 
 /* ------------------------------------------------------------------ */
-/* LinkedIn-Style Post Image Gallery Grid (1-10 Images)               */
+/* LinkedIn-Style Post Image Gallery Grid (Mobile & Desktop)          */
 /* ------------------------------------------------------------------ */
 
 function PostImageGallery({
@@ -2613,23 +2642,19 @@ function PostImageGallery({
   images: string[];
   onImageClick: (index: number) => void;
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const touchStartX = useRef<number | null>(null);
-  const touchDeltaX = useRef<number>(0);
-
   if (!images || images.length === 0) return null;
 
-  // Single Image: Display directly with full natural aspect ratio (no cut off or cropping)
+  // 1 Image: Full natural aspect ratio
   if (images.length === 1) {
     return (
       <div
         onClick={() => onImageClick(0)}
-        className="relative rounded-2xl overflow-hidden my-3 border border-border/60 w-full max-h-[620px] sm:max-h-[700px] flex items-center justify-center bg-black/[0.02] dark:bg-black/30 cursor-pointer group shadow-2xs"
+        className="relative rounded-2xl overflow-hidden my-3 border border-border/60 w-full max-h-[500px] sm:max-h-[640px] flex items-center justify-center bg-black/[0.02] dark:bg-black/30 cursor-pointer group shadow-2xs"
       >
         <img
           src={images[0]}
           alt="Post photo"
-          className="w-auto max-w-full h-auto max-h-[620px] sm:max-h-[700px] object-contain transition-transform duration-300 group-hover:scale-[1.008]"
+          className="w-auto max-w-full h-auto max-h-[500px] sm:max-h-[640px] object-contain transition-transform duration-300 group-hover:scale-[1.008]"
           loading="lazy"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
@@ -2637,110 +2662,134 @@ function PostImageGallery({
     );
   }
 
-  // Multiple Images: Sliding Carousel (Swipe on mobile, Left/Right arrows on desktop)
-  const handlePrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
-  };
-
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentIndex((prev) => Math.min(images.length - 1, prev + 1));
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchDeltaX.current = 0;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStartX.current === null) return;
-    if (touchDeltaX.current < -40 && currentIndex < images.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else if (touchDeltaX.current > 40 && currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-    }
-    touchStartX.current = null;
-    touchDeltaX.current = 0;
-  };
-
-  return (
-    <div
-      className="relative rounded-2xl overflow-hidden my-3 border border-border/60 bg-black/5 dark:bg-black/40 shadow-2xs select-none group/slider"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Top Right Counter Badge ("1/3", "2/3", etc.) */}
-      <div className="absolute top-3 right-3 z-20 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] sm:text-xs font-bold tracking-wide shadow-md pointer-events-none">
-        {currentIndex + 1}/{images.length}
-      </div>
-
-      {/* Sliding Images Track */}
-      <div
-        className="flex transition-transform duration-300 ease-out"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-      >
+  // 2 Images: Side-by-side (2 equal columns)
+  if (images.length === 2) {
+    return (
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 rounded-2xl overflow-hidden my-3 border border-border/60 h-52 sm:h-72 md:h-80 shadow-2xs bg-muted/20">
         {images.map((img, idx) => (
           <div
             key={idx}
             onClick={() => onImageClick(idx)}
-            className="w-full shrink-0 relative h-72 sm:h-[460px] flex items-center justify-center bg-black/[0.03] dark:bg-black/30 cursor-pointer overflow-hidden"
+            className="relative w-full h-full cursor-pointer overflow-hidden group"
           >
             <img
               src={img}
-              alt={`Photo ${idx + 1}`}
-              className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-300 group-hover/slider:scale-[1.01]"
+              alt={`Post photo ${idx + 1}`}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors pointer-events-none" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
           </div>
         ))}
       </div>
+    );
+  }
 
-      {/* Left Navigation Arrow Button (<) */}
-      {currentIndex > 0 && (
-        <button
-          type="button"
-          onClick={handlePrev}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 size-8 sm:size-9 rounded-full bg-black/65 hover:bg-black/85 text-white flex items-center justify-center shadow-lg transition-all active:scale-90 cursor-pointer hover:scale-105"
-          title="Previous photo"
-          aria-label="Previous photo"
+  // 3 Images: 1 large photo on the left, 2 stacked vertically (up and down) on the right
+  if (images.length === 3) {
+    return (
+      <div className="grid grid-cols-12 gap-1.5 sm:gap-2 rounded-2xl overflow-hidden my-3 border border-border/60 h-56 sm:h-80 md:h-96 shadow-2xs bg-muted/20">
+        {/* Left: 1 Large Photo (Index 0) */}
+        <div
+          onClick={() => onImageClick(0)}
+          className="col-span-7 relative w-full h-full cursor-pointer overflow-hidden group"
         >
-          <ChevronLeft className="size-5" />
-        </button>
-      )}
-
-      {/* Right Navigation Arrow Button (>) */}
-      {currentIndex < images.length - 1 && (
-        <button
-          type="button"
-          onClick={handleNext}
-          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 size-8 sm:size-9 rounded-full bg-black/65 hover:bg-black/85 text-white flex items-center justify-center shadow-lg transition-all active:scale-90 cursor-pointer hover:scale-105"
-          title="Next photo"
-          aria-label="Next photo"
-        >
-          <ChevronRight className="size-5" />
-        </button>
-      )}
-
-      {/* Bottom Dot Indicators */}
-      <div className="absolute bottom-2.5 inset-x-0 z-20 flex items-center justify-center gap-1.5 pointer-events-none">
-        {images.map((_, idx) => (
-          <span
-            key={idx}
-            className={`transition-all duration-200 rounded-full shadow-xs ${
-              idx === currentIndex
-                ? "w-4 h-1.5 bg-white"
-                : "size-1.5 bg-white/50"
-            }`}
+          <img
+            src={images[0]}
+            alt="Post photo 1"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            loading="lazy"
           />
-        ))}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+        </div>
+
+        {/* Right: 2 Photos stacked Up and Down (Index 1 & 2) */}
+        <div className="col-span-5 grid grid-rows-2 gap-1.5 sm:gap-2 h-full">
+          <div
+            onClick={() => onImageClick(1)}
+            className="relative w-full h-full cursor-pointer overflow-hidden group"
+          >
+            <img
+              src={images[1]}
+              alt="Post photo 2"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+          </div>
+          <div
+            onClick={() => onImageClick(2)}
+            className="relative w-full h-full cursor-pointer overflow-hidden group"
+          >
+            <img
+              src={images[2]}
+              alt="Post photo 3"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 4+ Images: 1 large photo on the left, 2 stacked up and down on the right with +N badge on the bottom right photo!
+  const remainingCount = images.length - 2;
+
+  return (
+    <div className="grid grid-cols-12 gap-1.5 sm:gap-2 rounded-2xl overflow-hidden my-3 border border-border/60 h-56 sm:h-80 md:h-96 shadow-2xs bg-muted/20">
+      {/* Left: 1 Large Photo (Index 0) */}
+      <div
+        onClick={() => onImageClick(0)}
+        className="col-span-7 relative w-full h-full cursor-pointer overflow-hidden group"
+      >
+        <img
+          src={images[0]}
+          alt="Post photo 1"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+      </div>
+
+      {/* Right: 2 Photos stacked Up and Down */}
+      <div className="col-span-5 grid grid-rows-2 gap-1.5 sm:gap-2 h-full">
+        {/* Top Right Photo (Index 1) */}
+        <div
+          onClick={() => onImageClick(1)}
+          className="relative w-full h-full cursor-pointer overflow-hidden group"
+        >
+          <img
+            src={images[1]}
+            alt="Post photo 2"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+        </div>
+
+        {/* Bottom Right Photo (Index 2) with LinkedIn-style +N overlay */}
+        <div
+          onClick={() => onImageClick(2)}
+          className="relative w-full h-full cursor-pointer overflow-hidden group"
+        >
+          <img
+            src={images[2]}
+            alt="Post photo 3"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            loading="lazy"
+          />
+          {/* Frosted Dark Glass Overlay for +2, +3, +4... */}
+          <div className="absolute inset-0 bg-black/60 hover:bg-black/70 backdrop-blur-[2px] transition-colors flex flex-col items-center justify-center text-white">
+            <span className="text-2xl sm:text-4xl font-black tracking-tight drop-shadow">
+              +{remainingCount}
+            </span>
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-white/90 mt-0.5 drop-shadow">
+              Photos
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
