@@ -3603,7 +3603,7 @@ function CommunityPostCard({
 
       {/* 2. Post Content (or Inline Editor when isEditing) */}
       {isEditing ? (
-        <div className="space-y-3 pt-2 bg-muted/20 p-4 rounded-2xl border border-border/80">
+        <div className="space-y-3 pt-2 bg-muted/20 p-3 sm:p-4 rounded-2xl border border-border/80">
           <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
             <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <Pencil className="size-3.5 text-blue-500 shrink-0" />
@@ -3616,7 +3616,7 @@ function CommunityPostCard({
                 setEditTitle(postData.title || "");
                 setEditContent(postData.content);
               }}
-              className="p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
+              className="p-1.5 text-muted-foreground hover:text-foreground rounded cursor-pointer active:scale-95 transition-all"
               title="Cancel edit"
             >
               <X className="size-4" />
@@ -3644,7 +3644,7 @@ function CommunityPostCard({
             <select
               value={editCategory}
               onChange={(e) => setEditCategory(e.target.value)}
-              className="text-xs bg-background border border-border/60 text-foreground rounded-lg px-2.5 py-1.5 focus:outline-none cursor-pointer font-medium shrink-0"
+              className="w-full sm:w-auto text-xs bg-background border border-border/60 text-foreground rounded-lg px-2.5 py-2 sm:py-1.5 focus:outline-none cursor-pointer font-medium shrink-0"
             >
               <option value="Discussion">Discussion</option>
               <option value="Study Guide">Study Guide</option>
@@ -3661,7 +3661,7 @@ function CommunityPostCard({
               placeholder="Tags (comma separated: React, AWS, Leetcode)..."
               value={editTags}
               onChange={(e) => setEditTags(e.target.value)}
-              className="flex-1 bg-background border border-border/60 text-foreground rounded-lg px-2.5 py-1.5 text-xs focus:outline-none min-w-0"
+              className="flex-1 bg-background border border-border/60 text-foreground rounded-lg px-2.5 py-2 sm:py-1.5 text-xs focus:outline-none min-w-0"
             />
           </div>
 
