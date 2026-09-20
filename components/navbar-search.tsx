@@ -2,18 +2,23 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Search, Star, CornerDownLeft, Building2 } from "lucide-react";
+import { motion } from "motion/react";
+import { Search, Star } from "lucide-react";
 import { CompanyLogo } from "@/components/company-logo";
 import { useTargetCompanies } from "@/lib/hooks/use-target-companies";
+import { useTypewriter } from "@/components/spectrumui/use-typewriter";
 import {
-  CommandDialog,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandSeparator,
-} from "@/components/ui/command";
+  CommandSearch,
+  CommandSearchGroup,
+  CommandSearchItem,
+} from "@/components/spectrumui/command-search";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export interface NavbarCompanyItem {
   id: number;
@@ -52,113 +57,134 @@ export function NavbarSearch({ companies, currentCompanySlug }: NavbarSearchProp
     router.push(`/dashboard?company=${slug}`);
   };
 
-  // Split into pinned targets and other companies
-  const { targetCompanies, otherCompanies } = React.useMemo(() => {
+  // Typewriter queries generated dynamically from top companies
+  const typewriterQueries = React.useMemo(() => {
+    if (!companies || companies.length === 0) {
+      return ["Google", "Meta", "Amazon", "Uber", "Apple", "Netflix", "Microsoft"];
+    }
+    return companies.slice(0, 8).map((c) => c.name);
+  }, [companies]);
+
+  const { text: typedText } = useTypewriter(typewriterQueries, {
+    typeMs: 120,
+    deleteMs: 60,
+    holdMs: 2200,
+    gapMs: 800,
+    enabled: !open,
+  });
+
+  // Split into pinned targets and other companies for the CommandSearch palette
+  const groups: CommandSearchGroup[] = React.useMemo(() => {
     const targetSet = new Set(targets.map((t) => t.toLowerCase()));
-    const targetList: NavbarCompanyItem[] = [];
-    const otherList: NavbarCompanyItem[] = [];
+    const targetItems: CommandSearchItem[] = [];
+    const otherItems: CommandSearchItem[] = [];
 
     companies.forEach((company) => {
-      if (targetSet.has(company.slug.toLowerCase())) {
-        targetList.push(company);
+      const isTarget = targetSet.has(company.slug.toLowerCase());
+      const isCurrent = company.slug === currentCompanySlug;
+
+      const item: CommandSearchItem = {
+        id: company.id,
+        label: company.name,
+        slug: company.slug,
+        value: `${company.name} ${company.slug}`,
+        icon: (
+          <CompanyLogo
+            name={company.name}
+            className="size-5 rounded-md text-[10px] shrink-0 shadow-2xs"
+          />
+        ),
+        badge: (
+          <div className="flex items-center gap-1.5">
+            {isTarget && (
+              <Star className="size-3.5 text-amber-500 fill-amber-400 shrink-0" />
+            )}
+            {isCurrent && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium hidden sm:inline">
+                Active
+              </span>
+            )}
+            <span className="text-[11px] px-2 py-0.5 rounded-md bg-secondary text-muted-foreground font-mono">
+              {company.problemCount} Qs
+            </span>
+          </div>
+        ),
+      };
+
+      if (isTarget) {
+        targetItems.push(item);
       } else {
-        otherList.push(company);
+        otherItems.push(item);
       }
     });
 
-    return { targetCompanies: targetList, otherCompanies: otherList };
-  }, [companies, targets]);
+    const list: CommandSearchGroup[] = [];
+    if (targetItems.length > 0) {
+      list.push({
+        label: "Target Companies",
+        items: targetItems,
+      });
+    }
+    list.push({
+      label: targetItems.length > 0 ? "All Companies" : "Companies",
+      items: otherItems,
+    });
+
+    return list;
+  }, [companies, targets, currentCompanySlug]);
 
   return (
     <>
-      {/* Search trigger button */}
+      {/* Spectrum UI Navbar Search Trigger Bar */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search companies"
-        className="flex items-center gap-2 rounded-md border border-border bg-card hover:bg-muted/70 text-muted-foreground text-xs transition-all cursor-pointer h-8 sm:h-8.5 px-2.5 sm:w-[200px] md:w-[240px] shadow-2xs"
+        className="group relative flex h-8.5 sm:h-9 items-center gap-2.5 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted/70 hover:border-primary/40 px-3 transition-all duration-150 cursor-pointer text-muted-foreground text-xs shadow-2xs hover:shadow-xs w-[170px] xs:w-[200px] sm:w-[240px] md:w-[280px] min-w-0"
       >
-        <Search className="size-3.5 shrink-0 text-muted-foreground" />
-        <span className="hidden sm:inline truncate text-muted-foreground text-xs">Search companies...</span>
-        <kbd className="hidden sm:inline-flex ml-auto text-[10px] text-muted-foreground font-mono bg-muted/70 border border-border px-1.5 py-0.5 rounded pointer-events-none">
+        <Search className="size-3.5 sm:size-4 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
+        <div className="flex min-w-0 flex-1 items-center overflow-hidden text-left font-normal text-xs">
+          <span className="truncate text-muted-foreground/80 group-hover:text-foreground transition-colors">
+            Search <span className="font-medium text-foreground">{typedText || "companies"}</span>
+          </span>
+          <motion.span
+            aria-hidden
+            className="ml-0.5 h-3.5 w-[1.5px] shrink-0 rounded-full bg-primary"
+            animate={{ opacity: [1, 1, 0, 0] }}
+            transition={{ duration: 1.1, repeat: Infinity, times: [0, 0.5, 0.5, 1] }}
+          />
+        </div>
+        <kbd className="hidden sm:inline-flex shrink-0 ml-auto items-center text-[10px] text-muted-foreground font-mono bg-background/80 border border-border/80 px-1.5 py-0.5 rounded shadow-2xs group-hover:border-primary/30 group-hover:text-foreground transition-colors pointer-events-none">
           ⌘K
         </kbd>
       </button>
 
-      {/* Command Palette Modal */}
-      <CommandDialog open={open} onOpenChange={setOpen} title="Search Companies">
-        <CommandInput placeholder="Search companies by name or tag..." />
-        <CommandList className="max-h-[300px] sm:max-h-[360px] p-2">
-          <CommandEmpty>
-            <div className="py-6 text-center text-xs text-muted-foreground">
-              <Building2 className="size-8 mx-auto mb-2 text-muted-foreground/40" />
-              No companies found.
-            </div>
-          </CommandEmpty>
+      {/* Spectrum UI Command Search Dialog Modal */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="top-14 sm:top-24 sm:-translate-y-0 max-w-xl p-0 border-border rounded-[16px] overflow-hidden shadow-2xl bg-card"
+        >
+          <DialogHeader className="sr-only">
+            <DialogTitle>Search Companies</DialogTitle>
+            <DialogDescription>
+              Quickly find and switch between target and top companies
+            </DialogDescription>
+          </DialogHeader>
 
-          {/* Pinned Target Companies */}
-          {targetCompanies.length > 0 && (
-            <>
-              <CommandGroup heading="Target Companies">
-                {targetCompanies.map((c) => {
-                  const isCurrent = c.slug === currentCompanySlug;
-                  return (
-                    <CommandItem
-                      key={`target-${c.id}`}
-                      value={`${c.name} ${c.slug}`}
-                      onSelect={() => handleSelect(c.slug)}
-                      className={`flex items-center justify-between py-2.5 px-3 rounded-lg ${
-                        isCurrent ? "bg-accent/70 font-medium" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <CompanyLogo name={c.name} className="size-5.5 rounded-md text-[10px] shrink-0" />
-                        <span className="truncate font-medium">{c.name}</span>
-                        <Star className="size-3.5 text-amber-500 fill-amber-400 shrink-0" />
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[11px] px-2 py-0.5 rounded-md bg-secondary text-muted-foreground font-mono">
-                          {c.problemCount} Qs
-                        </span>
-                        <CornerDownLeft className="size-3 text-muted-foreground hidden sm:inline" />
-                      </div>
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-              <CommandSeparator />
-            </>
-          )}
-
-          {/* All / Other Companies */}
-          <CommandGroup heading={targetCompanies.length > 0 ? "All Companies" : "Companies"}>
-            {otherCompanies.map((c) => {
-              const isCurrent = c.slug === currentCompanySlug;
-              return (
-                <CommandItem
-                  key={`company-${c.id}`}
-                  value={`${c.name} ${c.slug}`}
-                  onSelect={() => handleSelect(c.slug)}
-                  className={`flex items-center justify-between py-2.5 px-3 rounded-lg ${
-                    isCurrent ? "bg-accent/70 font-medium" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <CompanyLogo name={c.name} className="size-5.5 rounded-md text-[10px] shrink-0" />
-                    <span className="truncate font-medium">{c.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] px-2 py-0.5 rounded-md bg-secondary text-muted-foreground font-mono">
-                      {c.problemCount} Qs
-                    </span>
-                    <CornerDownLeft className="size-3 text-muted-foreground hidden sm:inline" />
-                  </div>
-                </CommandItem>
-              );
-            })}
-          </CommandGroup>
-        </CommandList>
-      </CommandDialog>
+          <CommandSearch
+            queries={typewriterQueries}
+            placeholder="Search companies by name or slug..."
+            groups={groups}
+            height={440}
+            onSelect={(item) => handleSelect(item.slug || item.label.toLowerCase())}
+            onClose={() => setOpen(false)}
+            autoFocus={true}
+            interactive={true}
+            className="border-0 shadow-none drop-shadow-none rounded-[16px]"
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
