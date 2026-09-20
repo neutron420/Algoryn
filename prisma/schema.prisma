@@ -107,6 +107,7 @@ model User {
   discussionPosts    DiscussionPost[]
   discussionComments DiscussionComment[]
   platformAccounts   UserPlatformAccount[]
+  leaderboardEntry   LeaderboardEntry?
 }
 
 model UserTargetCompany {
@@ -257,7 +258,8 @@ model UserPlatformAccount {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stats UserPlatformStats[]
 
   @@unique([userId, platform])
   @@index([userId])
@@ -278,11 +280,16 @@ model UserPlatformStats {
   score         Int?
   rawData       Json?
   fetchedAt     DateTime       @default(now())
+
+  account UserPlatformAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([platform])
 }
 
 model LeaderboardEntry {
   id                Int      @id @default(autoincrement())
-  userId            String
+  userId            String   @unique
   displayName       String?
   photoUrl          String?
   leetcodeScore     Int      @default(0)
@@ -297,7 +304,10 @@ model LeaderboardEntry {
   globalRank        Int      @default(0)
   updatedAt         DateTime @updatedAt
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([globalRank])
+  @@index([totalScore])
 }
 
 model LeaderboardRun {
