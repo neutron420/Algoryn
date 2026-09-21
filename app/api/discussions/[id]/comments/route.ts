@@ -4,6 +4,8 @@ import { getRedisClient } from "@/lib/redis";
 
 export const runtime = "nodejs";
 
+const memoryCommentVotes = new Map<string, "upvote" | "downvote">();
+
 interface FlatCommentRow {
   id: string;
   content: string;
@@ -88,6 +90,9 @@ export async function GET(
       );
     }
 
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
     const rows = await prisma.discussionComment.findMany({
       where: { postId },
       orderBy: { createdAt: "asc" },
@@ -95,10 +100,27 @@ export async function GET(
 
     const tree = buildCommentTree(rows || []);
 
+    const userVotes: Record<string, "upvote" | "downvote"> = {};
+    if (userId && rows && rows.length > 0) {
+      const redis = getRedisClient();
+      for (const row of rows) {
+        const voteKey = `comment:vote:${row.id}:${userId}`;
+        if (redis) {
+          try {
+            const v = await redis.get<"upvote" | "downvote">(voteKey);
+            if (v) userVotes[row.id] = v;
+          } catch {}
+        } else if (memoryCommentVotes.has(voteKey)) {
+          userVotes[row.id] = memoryCommentVotes.get(voteKey)!;
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       comments: tree,
       totalCount: rows.length,
+      userVotes,
     });
   } catch (error: unknown) {
     console.error("Error fetching comments:", error);
@@ -235,7 +257,7 @@ export async function PATCH(
   try {
     await context.params;
     const body = await req.json();
-    const { commentId, action, content, userId } = body;
+    const { commentId, action, content, userId, currentVote } = body;
 
     if (!commentId) {
       return NextResponse.json({ error: "commentId is required" }, { status: 400 });
@@ -311,10 +333,14 @@ export async function PATCH(
       const voteCacheKey = `comment:vote:${commentId}:${effectiveUserId}`;
 
       let previousVote: "upvote" | "downvote" | null = null;
-      if (redis) {
+      if (currentVote !== undefined) {
+        previousVote = currentVote;
+      } else if (redis) {
         try {
           previousVote = await redis.get<"upvote" | "downvote">(voteCacheKey);
         } catch {}
+      } else if (memoryCommentVotes.has(voteCacheKey)) {
+        previousVote = memoryCommentVotes.get(voteCacheKey) || null;
       }
 
       let newLikes = Math.max(0, comment.likesCount || 0);
@@ -329,6 +355,7 @@ export async function PATCH(
         if (redis) {
           try { await redis.del(voteCacheKey); } catch {}
         }
+        memoryCommentVotes.delete(voteCacheKey);
       } else if (previousVote && previousVote !== action) {
         // User switched their vote!
         if (action === "upvote") {
@@ -342,6 +369,7 @@ export async function PATCH(
         if (redis) {
           try { await redis.set(voteCacheKey, action, { ex: 86400 * 30 }); } catch {}
         }
+        memoryCommentVotes.set(voteCacheKey, action);
       } else {
         // New vote!
         if (action === "upvote") newLikes = newLikes + 1;
@@ -350,6 +378,7 @@ export async function PATCH(
         if (redis) {
           try { await redis.set(voteCacheKey, action, { ex: 86400 * 30 }); } catch {}
         }
+        memoryCommentVotes.set(voteCacheKey, action);
       }
 
       const updated = await prisma.discussionComment.update({

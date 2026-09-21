@@ -307,4 +307,31 @@ button, [role="button"], a.btn, input[type="button"], input[type="submit"] {
   --cs-border-color: rgba(255, 255, 255, 0.08);
   --cs-text-color: #f1f5f9;
   --cs-secondary-text-color: #94a3b8;
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(-1.5deg);
+  }
+}
+
+@keyframes floatDelayed {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(7px) rotate(1.2deg);
+  }
 }

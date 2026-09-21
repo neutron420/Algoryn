@@ -639,15 +639,17 @@ export function AppSidebar({
             </Link>
 
             {/* Interview Experience */}
-            <button
-              type="button"
+            <Link
+              href="/dashboard/interview-experiences"
               onClick={() => {
-                toast.info("Interview Experience is coming soon!", {
-                  description: "Real company interview debriefs, compensation data, and candidate questions archive are launching soon.",
-                });
+                if (isMobile) setOpenMobile(false);
               }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 text-foreground/90"
-              title="Interview Experience - Coming Soon"
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 ${
+                pathname?.startsWith("/dashboard/interview-experiences")
+                  ? "bg-muted text-foreground font-semibold"
+                  : "text-foreground/90"
+              }`}
+              title="Interview Experiences"
             >
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <Briefcase className="size-4 shrink-0 text-orange-500 group-hover:scale-105 transition-transform" />
@@ -655,13 +657,13 @@ export function AppSidebar({
                   <div className="flex items-center gap-1.5">
                     <span className="font-bold text-xs text-foreground leading-tight">Interview Experience</span>
                     <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[3px] bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
-                      Soon
+                      NEW
                     </span>
                   </div>
                   <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Recent Company Rounds</span>
                 </div>
               </div>
-            </button>
+            </Link>
 
             {/* Leaderboard */}
             <button

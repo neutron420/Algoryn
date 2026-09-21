@@ -140,14 +140,6 @@ const CATEGORY_ITEMS: CategoryItem[] = [
     inactiveClass: "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30",
   },
   {
-    id: "Interview Experience",
-    name: "Interview Experience",
-    mobileLabel: "Interviews",
-    variant: "outline",
-    activeClass: "bg-amber-600 text-white shadow-sm shadow-amber-500/25 border-amber-600 font-semibold ring-1 ring-amber-500/40",
-    inactiveClass: "bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30",
-  },
-  {
     id: "Events",
     name: "Events",
     mobileLabel: "Events",
@@ -217,6 +209,45 @@ function formatNumber(num: number): string {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
   if (num >= 1000) return (num / 1000).toFixed(1) + "k";
   return String(num || 0);
+}
+
+const COMMENT_VOTES_STORAGE_KEY = "algoryn_comment_votes";
+
+function getStoredCommentVotes(): Record<string, "upvote" | "downvote"> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(COMMENT_VOTES_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function setStoredCommentVote(commentId: string, vote: "upvote" | "downvote" | null) {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getStoredCommentVotes();
+    if (vote) {
+      existing[commentId] = vote;
+    } else {
+      delete existing[commentId];
+    }
+    localStorage.setItem(COMMENT_VOTES_STORAGE_KEY, JSON.stringify(existing));
+  } catch {}
+}
+
+function getOrCreateViewerId(): string {
+  if (typeof window === "undefined") return "guest";
+  try {
+    let id = localStorage.getItem("algoryn_viewer_id");
+    if (!id) {
+      id = "viewer_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now().toString(36);
+      localStorage.setItem("algoryn_viewer_id", id);
+    }
+    return id;
+  } catch {
+    return "guest";
+  }
 }
 
 function formatRelativeTime(dateStr: string): string {
@@ -776,6 +807,12 @@ function DiscussionsSidebarWidgets({
                         <span className="flex items-center gap-1">
                           <MessageCircle className="size-3" />
                           {item.comments}
+                        </span>
+                        <span className="flex items-center gap-1 hover:text-blue-500 transition-colors" title={`${item.views || 0} views`}>
+                          <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3 fill-current">
+                            <g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"></path></g>
+                          </svg>
+                          {formatNumber(item.views || 0)}
                         </span>
                       </div>
                     </div>
@@ -2058,7 +2095,6 @@ type FormatAction =
                     >
                       <option value="Discussion">Discussion</option>
                       <option value="Study Guide">Study Guide</option>
-                      <option value="Interview Experience">Interview Experience</option>
                       <option value="Events">Events</option>
                       <option value="System Design">System Design</option>
                       <option value="DSA Tips">DSA Tips</option>
@@ -2360,7 +2396,7 @@ type FormatAction =
                     ? `No discussions match "${searchQuery}". Try a different keyword.`
                     : selectedTag
                     ? `No posts found with tag #${selectedTag}. Try clearing the filter.`
-                    : "Be the first to share an interview experience, ask a question, or post a study guide!"}
+                    : "Be the first to start a discussion, ask a question, or post a study guide!"}
                 </p>
                 {(selectedTag || searchQuery || showBookmarkedOnly) && (
                   <button
@@ -2897,6 +2933,7 @@ function CommunityPostCard({
   const [postData, setPostData] = useState(post);
   const [liked, setLiked] = useState(post.isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount);
+  const [viewsCount, setViewsCount] = useState(post.viewsCount || 0);
   const [bookmarked, setBookmarked] = useState(post.isBookmarked);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<DiscussionCommentItem[]>([]);
@@ -2970,6 +3007,7 @@ function CommunityPostCard({
     setPostData(post);
     setLiked(post.isLiked);
     setLikesCount(post.likesCount);
+    setViewsCount(post.viewsCount || 0);
     setBookmarked(post.isBookmarked);
     setEditImages(getPostImages(post));
   }
@@ -3097,17 +3135,78 @@ function CommunityPostCard({
   const [commentSort, setCommentSort] = useState<"recent" | "popular">("recent");
 
   // Track user votes on comments: Record<commentId, 'upvote' | 'downvote'>
-  const [userCommentVotes, setUserCommentVotes] = useState<Record<string, "upvote" | "downvote">>({});
+  const [userCommentVotes, setUserCommentVotes] = useState<Record<string, "upvote" | "downvote">>(() => getStoredCommentVotes());
+
+  // Register view count (+1) when anyone views this post (1 view per unique person ID)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const viewerId = currentUserId || getOrCreateViewerId();
+    const storageKey = `algoryn_viewed_${post.id}_${viewerId}`;
+    if (localStorage.getItem(storageKey)) {
+      return; // This person already counted as viewed!
+    }
+
+    let recorded = false;
+    const recordView = async () => {
+      if (recorded) return;
+      recorded = true;
+      try {
+        localStorage.setItem(storageKey, "1");
+
+        const res = await fetch(`/api/discussions/${post.id}/view`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: currentUserId || null,
+            viewerId,
+          }),
+        });
+        const data = await res.json();
+        if (data.success && typeof data.viewsCount === "number") {
+          setViewsCount(data.viewsCount);
+        }
+      } catch (err) {
+        console.error("Error incrementing post view:", err);
+      }
+    };
+
+    if ("IntersectionObserver" in window && containerRef.current) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) {
+            recordView();
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.2 }
+      );
+      observer.observe(containerRef.current);
+      return () => observer.disconnect();
+    } else {
+      recordView();
+    }
+  }, [post.id, currentUserId]);
 
   // Fetch comments when comments section is opened
   const loadComments = async () => {
     try {
       setCommentsLoading(true);
-      const res = await fetch(`/api/discussions/${post.id}/comments`);
+      const url = `/api/discussions/${post.id}/comments${currentUserId ? `?userId=${encodeURIComponent(currentUserId)}` : ""}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success && Array.isArray(data.comments)) {
         setComments(data.comments);
         setCommentsCount(data.totalCount || data.comments.length);
+        if (data.userVotes && typeof data.userVotes === "object") {
+          setUserCommentVotes((prev) => {
+            const merged = { ...prev, ...data.userVotes };
+            try {
+              localStorage.setItem(COMMENT_VOTES_STORAGE_KEY, JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+        }
       }
     } catch (err) {
       console.error("Error fetching comments:", err);
@@ -3397,6 +3496,7 @@ function CommunityPostCard({
     }
 
     // Optimistic UI updates
+    setStoredCommentVote(commentId, nextVote);
     setUserCommentVotes((prev) => {
       const copy = { ...prev };
       if (nextVote) copy[commentId] = nextVote;
@@ -3425,7 +3525,12 @@ function CommunityPostCard({
       const res = await fetch(`/api/discussions/${post.id}/comments`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commentId, action, userId: currentUserId }),
+        body: JSON.stringify({
+          commentId,
+          action,
+          userId: currentUserId || null,
+          currentVote: currentVote || null,
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -3444,6 +3549,7 @@ function CommunityPostCard({
           setComments((prev) => syncServerVotes(prev));
         }
         if (data.userVote !== undefined) {
+          setStoredCommentVote(commentId, data.userVote);
           setUserCommentVotes((prev) => {
             const copy = { ...prev };
             if (data.userVote) copy[commentId] = data.userVote;
@@ -3634,7 +3740,6 @@ function CommunityPostCard({
               >
                 <option value="Discussion">Discussion</option>
                 <option value="Study Guide">Study Guide</option>
-                <option value="Interview Experience">Interview Experience</option>
                 <option value="Events">Events</option>
                 <option value="System Design">System Design</option>
                 <option value="DSA Tips">DSA Tips</option>
@@ -3876,6 +3981,19 @@ function CommunityPostCard({
             <span className="font-normal text-xs">{formatNumber(likesCount)}</span>
           )}
         </button>
+
+        {/* Analytics / Views (Image 2 Twitter-style Bar Chart) */}
+        <div
+          className="group/action flex items-center gap-1.5 text-xs transition-colors hover:text-[#1d9bf0] cursor-default"
+          title={`${viewsCount} Views`}
+        >
+          <div className="p-2 -m-1 rounded-full group-hover/action:bg-[#1d9bf0]/10 transition-colors">
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="w-[18px] h-[18px] fill-current">
+              <g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"></path></g>
+            </svg>
+          </div>
+          <span className="font-normal text-xs">{formatNumber(viewsCount)}</span>
+        </div>
 
         {/* Bookmark & Share Tray */}
         <div className="flex items-center gap-0.5">
@@ -4387,38 +4505,46 @@ function ThreadedCommentRow({
 
           {/* Action Row */}
           <div className="flex items-center gap-3.5 pt-0.5 text-xs text-muted-foreground">
-            {/* Thumbs Up / Down: ONLY on root comments (depth === 0), removed from replies per user request */}
-            {depth === 0 && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onVote(comment.id, "upvote")}
-                  className={`flex items-center gap-1 transition-colors cursor-pointer ${
-                    userVotes?.[comment.id] === "upvote"
-                      ? "text-pink-600 font-semibold"
-                      : "hover:text-pink-600"
-                  }`}
-                  title={userVotes?.[comment.id] === "upvote" ? "Undo Upvote" : "Upvote"}
-                >
-                  <ThumbsUp className={`size-3.5 ${userVotes?.[comment.id] === "upvote" ? "fill-pink-600" : ""}`} />
-                  <span>{comment.likesCount}</span>
-                </button>
+            {/* Thumbs Up / Down */}
+            <button
+              type="button"
+              onClick={() => onVote(comment.id, "upvote")}
+              className={`flex items-center gap-1 transition-colors cursor-pointer ${
+                userVotes?.[comment.id] === "upvote"
+                  ? "text-blue-600 dark:text-blue-400 font-semibold"
+                  : "hover:text-blue-600"
+              }`}
+              title={userVotes?.[comment.id] === "upvote" ? "Undo Like" : "Like"}
+            >
+              <ThumbsUp
+                className={`size-3.5 transition-transform active:scale-125 ${
+                  userVotes?.[comment.id] === "upvote"
+                    ? "fill-blue-600 dark:fill-blue-400 text-blue-600 dark:text-blue-400"
+                    : ""
+                }`}
+              />
+              <span>{comment.likesCount}</span>
+            </button>
 
-                <button
-                  type="button"
-                  onClick={() => onVote(comment.id, "downvote")}
-                  className={`flex items-center gap-1 transition-colors cursor-pointer ${
-                    userVotes?.[comment.id] === "downvote"
-                      ? "text-blue-600 font-semibold"
-                      : "hover:text-foreground"
-                  }`}
-                  title={userVotes?.[comment.id] === "downvote" ? "Undo Downvote" : "Downvote"}
-                >
-                  <ThumbsDown className={`size-3.5 ${userVotes?.[comment.id] === "downvote" ? "fill-blue-600" : ""}`} />
-                  <span>{comment.dislikesCount}</span>
-                </button>
-              </>
-            )}
+            <button
+              type="button"
+              onClick={() => onVote(comment.id, "downvote")}
+              className={`flex items-center gap-1 transition-colors cursor-pointer ${
+                userVotes?.[comment.id] === "downvote"
+                  ? "text-red-500 dark:text-red-400 font-semibold"
+                  : "hover:text-foreground"
+              }`}
+              title={userVotes?.[comment.id] === "downvote" ? "Undo Dislike" : "Dislike"}
+            >
+              <ThumbsDown
+                className={`size-3.5 transition-transform active:scale-125 ${
+                  userVotes?.[comment.id] === "downvote"
+                    ? "fill-red-500 dark:fill-red-400 text-red-500 dark:text-red-400"
+                    : ""
+                }`}
+              />
+              <span>{comment.dislikesCount}</span>
+            </button>
 
             {/* Reply Button (ALWAYS present, pre-fills author mention!) */}
             <button

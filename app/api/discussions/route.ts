@@ -13,7 +13,14 @@ export async function GET(req: Request) {
 
     const whereClause: Record<string, unknown> = {};
     if (category && category !== "ALL" && category !== "All posts") {
+      if (category.toLowerCase() === "interview experience") {
+        // Discussions feed does not serve Interview Experiences (dedicated page exists)
+        return NextResponse.json({ success: true, posts: [] });
+      }
       whereClause["category"] = { equals: category, mode: "insensitive" };
+    } else {
+      // Exclude Interview Experiences from all generic discussion feeds
+      whereClause["category"] = { not: "Interview Experience" };
     }
     if (tag && tag.trim().length > 0) {
       whereClause["tags"] = { has: tag.trim() };
@@ -120,6 +127,13 @@ export async function POST(req: Request) {
       authorRole = "Software Engineer",
       avatarUrl,
     } = body;
+
+    if (category && String(category).trim().toLowerCase() === "interview experience") {
+      return NextResponse.json(
+        { error: "Interview experiences must be shared through the Interview Experiences section (/dashboard/interview-experiences/share)." },
+        { status: 400 }
+      );
+    }
 
     if (!content || typeof content !== "string" || content.trim().length === 0) {
       return NextResponse.json(

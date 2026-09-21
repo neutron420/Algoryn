@@ -45,8 +45,11 @@ function cleanTitle(rawTitle: string | null | undefined, rawContent: string): st
 
 export async function GET() {
   try {
-    // 1. Fetch Trending Posts from database
+    // 1. Fetch Trending Posts from database (excluding Interview Experiences)
     const trendingPosts = await prisma.discussionPost.findMany({
+      where: {
+        category: { not: "Interview Experience" },
+      },
       orderBy: [
         { likesCount: "desc" },
         { viewsCount: "desc" },
@@ -66,18 +69,21 @@ export async function GET() {
       },
     });
 
-    const formattedTrending = trendingPosts.map((post) => ({
+    const formattedTrending = trendingPosts.map((post: any) => ({
       id: post.id,
       title: cleanTitle(post.title, post.content),
       likes: post.likesCount,
-      comments: post._count.comments,
+      comments: post._count?.comments || 0,
       views: post.viewsCount,
       category: post.category,
     }));
 
-    // 2. Fetch Top Contributors from database
+    // 2. Fetch Top Contributors from database (excluding Interview Experiences)
     const topAuthors = await prisma.discussionPost.groupBy({
       by: ["authorName", "authorHandle", "authorRole", "avatarUrl"],
+      where: {
+        category: { not: "Interview Experience" },
+      },
       _count: {
         id: true,
       },
@@ -89,12 +95,12 @@ export async function GET() {
       take: 5,
     });
 
-    let formattedContributors = topAuthors.map((author) => ({
+    let formattedContributors = topAuthors.map((author: any) => ({
       name: author.authorName,
       handle: author.authorHandle || `@${author.authorName.toLowerCase().replace(/\s+/g, "")}`,
       role: author.authorRole || "Software Engineer",
       avatar: author.avatarUrl || null,
-      postCount: author._count.id,
+      postCount: typeof author._count === "object" ? author._count?.id || 1 : Number(author._count) || 1,
     }));
 
     // If fewer than 5 contributors, augment with real platform users from database
@@ -125,8 +131,11 @@ export async function GET() {
       formattedContributors = [...formattedContributors, ...userContributors];
     }
 
-    // 3. Aggregate all Tags from database
+    // 3. Aggregate all Tags from database (excluding interview experience metadata tags)
     const postTags = await prisma.discussionPost.findMany({
+      where: {
+        category: { not: "Interview Experience" },
+      },
       select: { tags: true },
     });
 
@@ -135,7 +144,7 @@ export async function GET() {
         postTags
           .flatMap((p) => p.tags)
           .map((t) => t.trim())
-          .filter(Boolean)
+          .filter((t) => Boolean(t) && !t.includes(":"))
       )
     );
 

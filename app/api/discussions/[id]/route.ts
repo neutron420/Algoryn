@@ -3,6 +3,97 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
+// GET /api/discussions/[id] - Fetch single post by ID
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: postId } = await context.params;
+    const { searchParams } = new URL(req.url);
+    const currentUserId = searchParams.get("userId");
+
+    if (!postId) {
+      return NextResponse.json({ error: "Post ID is required" }, { status: 400 });
+    }
+
+    const post = await prisma.discussionPost.findUnique({
+      where: { id: postId },
+      include: {
+        _count: { select: { comments: true } },
+        likes: currentUserId ? { where: { userId: currentUserId }, select: { id: true } } : false,
+        bookmarks: currentUserId ? { where: { userId: currentUserId }, select: { id: true } } : false,
+      },
+    });
+
+    if (!post) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    let parsedImages: string[] = [];
+    if (post.imageUrl) {
+      const trimmed = post.imageUrl.trim();
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        try {
+          const arr = JSON.parse(trimmed);
+          if (Array.isArray(arr)) {
+            parsedImages = arr.filter((u: unknown): u is string => typeof u === "string" && Boolean(u.trim()));
+          }
+        } catch {
+          parsedImages = [trimmed];
+        }
+      } else {
+        parsedImages = [trimmed];
+      }
+    }
+
+    let companyName = "General";
+    let roundType = "Full Loop";
+    let verdict = "Offer";
+    let role = post.authorRole || "Software Engineer";
+    const userTags: string[] = [];
+
+    for (const t of post.tags || []) {
+      if (t.startsWith("company:")) companyName = t.replace("company:", "");
+      else if (t.startsWith("round:")) roundType = t.replace("round:", "");
+      else if (t.startsWith("verdict:")) verdict = t.replace("verdict:", "");
+      else if (t.startsWith("role:")) role = t.replace("role:", "");
+      else userTags.push(t);
+    }
+
+    return NextResponse.json({
+      success: true,
+      post: {
+        id: post.id,
+        userId: post.userId,
+        authorName: post.authorName,
+        authorHandle: post.authorHandle || `@${post.authorName.toLowerCase().replace(/\s+/g, "")}`,
+        authorRole: role,
+        avatarUrl: post.avatarUrl,
+        title: post.title,
+        content: post.content,
+        imageUrl: post.imageUrl,
+        imageUrls: parsedImages,
+        category: post.category,
+        company: companyName,
+        round: roundType,
+        verdict,
+        tags: userTags,
+        viewsCount: post.viewsCount || 0,
+        likesCount: post.likesCount || 0,
+        bookmarksCount: post.bookmarksCount || 0,
+        commentsCount: post._count?.comments || 0,
+        createdAt: post.createdAt.toISOString(),
+        isLiked: (post.likes?.length ?? 0) > 0,
+        isBookmarked: (post.bookmarks?.length ?? 0) > 0,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching discussion post:", error);
+    return NextResponse.json({ error: "Failed to fetch post" }, { status: 500 });
+  }
+}
+
 // PATCH /api/discussions/[id] - Edit post
 export async function PATCH(
   req: Request,
