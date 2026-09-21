@@ -574,9 +574,9 @@ export default function ShareExperiencePage() {
       {/* ============================================================ */}
       {/* Main Page Content (No duplicate navbar header)                */}
       {/* ============================================================ */}
-      <main className="max-w-[1440px] mx-auto px-3.5 sm:px-6 pt-3 sm:pt-4 pb-28 lg:pb-16 space-y-3.5 sm:space-y-4">
-        {/* Top In-Page Action Bar */}
-        <div className="flex items-center justify-between gap-2 pb-1">
+      <main className="max-w-[1440px] mx-auto px-3.5 sm:px-6 pt-3 sm:pt-4 pb-16 space-y-3.5 sm:space-y-4">
+        {/* Top In-Page Action Bar (Single unified action bar) */}
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md py-2.5 -mx-3.5 sm:-mx-6 px-3.5 sm:px-6 border-b border-border/40 flex items-center justify-between gap-2 shadow-2xs">
           <Link
             href="/dashboard/interview-experiences"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors group shrink-0"
@@ -592,7 +592,7 @@ export default function ShareExperiencePage() {
               className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 border border-blue-200/60 dark:border-blue-800/40 transition-colors cursor-pointer"
             >
               <Save className="size-3.5" />
-              <span>Draft</span>
+              <span>Save Draft</span>
             </button>
 
             <button
@@ -1097,37 +1097,6 @@ export default function ShareExperiencePage() {
                 />
               </div>
             </div>
-
-            {/* Bottom Form Actions */}
-            <div className="flex items-center justify-end gap-2.5 pt-1 pb-6">
-              <button
-                type="button"
-                onClick={handleSaveDraft}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 border border-blue-200/60 dark:border-blue-800/40 transition-colors cursor-pointer"
-              >
-                <Save className="size-3.5" />
-                <span>Save Draft</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handlePublish}
-                disabled={isSubmitting || !company.trim() || !role.trim()}
-                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:text-muted-foreground text-white shadow-2xs transition-all cursor-pointer disabled:cursor-not-allowed active:scale-95"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="size-3.5 animate-spin" />
-                    <span>Publishing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="size-3.5" />
-                    <span>Publish Experience</span>
-                  </>
-                )}
-              </button>
-            </div>
           </div>
 
           {/* ─── Right Column: Flawless Live Debrief Preview (5 cols) ─── */}
@@ -1333,37 +1302,6 @@ export default function ShareExperiencePage() {
               )}
             </div>
           </div>
-        </div>
-
-        {/* Mobile Sticky Quick Action Bar */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border/80 px-4 py-2.5 flex items-center justify-between gap-3 shadow-lg">
-          <button
-            type="button"
-            onClick={handleSaveDraft}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/40 transition-colors cursor-pointer"
-          >
-            <Save className="size-3.5" />
-            <span>Save Draft</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handlePublish}
-            disabled={isSubmitting || !company.trim() || !role.trim()}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:text-muted-foreground text-white shadow-2xs transition-all cursor-pointer disabled:cursor-not-allowed active:scale-95"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="size-3.5 animate-spin" />
-                <span>Publishing...</span>
-              </>
-            ) : (
-              <>
-                <Send className="size-3.5" />
-                <span>Publish</span>
-              </>
-            )}
-          </button>
         </div>
       </main>
     </div>

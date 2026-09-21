@@ -497,7 +497,6 @@ export default function InterviewExperiencesPage() {
   const router = useRouter();
 
   const [experiences, setExperiences] = useState<InterviewExperienceItem[]>([]);
-  const [trendingExperiences, setTrendingExperiences] = useState<TrendingExperienceItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Database Companies
@@ -570,9 +569,6 @@ export default function InterviewExperiencesPage() {
           if (Array.isArray(data.experiences)) {
             setExperiences(data.experiences);
           }
-          if (Array.isArray(data.trending)) {
-            setTrendingExperiences(data.trending);
-          }
         }
       } catch (err) {
         console.error("Error loading interview experiences:", err);
@@ -604,11 +600,8 @@ export default function InterviewExperiencesPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto p-3.5 sm:p-6 space-y-6 pb-20">
-      {/* Main Content Grid: Left Feed + Right Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left: What's On Your Mind, Filters & Experience Cards */}
-        <div className="lg:col-span-8 space-y-4">
+    <div className="max-w-4xl mx-auto p-3.5 sm:p-6 space-y-6 pb-20">
+      <div className="space-y-4">
           {/* Hero Banner (What's on your mind? with Share Experience button) */}
           <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card p-5 sm:p-7 shadow-xs">
             {/* Ambient Gradient Glows */}
@@ -1016,219 +1009,6 @@ export default function InterviewExperiencesPage() {
             </div>
           )}
         </div>
-
-        {/* Right Sidebar Widgets */}
-        <div className="lg:col-span-4 space-y-5">
-          {/* Widget 1: Top Read Experiences (Dynamic from database) */}
-          <div className="bg-card border border-border/70 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Flame className="size-4 text-amber-500 fill-amber-500/20" />
-                <h3 className="font-semibold text-sm text-foreground">Top Read Experiences</h3>
-              </div>
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                Popular Debriefs
-              </span>
-            </div>
-
-            {trendingExperiences.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No trending debriefs yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {trendingExperiences.map((item, idx) => {
-                  const rankColors = [
-                    "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
-                    "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
-                    "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
-                  ];
-                  const rankBadgeClass = rankColors[idx] || "bg-muted text-muted-foreground border-border/50";
-
-                  return (
-                    <Link
-                      key={item.id}
-                      href={`/dashboard/interview-experiences/${item.id}`}
-                      onPointerEnter={() => {
-                        try {
-                          router.prefetch(`/dashboard/interview-experiences/${item.id}`);
-                        } catch {}
-                      }}
-                      onTouchStart={() => {
-                        try {
-                          router.prefetch(`/dashboard/interview-experiences/${item.id}`);
-                        } catch {}
-                      }}
-                      className="group p-2.5 -mx-1 rounded-xl hover:bg-muted/60 transition-all duration-200 block border border-transparent hover:border-border/60"
-                    >
-                      <div className="flex items-start gap-2.5">
-                        <span
-                          className={`size-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 border mt-0.5 ${rankBadgeClass}`}
-                        >
-                          {idx + 1}
-                        </span>
-
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <h4 className="text-xs font-bold text-foreground group-hover:text-blue-600 transition-colors leading-snug truncate">
-                            {item.company} — {item.role || "SDE"}
-                          </h4>
-
-                          <p className="text-[11px] text-muted-foreground line-clamp-1">
-                            {item.title}
-                          </p>
-
-                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground pt-0.5">
-                            <span className="font-semibold text-blue-600 dark:text-blue-400">
-                              {formatNumber(item.views)} views
-                            </span>
-                            <span>•</span>
-                            <span className="truncate">{item.round}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Widget 2: Relevant / Best Community Debriefs */}
-          <div className="bg-card border border-border/70 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Compass className="size-4 text-blue-600 dark:text-blue-400" />
-                <h3 className="font-semibold text-sm text-foreground">Relevant Debriefs</h3>
-              </div>
-              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-wider">
-                Top Highlights
-              </span>
-            </div>
-
-            {experiences.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No community debriefs yet.</p>
-            ) : (
-              <div className="space-y-2.5">
-                {[...experiences]
-                  .sort((a, b) => (b.viewsCount + b.likesCount * 2 + b.commentsCount * 3) - (a.viewsCount + a.likesCount * 2 + a.commentsCount * 3))
-                  .slice(0, 4)
-                  .map((post) => (
-                    <Link
-                      key={post.id}
-                      href={`/dashboard/interview-experiences/${post.id}`}
-                      onPointerEnter={() => {
-                        try {
-                          sessionStorage.setItem(`algoryn_cached_exp_${post.id}`, JSON.stringify(post));
-                          router.prefetch(`/dashboard/interview-experiences/${post.id}`);
-                        } catch {}
-                      }}
-                      onTouchStart={() => {
-                        try {
-                          sessionStorage.setItem(`algoryn_cached_exp_${post.id}`, JSON.stringify(post));
-                          router.prefetch(`/dashboard/interview-experiences/${post.id}`);
-                        } catch {}
-                      }}
-                      onClick={() => {
-                        try {
-                          sessionStorage.setItem(`algoryn_cached_exp_${post.id}`, JSON.stringify(post));
-                        } catch {}
-                      }}
-                      className="group p-2.5 rounded-xl bg-muted/30 hover:bg-muted/70 transition-all duration-200 block border border-border/40 hover:border-blue-500/40"
-                    >
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="size-5 rounded-md bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-[10px] shrink-0 border border-blue-500/20">
-                              {post.company ? post.company.charAt(0).toUpperCase() : "E"}
-                            </span>
-                            <span className="text-[11px] font-bold text-foreground truncate">
-                              {post.company || "General"}
-                            </span>
-                            {post.round && (
-                              <span className="text-[10px] text-muted-foreground truncate hidden sm:inline">
-                                • {post.round}
-                              </span>
-                            )}
-                          </div>
-                          {post.verdict && (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                              post.verdict === "OFFER"
-                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                                : "bg-muted text-muted-foreground"
-                            }`}>
-                              {post.verdict === "OFFER" ? "Offer" : post.verdict}
-                            </span>
-                          )}
-                        </div>
-
-                        <h4 className="text-xs font-semibold text-foreground/90 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-1">
-                          {post.title}
-                        </h4>
-
-                        {/* Post Analytics */}
-                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-1 border-t border-border/30">
-                          <span className="flex items-center gap-1 text-pink-600/90 dark:text-pink-400 font-medium">
-                            <Heart className="size-3 fill-pink-500/20 text-pink-500" />
-                            {formatNumber(post.likesCount)}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MessageCircle className="size-3" />
-                            {post.commentsCount}
-                          </span>
-                          <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium ml-auto" title={`${post.viewsCount} views`}>
-                            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3 fill-current">
-                              <g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"></path></g>
-                            </svg>
-                            {formatNumber(post.viewsCount)} views
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-              </div>
-            )}
-          </div>
-
-          {/* Widget 3: Interview Rounds Guide */}
-          <div className="bg-card border border-border/70 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3.5">
-            <div className="flex items-center gap-1.5">
-              <Flame className="size-4 text-amber-500" />
-              <h3 className="font-semibold text-sm text-foreground">Interview Rounds Guide</h3>
-            </div>
-
-            <div className="space-y-2.5 text-xs text-muted-foreground">
-              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/40 space-y-1">
-                <div className="flex items-center gap-1.5 text-foreground font-bold">
-                  <Target className="size-3.5 text-rose-500" />
-                  <span>Online Assessment (OA)</span>
-                </div>
-                <p className="text-[11px] leading-relaxed">
-                  Usually 2-3 LeetCode Medium problems with strict 60-90 min time limits. Test edge cases early!
-                </p>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/40 space-y-1">
-                <div className="flex items-center gap-1.5 text-foreground font-bold">
-                  <Code2 className="size-3.5 text-blue-500" />
-                  <span>Technical DSA Rounds</span>
-                </div>
-                <p className="text-[11px] leading-relaxed">
-                  45 minutes with an engineer. Communicate thought process out loud, ask clarifying constraints first.
-                </p>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/40 space-y-1">
-                <div className="flex items-center gap-1.5 text-foreground font-bold">
-                  <Layers className="size-3.5 text-violet-500" />
-                  <span>System Design (HLD/LLD)</span>
-                </div>
-                <p className="text-[11px] leading-relaxed">
-                  Focus on scalability, database tradeoffs, caching, and rate limiting for mid-to-senior roles.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
   );
 }

@@ -22,6 +22,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   ExternalLink,
+  ArrowBigUp,
+  MessageSquare,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "sonner";
@@ -74,6 +77,33 @@ interface InterviewExperienceItem {
   createdAt: string;
   isLiked: boolean;
   isBookmarked: boolean;
+}
+
+interface RecommendedReadItem {
+  id: string;
+  title: string;
+  content: string;
+  company: string;
+  likesCount: number;
+  commentsCount: number;
+  viewsCount: number;
+  isDiscussion?: boolean;
+}
+
+function getCardSnippet(rawContent: string): string {
+  if (!rawContent) return "";
+  return rawContent
+    .replace(/^#+\s+/gm, "")
+    .replace(/^[-*•]\s+/gm, "")
+    .replace(/^---\s*$/gm, "")
+    .replace(/\*\*\*.*?\*\*\*/g, "")
+    .replace(/\*\*.*?\*\*/g, "")
+    .replace(/\*.*?\*/g, "")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\$([^$]+)\$/g, "$1")
+    .replace(/\*/g, "")
+    .trim()
+    .slice(0, 160);
 }
 
 /* ------------------------------------------------------------------ */
@@ -144,16 +174,46 @@ function getOrCreateViewerId(): string {
 /* Markdown Viewer Component                                          */
 /* ------------------------------------------------------------------ */
 
-function formatInline(text: string) {
+function formatInline(text: string, knownMentions?: string[]) {
   if (!text) return null;
 
-  // Tokenizer regex: matches `code`, $math$, ***bold italic***, **bold**, *italic*
-  const regex = /(`[^`]+`|\$[^$]+\$|\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*[^*\n]+?\*)/g;
+  // Build mention pattern dynamically
+  const mentionParts: string[] = [];
+  if (knownMentions && knownMentions.length > 0) {
+    const escaped = knownMentions
+      .map((n) => n.trim())
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length)
+      .map((n) => "@" + n.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"));
+    if (escaped.length > 0) {
+      mentionParts.push(...escaped);
+    }
+  }
+  mentionParts.push("@[A-Z][a-zA-Z0-9_.-]*(?:\\s+[A-Z][a-zA-Z0-9_.-]*)+");
+  mentionParts.push("@[a-zA-Z0-9_.-]+");
+
+  const mentionPattern = mentionParts.join("|");
+
+  // Tokenizer regex: matches `code`, $math$, ***bold italic***, **bold**, *italic*, and @mentions
+  const regex = new RegExp(
+    `(\`[^\`]+\`|\\$[^\\$]+\\$|\\*\\*\\*.*?\\*\\*\\*|\\*\\*.*?\\*\\*|\\*[^*\\n]+?\\*|${mentionPattern})`,
+    "g"
+  );
   const parts = text.split(regex);
 
   return parts.map((part, idx) => {
     if (!part) return null;
 
+    if (part.startsWith("@") && part.length >= 2) {
+      return (
+        <span
+          key={idx}
+          className="inline-flex items-center text-blue-600 dark:text-blue-400 font-semibold bg-blue-500/10 hover:bg-blue-500/20 px-1.5 py-0.5 rounded-md text-xs transition-colors mx-0.5 select-all border border-blue-500/20"
+        >
+          {part}
+        </span>
+      );
+    }
     if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
       return (
         <code key={idx} className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-[12px] border border-border/50">
@@ -196,7 +256,15 @@ function formatInline(text: string) {
   });
 }
 
-function MarkdownViewer({ content, className = "" }: { content: string; className?: string }) {
+function MarkdownViewer({
+  content,
+  className = "",
+  knownMentions,
+}: {
+  content: string;
+  className?: string;
+  knownMentions?: string[];
+}) {
   if (!content) return null;
 
   const lines = content.split("\n");
@@ -300,7 +368,7 @@ function MarkdownViewer({ content, className = "" }: { content: string; classNam
         if (block.type === "h1") {
           return (
             <h2 key={idx} className="text-xl sm:text-2xl font-bold text-foreground mt-6 mb-2 pb-1 border-b border-border/40">
-              {formatInline(block.content)}
+              {formatInline(block.content, knownMentions)}
             </h2>
           );
         }
@@ -308,28 +376,28 @@ function MarkdownViewer({ content, className = "" }: { content: string; classNam
           return (
             <h3 key={idx} className="text-lg sm:text-xl font-bold text-foreground mt-5 mb-2 flex items-center gap-2">
               <span className="w-1.5 h-4 rounded-full bg-blue-600 shrink-0" />
-              <span>{formatInline(block.content)}</span>
+              <span>{formatInline(block.content, knownMentions)}</span>
             </h3>
           );
         }
         if (block.type === "h3") {
           return (
             <h4 key={idx} className="text-sm sm:text-base font-bold text-foreground mt-4 mb-1 text-blue-600 dark:text-blue-400">
-              {formatInline(block.content)}
+              {formatInline(block.content, knownMentions)}
             </h4>
           );
         }
         if (block.type === "h4") {
           return (
             <h5 key={idx} className="text-xs sm:text-sm font-bold text-foreground mt-3 mb-1">
-              {formatInline(block.content)}
+              {formatInline(block.content, knownMentions)}
             </h5>
           );
         }
         if (block.type === "question_title") {
           return (
             <div key={idx} className="mt-5 mb-2 font-bold text-sm sm:text-base text-foreground border-l-2 border-blue-600 pl-3 py-0.5">
-              {formatInline(block.content)}
+              {formatInline(block.content, knownMentions)}
             </div>
           );
         }
@@ -337,7 +405,7 @@ function MarkdownViewer({ content, className = "" }: { content: string; classNam
           return (
             <div key={idx} className="flex items-baseline gap-2 py-0.5 text-xs sm:text-sm leading-relaxed">
               <span className="font-bold text-foreground shrink-0">{block.label}:</span>
-              <span className="text-foreground/90">{formatInline(block.content)}</span>
+              <span className="text-foreground/90">{formatInline(block.content, knownMentions)}</span>
             </div>
           );
         }
@@ -352,7 +420,7 @@ function MarkdownViewer({ content, className = "" }: { content: string; classNam
                   : "bg-blue-500/5 border-blue-500/20 text-foreground/90 italic"
               }`}
             >
-              {formatInline(block.content)}
+              {formatInline(block.content, knownMentions)}
             </div>
           );
         }
@@ -373,7 +441,7 @@ function MarkdownViewer({ content, className = "" }: { content: string; classNam
         if (block.type === "quote") {
           return (
             <blockquote key={idx} className="border-l-2 border-blue-500 pl-3.5 my-2 italic text-muted-foreground bg-blue-500/5 py-2 rounded-r-lg text-xs sm:text-sm">
-              {formatInline(block.content)}
+              {formatInline(block.content, knownMentions)}
             </blockquote>
           );
         }
@@ -381,7 +449,7 @@ function MarkdownViewer({ content, className = "" }: { content: string; classNam
           return (
             <div key={idx} className="flex items-start gap-2 ml-1 my-1 text-foreground/90 leading-relaxed text-xs sm:text-sm">
               <span className="text-muted-foreground select-none font-bold shrink-0">–</span>
-              <div className="flex-1 min-w-0">{formatInline(block.content)}</div>
+              <div className="flex-1 min-w-0">{formatInline(block.content, knownMentions)}</div>
             </div>
           );
         }
@@ -391,13 +459,13 @@ function MarkdownViewer({ content, className = "" }: { content: string; classNam
               <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-muted text-foreground border border-border/50 shrink-0 select-none">
                 {block.num}.
               </span>
-              <div className="flex-1 min-w-0">{formatInline(block.content)}</div>
+              <div className="flex-1 min-w-0">{formatInline(block.content, knownMentions)}</div>
             </div>
           );
         }
         return (
           <p key={idx} className="leading-relaxed text-foreground/90 text-xs sm:text-sm">
-            {formatInline(block.content)}
+            {formatInline(block.content, knownMentions)}
           </p>
         );
       })}
@@ -421,6 +489,7 @@ function ThreadedCommentRow({
   onReplyTextChange,
   onSubmitReply,
   isSubmittingReply,
+  knownMentions,
 }: {
   comment: DiscussionCommentItem;
   depth?: number;
@@ -433,6 +502,7 @@ function ThreadedCommentRow({
   onReplyTextChange: (val: string) => void;
   onSubmitReply: (id: string) => void;
   isSubmittingReply: boolean;
+  knownMentions?: string[];
 }) {
   const [expanded, setExpanded] = useState(true);
   const isReplying = replyingToId === comment.id;
@@ -457,7 +527,7 @@ function ThreadedCommentRow({
           </div>
 
           <div className="text-xs sm:text-sm text-foreground/90 bg-muted/30 border border-border/50 rounded-xl p-2.5">
-            <MarkdownViewer content={comment.content} />
+            <MarkdownViewer content={comment.content} knownMentions={knownMentions} />
           </div>
 
           {/* Comment action bar */}
@@ -522,7 +592,13 @@ function ThreadedCommentRow({
 
       {/* Inline reply box */}
       {isReplying && (
-        <div className="ml-8 sm:ml-10 bg-muted/40 border border-border/70 rounded-xl p-2.5 space-y-2 animate-in fade-in zoom-in-95 duration-100">
+        <div className="ml-2 sm:ml-8 bg-muted/40 border border-border/70 rounded-xl p-2.5 sm:p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 shadow-2xs">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium px-0.5">
+            <span>Replying to</span>
+            <span className="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
+              @{comment.author?.name || "candidate"}
+            </span>
+          </div>
           <input
             type="text"
             autoFocus
@@ -535,7 +611,7 @@ function ThreadedCommentRow({
                 onSubmitReply(comment.id);
               }
             }}
-            className="w-full bg-transparent px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="w-full bg-background/80 border border-border/70 focus:border-blue-500/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all shadow-2xs"
           />
           <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-border/40">
             <button
@@ -549,7 +625,7 @@ function ThreadedCommentRow({
               type="button"
               onClick={() => onSubmitReply(comment.id)}
               disabled={isSubmittingReply || !replyText.trim()}
-              className="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full disabled:opacity-50 hover:bg-blue-700 transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+              className="bg-blue-600 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full disabled:opacity-50 hover:bg-blue-700 transition-all cursor-pointer flex items-center gap-1 active:scale-95"
             >
               {isSubmittingReply ? <Loader2 className="size-3 animate-spin" /> : "Reply"}
             </button>
@@ -559,7 +635,7 @@ function ThreadedCommentRow({
 
       {/* Nested Replies tree */}
       {hasReplies && expanded && (
-        <div className="pl-4 sm:pl-6 ml-3 sm:ml-4 border-l-2 border-border/60 space-y-2.5 pt-1">
+        <div className="pl-2.5 sm:pl-6 ml-2 sm:ml-4 border-l-2 border-border/60 space-y-2.5 pt-1">
           {comment.replies.map((reply) => (
             <ThreadedCommentRow
               key={reply.id}
@@ -574,6 +650,7 @@ function ThreadedCommentRow({
               onReplyTextChange={onReplyTextChange}
               onSubmitReply={onSubmitReply}
               isSubmittingReply={isSubmittingReply}
+              knownMentions={knownMentions}
             />
           ))}
         </div>
@@ -624,6 +701,75 @@ export default function InterviewExperienceDetailPage() {
   const [replyText, setReplyText] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [userCommentVotes, setUserCommentVotes] = useState<Record<string, "upvote" | "downvote">>(() => getStoredCommentVotes());
+
+  // Recommended Reads & Comments Sorting State (Image 3 Style)
+  const [recommendedReads, setRecommendedReads] = useState<RecommendedReadItem[]>([]);
+  const [commentSort, setCommentSort] = useState<"top" | "latest" | "oldest">("top");
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  const knownMentions = React.useMemo(() => {
+    const set = new Set<string>();
+    if (experience?.authorName) set.add(experience.authorName.trim());
+    function traverse(list: DiscussionCommentItem[]) {
+      for (const c of list) {
+        if (c.author?.name) set.add(c.author.name.trim());
+        if (c.replies && c.replies.length > 0) traverse(c.replies);
+      }
+    }
+    traverse(comments);
+    return Array.from(set).filter(Boolean);
+  }, [comments, experience?.authorName]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setSortDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!postId) return;
+    const loadRecommended = async () => {
+      try {
+        const res = await fetch("/api/interview-experiences?limit=10");
+        const data = await res.json();
+        let list: RecommendedReadItem[] = [];
+        if (data.success && Array.isArray(data.experiences)) {
+          list = data.experiences
+            .filter((item: any) => item.id !== postId)
+            .slice(0, 2)
+            .map((item: any) => ({
+              id: item.id,
+              title: item.title,
+              content: item.content,
+              company: item.company || "Interview Experience",
+              likesCount: item.likesCount || 0,
+              commentsCount: item.commentsCount || 0,
+              viewsCount: item.viewsCount || 0,
+              isDiscussion: false,
+            }));
+        }
+        setRecommendedReads(list);
+      } catch (e) {
+        console.error("Error loading recommended reads:", e);
+      }
+    };
+    loadRecommended();
+  }, [postId]);
+
+  const sortedComments = [...comments].sort((a, b) => {
+    if (commentSort === "top") {
+      return (b.likesCount - b.dislikesCount) - (a.likesCount - a.dislikesCount);
+    }
+    if (commentSort === "latest") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const { contextSafe } = useGSAP({ scope: containerRef });
@@ -1180,56 +1326,146 @@ export default function InterviewExperienceDetailPage() {
         </div>
       </article>
 
-      {/* Discussion / Comments Section */}
-      <section className="bg-card border border-border/70 rounded-2xl p-5 sm:p-7 shadow-xs space-y-5">
-        <div className="flex items-center justify-between border-b border-border/50 pb-3">
-          <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm sm:text-base text-foreground">Discussion &amp; Advice</h3>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+      {/* ─── Recommended Reads Section (Image 3 Style) ─── */}
+      {recommendedReads.length > 0 && (
+        <section className="space-y-3.5 pt-2">
+          <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+            Recommended Reads
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {recommendedReads.map((item) => (
+              <Link
+                key={item.id}
+                href={`/dashboard/interview-experiences/${item.id}`}
+                className="bg-card border border-border/80 hover:border-blue-500/50 rounded-2xl p-4 sm:p-5 transition-all duration-200 group flex flex-col justify-between shadow-2xs hover:shadow-xs"
+              >
+                <div className="space-y-2">
+                  <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 w-fit">
+                    {item.company || "Interview"}
+                  </span>
+                  <h4 className="text-sm sm:text-base font-bold text-foreground group-hover:text-blue-600 transition-colors line-clamp-1 leading-snug">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                    {getCardSnippet(item.content)}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-5 text-xs text-muted-foreground font-medium pt-3.5 mt-2 border-t border-border/40">
+                  <div className="flex items-center gap-1 hover:text-foreground transition-colors" title="Upvotes">
+                    <ArrowBigUp className="size-4" />
+                    <span>{item.likesCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1 hover:text-foreground transition-colors" title="Comments">
+                    <MessageSquare className="size-3.5" />
+                    <span>{item.commentsCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1 hover:text-foreground transition-colors" title="Views">
+                    <Eye className="size-3.5" />
+                    <span>{item.viewsCount}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ─── Comments Section (Image 3 Style) ─── */}
+      <section className="space-y-4 pt-2">
+        {/* Comments Header: Message Icon + Comments + Count Badge on Left, Sort on Right */}
+        <div className="flex items-center justify-between pb-1">
+          <div className="flex items-center gap-2 text-foreground font-bold text-sm sm:text-base">
+            <MessageSquare className="size-4 text-muted-foreground" />
+            <span>Comments</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">
               {comments.length}
             </span>
           </div>
-        </div>
 
-        {/* Comment input form */}
-        <div className="flex items-start gap-3">
-          <div className="size-8 rounded-full bg-linear-to-br from-blue-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
-            {user?.photoURL ? (
-              <img src={user.photoURL} alt="" className="size-full rounded-full object-cover" />
-            ) : (
-              user?.displayName?.[0]?.toUpperCase() || "Y"
+          {/* Sort dropdown */}
+          <div className="relative" ref={sortDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setSortDropdownOpen((v) => !v)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-muted/40 hover:bg-muted text-xs font-medium text-foreground border border-border/60 transition-colors cursor-pointer"
+            >
+              <span>{commentSort === "top" ? "Top" : commentSort === "latest" ? "Latest" : "Oldest"}</span>
+              <ChevronDown className="size-3.5 text-muted-foreground" />
+            </button>
+
+            {sortDropdownOpen && (
+              <div className="absolute right-0 mt-1.5 w-28 bg-popover text-popover-foreground border border-border/80 rounded-xl shadow-xl p-1 z-30 space-y-0.5 animate-in fade-in zoom-in-95 duration-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCommentSort("top");
+                    setSortDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                    commentSort === "top" ? "bg-blue-600 text-white font-bold" : "hover:bg-muted text-foreground"
+                  }`}
+                >
+                  Top
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCommentSort("latest");
+                    setSortDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                    commentSort === "latest" ? "bg-blue-600 text-white font-bold" : "hover:bg-muted text-foreground"
+                  }`}
+                >
+                  Latest
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCommentSort("oldest");
+                    setSortDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                    commentSort === "oldest" ? "bg-blue-600 text-white font-bold" : "hover:bg-muted text-foreground"
+                  }`}
+                >
+                  Oldest
+                </button>
+              </div>
             )}
           </div>
+        </div>
 
-          <div className="flex-1 bg-muted/40 border border-border/70 rounded-2xl p-3 focus-within:border-blue-500/50 transition-all space-y-2.5">
-            <textarea
-              placeholder="Ask a question about this interview round or share your advice..."
-              value={newCommentText}
-              onChange={(e) => setNewCommentText(e.target.value)}
-              rows={2}
-              className="w-full bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none leading-relaxed"
-            />
-            <div className="flex items-center justify-end gap-2 pt-1 border-t border-border/30">
-              <button
-                type="button"
-                onClick={handleAddComment}
-                disabled={isSubmittingComment || !newCommentText.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold px-4 py-1.5 rounded-full transition-all cursor-pointer flex items-center gap-1 active:scale-95"
-              >
-                {isSubmittingComment ? (
-                  <>
-                    <Loader2 className="size-3 animate-spin" />
-                    <span>Posting...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="size-3" />
-                    <span>Comment</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+        {/* Input Bar: Exact Match to Image 3 */}
+        <div className="relative flex items-center bg-muted/35 hover:bg-muted/50 focus-within:bg-card border border-border/80 focus-within:border-blue-500/80 rounded-2xl sm:rounded-full px-4 sm:px-5 py-2.5 sm:py-3 transition-all shadow-2xs">
+          <input
+            type="text"
+            placeholder="Type your comment here......."
+            value={newCommentText}
+            onChange={(e) => setNewCommentText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleAddComment();
+              }
+            }}
+            className="w-full bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none pr-9"
+          />
+          <button
+            type="button"
+            onClick={handleAddComment}
+            disabled={isSubmittingComment || !newCommentText.trim()}
+            className="absolute right-3.5 sm:right-4 p-1 rounded-full text-muted-foreground hover:text-blue-600 disabled:opacity-30 disabled:hover:text-muted-foreground transition-all cursor-pointer disabled:cursor-not-allowed"
+            title="Post Comment"
+          >
+            {isSubmittingComment ? (
+              <Loader2 className="size-4 animate-spin text-blue-600" />
+            ) : (
+              <Send className="size-4 rotate-12" />
+            )}
+          </button>
         </div>
 
         {/* Comments tree */}
@@ -1239,11 +1475,11 @@ export default function InterviewExperienceDetailPage() {
           </div>
         ) : comments.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-6">
-            No questions or comments yet. Be the first to ask about this interview!
+            No comments yet. Be the first to start the conversation!
           </p>
         ) : (
           <div className="space-y-4 pt-2">
-            {comments.map((rootComment) => (
+            {sortedComments.map((rootComment) => (
               <ThreadedCommentRow
                 key={rootComment.id}
                 comment={rootComment}
@@ -1262,6 +1498,7 @@ export default function InterviewExperienceDetailPage() {
                 onReplyTextChange={setReplyText}
                 onSubmitReply={handleAddReply}
                 isSubmittingReply={isSubmittingReply}
+                knownMentions={knownMentions}
               />
             ))}
           </div>

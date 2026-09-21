@@ -522,8 +522,8 @@ function cleanTrendingTitle(titleOrContent: string): string {
 }
 
 function renderInlineMarkdown(text: string): React.ReactNode {
-  // Regex matches **bold**, ~~strikethrough~~, <u>underline</u>, *italic*, `inline code`, [link](url), and @mentions
-  const regex = /(\*\*.*?\*\*|~~.*?~~|<u>.*?<\/u>|\*.*?\*|`.*?`|\[.*?\]\(.*?\)|\B@[a-zA-Z0-9_.-]+)/g;
+  // Regex matches **bold**, ~~strikethrough~~, <u>underline</u>, *italic*, `inline code`, [link](url), and @mentions (including full names like @First Last)
+  const regex = /(\*\*.*?\*\*|~~.*?~~|<u>.*?<\/u>|\*.*?\*|`.*?`|\[.*?\]\(.*?\)|\B@[A-Z][a-zA-Z0-9_.-]*(?:\s+[A-Z][a-zA-Z0-9_.-]*)+|\B@[a-zA-Z0-9_.-]+)/g;
   const tokens = text.split(regex);
 
   return tokens.map((token, i) => {
