@@ -892,15 +892,22 @@ export default function ShareExperiencePage() {
                   </div>
 
                   {/* Questions Asked Sub-section */}
-                  <div className="space-y-2 pt-2 border-t border-border/30">
+                  <div className="space-y-2.5 pt-2 border-t border-border/30">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground">
-                        Questions Asked
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-foreground">
+                          Questions Asked
+                        </span>
+                        {rnd.questions.length > 0 && (
+                          <span className="px-1.5 py-0.2 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold border border-blue-500/20">
+                            {rnd.questions.length}
+                          </span>
+                        )}
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleAddQuestion(rnd.id)}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 bg-blue-500/10 hover:bg-blue-500/20 px-2 py-0.5 rounded-lg border border-blue-500/20 transition-all cursor-pointer active:scale-95"
                       >
                         <Plus className="size-3" />
                         <span>Add Question</span>
@@ -908,59 +915,117 @@ export default function ShareExperiencePage() {
                     </div>
 
                     {rnd.questions.length === 0 ? (
-                      <p className="text-xs text-muted-foreground italic py-1">
-                        No specific questions listed yet. Click &quot;Add Question&quot; to add one.
-                      </p>
+                      <div className="p-3 rounded-xl bg-muted/20 border border-dashed border-border/70 text-center space-y-1">
+                        <p className="text-xs text-muted-foreground italic">
+                          No specific questions added for this round yet.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleAddQuestion(rnd.id)}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                        >
+                          <Plus className="size-3" />
+                          <span>Add first question</span>
+                        </button>
+                      </div>
                     ) : (
-                      <div className="space-y-2">
-                        {rnd.questions.map((q) => (
+                      <div className="space-y-2.5">
+                        {rnd.questions.map((q, qIdx) => (
                           <div
                             key={q.id}
-                            className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 sm:p-2 rounded-xl bg-muted/40 border border-border/50"
+                            className="p-3 rounded-xl bg-card border border-border/70 shadow-2xs space-y-2.5 focus-within:border-blue-500/60 transition-colors"
                           >
-                            <input
-                              type="text"
-                              placeholder="Problem title or concept..."
-                              value={q.title}
-                              onChange={(e) =>
-                                handleUpdateQuestion(rnd.id, q.id, { title: e.target.value })
-                              }
-                              className="w-full sm:flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-w-0"
-                            />
-
-                            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-between sm:justify-start pt-1 sm:pt-0 border-t sm:border-t-0 border-border/30">
-                              <input
-                                type="text"
-                                placeholder="Topic"
-                                value={q.topic}
-                                onChange={(e) =>
-                                  handleUpdateQuestion(rnd.id, q.id, { topic: e.target.value })
-                                }
-                                className="flex-1 sm:w-24 bg-card px-2 py-1 rounded-md text-[11px] text-foreground border border-border/50 focus:outline-none"
-                              />
-
-                              <select
-                                value={q.difficulty}
-                                onChange={(e) =>
-                                  handleUpdateQuestion(rnd.id, q.id, {
-                                    difficulty: e.target.value as "Easy" | "Medium" | "Hard",
-                                  })
-                                }
-                                className="bg-card px-2 py-1 rounded-md text-[11px] font-semibold border border-border/50 text-foreground focus:outline-none shrink-0 cursor-pointer"
-                              >
-                                <option value="Easy">Easy</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Hard">Hard</option>
-                              </select>
+                            {/* Question Header: Badge on left, Delete on right */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <span className="inline-flex items-center justify-center size-5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-[10px] border border-blue-500/20">
+                                  Q{qIdx + 1}
+                                </span>
+                                <span className="text-[11px] font-semibold text-muted-foreground">
+                                  Question {qIdx + 1}
+                                </span>
+                              </div>
 
                               <button
                                 type="button"
                                 onClick={() => handleRemoveQuestion(rnd.id, q.id)}
-                                className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer shrink-0"
-                                title="Delete Question"
+                                className="size-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                title="Remove Question"
                               >
                                 <X className="size-3.5" />
                               </button>
+                            </div>
+
+                            {/* Problem Title Input */}
+                            <input
+                              type="text"
+                              placeholder="Problem title or concept (e.g. Trapping Rain Water, LRU Cache)..."
+                              value={q.title}
+                              onChange={(e) =>
+                                handleUpdateQuestion(rnd.id, q.id, { title: e.target.value })
+                              }
+                              className="w-full bg-muted/40 hover:bg-muted/60 focus:bg-background border border-border/60 focus:border-blue-500/80 rounded-lg px-3 py-2 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-all"
+                            />
+
+                            {/* Topic + Difficulty Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-0.5">
+                              {/* Topic Input */}
+                              <div className="sm:col-span-6">
+                                <input
+                                  type="text"
+                                  placeholder="Topic (e.g. Arrays, Graph, LLD)"
+                                  value={q.topic}
+                                  onChange={(e) =>
+                                    handleUpdateQuestion(rnd.id, q.id, { topic: e.target.value })
+                                  }
+                                  className="w-full bg-muted/40 hover:bg-muted/60 focus:bg-background border border-border/60 focus:border-blue-500/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-all h-[34px]"
+                                />
+                              </div>
+
+                              {/* Difficulty 3-Button Segmented Control (LeetCode Style) */}
+                              <div className="sm:col-span-6">
+                                <div className="grid grid-cols-3 gap-1 p-0.5 rounded-lg bg-muted/50 border border-border/60 h-[34px] items-center">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleUpdateQuestion(rnd.id, q.id, { difficulty: "Easy" })
+                                    }
+                                    className={`h-full rounded-md text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center ${
+                                      q.difficulty === "Easy"
+                                        ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-2xs font-extrabold"
+                                        : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                  >
+                                    Easy
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleUpdateQuestion(rnd.id, q.id, { difficulty: "Medium" })
+                                    }
+                                    className={`h-full rounded-md text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center ${
+                                      q.difficulty === "Medium"
+                                        ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-2xs font-extrabold"
+                                        : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                  >
+                                    Medium
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleUpdateQuestion(rnd.id, q.id, { difficulty: "Hard" })
+                                    }
+                                    className={`h-full rounded-md text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center ${
+                                      q.difficulty === "Hard"
+                                        ? "bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 shadow-2xs font-extrabold"
+                                        : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                  >
+                                    Hard
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         ))}
