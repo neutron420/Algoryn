@@ -1,4 +1,3 @@
-import CallToAction from "@/components/templates/nova/sections/call-to-action-1";
 import Content from "@/components/templates/nova/sections/content-1";
 import FAQs from "@/components/templates/nova/sections/faqs-1";
 import Features from "@/components/templates/nova/sections/features-1";
@@ -29,7 +28,6 @@ export default function Landing() {
       <Pricing />
       <Testimonials />
       <FAQs />
-      <CallToAction />
       <Footer />
     </>
   );
