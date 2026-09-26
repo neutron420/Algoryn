@@ -611,6 +611,33 @@ export function AppSidebar({
           </SidebarGroupLabel>
 
           <SidebarGroupContent className="space-y-1">
+            {/* DSA Roadmap / Tree */}
+            <Link
+              href="/dashboard/roadmap"
+              onClick={() => {
+                if (isMobile) setOpenMobile(false);
+              }}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 ${
+                pathname === "/dashboard/roadmap"
+                  ? "bg-muted text-foreground font-semibold"
+                  : "text-foreground/90"
+              }`}
+              title="DSA Roadmap"
+            >
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <Network className="size-4 shrink-0 text-indigo-500 group-hover:scale-105 transition-transform" />
+                <div className="flex flex-col items-start min-w-0 text-left">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-xs text-foreground leading-tight">DSA Roadmap</span>
+                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[3px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                      TREE
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Visual Learning Hierarchy</span>
+                </div>
+              </div>
+            </Link>
+
             {/* Discussions */}
             <Link
               href="/dashboard/discussions"
