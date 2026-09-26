@@ -5,6 +5,7 @@ import { withDbRetry } from "@/lib/db-retry";
 import { ProblemItem } from "@/types/problem";
 import { TargetCompaniesBar } from "@/components/target-companies-bar";
 import { getOrSetCache } from "@/lib/redis";
+import { GoogleAdBanner } from "@/components/ads/google-ad-banner";
 
 interface PageProps {
   searchParams: Promise<{
@@ -261,6 +262,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         companyName={activeCompany.name}
         companySlug={activeCompany.slug}
       />
+
+      {/* Google Ads Placement */}
+      <div className="pt-2">
+        <GoogleAdBanner format="horizontal" minHeight={140} className="w-full" />
+      </div>
     </div>
   );
 }
