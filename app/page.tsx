@@ -7,6 +7,7 @@ import Topics from "@/components/templates/nova/sections/topics-1";
 import Testimonials from "@/components/templates/nova/sections/testimonials-1";
 import HowItWorks from "@/components/ui/how-it-works";
 import { AlgorynBentoGrid } from "@/components/landing/algoryn-bento";
+import Announcement9 from "@/components/ui/announcement-9";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default function Landing() {
       <Testimonials />
       <FAQs />
       <Footer />
+      <Announcement9 />
     </>
   );
 }
