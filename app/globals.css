@@ -334,4 +334,34 @@ button, [role="button"], a.btn, input[type="button"], input[type="submit"] {
   50% {
     transform: translateY(7px) rotate(1.2deg);
   }
-}
+}
+
+/* DSA Tree Node Opening & Closing Micro-Animations */
+@keyframes dsaCardEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.dsa-card-enter {
+  animation: dsaCardEnter 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes dsaEdgeEnter {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+.dsa-edge-enter {
+  animation: dsaEdgeEnter 200ms ease-out both;
+}
+

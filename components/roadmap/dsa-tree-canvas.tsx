@@ -136,6 +136,19 @@ function NodeIcon({ node, className }: { node: DsaNode; className?: string }) {
   return <Code2 className={cn("size-3 shrink-0 text-muted-foreground/70", className)} />;
 }
 
+// Detect if a node is part of a subtree currently playing its smooth collapse animation
+function isNodeOrAncestorCollapsing(item: LayoutNode, collapsingIds: Set<string>): boolean {
+  if (collapsingIds.size === 0) return false;
+  let curr: LayoutNode | undefined = item;
+  while (curr) {
+    if (curr.parentLayoutNode && collapsingIds.has(curr.parentLayoutNode.node.id)) {
+      return true;
+    }
+    curr = curr.parentLayoutNode;
+  }
+  return false;
+}
+
 // Initial set of expanded nodes: Minimal (root only) as requested
 const INITIAL_EXPANDED = new Set<string>();
 
@@ -148,8 +161,9 @@ export function DsaTreeCanvas() {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Expansion & Selection State
+  // Expansion & Selection State (with smooth collapse tracking)
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(INITIAL_EXPANDED);
+  const [collapsingNodeIds, setCollapsingNodeIds] = useState<Set<string>>(new Set());
   const [selectedNode, setSelectedNode] = useState<DsaNode | null>(null);
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
   const [pendingFocusNodeId, setPendingFocusNodeId] = useState<string | null>(null);
@@ -365,22 +379,40 @@ export function DsaTreeCanvas() {
   const zoomOut = () => setZoom((z) => Math.max(z * 0.8, 0.25));
 
   // =========================================================================
-  // NODE EXPAND / COLLAPSE
+  // NODE EXPAND / COLLAPSE (Smooth Dynamic Gliding)
   // =========================================================================
   const toggleNodeExpansion = (nodeId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setExpandedNodes((prev) => {
-      const next = new Set(prev);
-      if (next.has(nodeId)) {
+
+    if (expandedNodes.has(nodeId)) {
+      // Trigger smooth closing transition
+      setCollapsingNodeIds((prev) => new Set([...prev, nodeId]));
+
+      setTimeout(() => {
+        setExpandedNodes((prev) => {
+          const next = new Set(prev);
+          next.delete(nodeId);
+          return next;
+        });
+        setCollapsingNodeIds((prev) => {
+          const next = new Set(prev);
+          next.delete(nodeId);
+          return next;
+        });
+      }, 150);
+    } else {
+      // Clear any pending collapse for this node and expand immediately
+      setCollapsingNodeIds((prev) => {
+        const next = new Set(prev);
         next.delete(nodeId);
-      } else {
-        next.add(nodeId);
-      }
-      return next;
-    });
+        return next;
+      });
+      setExpandedNodes((prev) => new Set([...prev, nodeId]));
+    }
   };
 
   const expandAll = () => {
+    setCollapsingNodeIds(new Set());
     const all = new Set<string>();
     function traverse(n: DsaNode) {
       if (n.children && n.children.length > 0) {
@@ -393,8 +425,12 @@ export function DsaTreeCanvas() {
   };
 
   const collapseAll = () => {
-    setExpandedNodes(new Set());
-    setTimeout(fitView, 50);
+    // Collect all currently expanded nodes to trigger smooth collapse on all of them
+    setCollapsingNodeIds(new Set(expandedNodes));
+    setTimeout(() => {
+      setExpandedNodes(new Set());
+      setCollapsingNodeIds(new Set());
+    }, 150);
   };
 
   // Jump to & focus searched node
@@ -558,6 +594,9 @@ export function DsaTreeCanvas() {
             className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
           >
             {layoutEdges.map((edge) => {
+              const sourceNodeId = edge.id.split("->")[0].replace("trunk-", "");
+              const isEdgeCollapsing = collapsingNodeIds.has(sourceNodeId);
+
               if (edge.isTrunk) {
                 // Vertical trunk spine
                 return (
@@ -570,7 +609,10 @@ export function DsaTreeCanvas() {
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeDasharray="4 4"
-                    className="text-slate-300 dark:text-slate-700 opacity-60"
+                    className={cn(
+                      "text-slate-300 dark:text-slate-700 transition-opacity duration-150",
+                      isEdgeCollapsing ? "opacity-0" : "opacity-60 dsa-edge-enter"
+                    )}
                   />
                 );
               }
@@ -586,13 +628,16 @@ export function DsaTreeCanvas() {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
-                  className="text-slate-300 dark:text-slate-700 transition-colors duration-150"
+                  className={cn(
+                    "text-slate-300 dark:text-slate-700 transition-opacity duration-150",
+                    isEdgeCollapsing ? "opacity-0" : "opacity-80 dsa-edge-enter"
+                  )}
                 />
               );
             })}
           </svg>
 
-          {/* HTML Nodes Layer */}
+          {/* HTML Nodes Layer (GPU Accelerated Smooth Gliding & 2-Layer Transitions) */}
           {layoutNodes.map((item) => {
             const isRoot = item.node.type === "root";
             const isTopic = item.node.type === "topic";
@@ -601,81 +646,94 @@ export function DsaTreeCanvas() {
             const isTechnique = item.node.type === "technique";
             const isSelected = selectedNode?.id === item.node.id;
             const isHighlighted = highlightedNodeId === item.node.id;
+            const isCollapsing = isNodeOrAncestorCollapsing(item, collapsingNodeIds);
 
             return (
               <div
                 key={item.node.id}
                 style={{
                   position: "absolute",
-                  left: `${item.x - item.width / 2}px`,
-                  top: `${item.y - item.height / 2}px`,
+                  left: 0,
+                  top: 0,
                   width: `${item.width}px`,
                   height: `${item.height}px`,
+                  transform: `translate3d(${item.x - item.width / 2}px, ${item.y - item.height / 2}px, 0)`,
+                  transition: isDragging
+                    ? "none"
+                    : "transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 160ms ease-out",
+                  opacity: isCollapsing ? 0 : 1,
+                  pointerEvents: isCollapsing ? "none" : "auto",
+                  zIndex: isSelected ? 20 : isHighlighted ? 25 : isRoot ? 15 : 1,
+                  willChange: isDragging ? "auto" : "transform, opacity",
                 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedNode(item.node);
-                }}
-                className={cn(
-                  "pointer-events-auto rounded-xl flex items-center justify-between px-3 transition-[background-color,border-color,box-shadow,color,opacity] duration-150 cursor-pointer shadow-xs group",
-                  // Depth-Based Visual Hierarchy (NeetCode Style)
-                  isRoot &&
-                    "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold border-2 border-indigo-400 shadow-md",
-                  isTopic &&
-                    "bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#312E81] border border-[#C7D2FE] dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 dark:text-indigo-200 dark:border-indigo-800 shadow-2xs font-semibold",
-                  isSubtopic &&
-                    "bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 dark:bg-card/90 dark:hover:bg-muted dark:text-foreground dark:border-border/80 shadow-2xs font-medium",
-                  isPattern &&
-                    "bg-slate-50 hover:bg-white text-slate-700 border border-slate-200/80 dark:bg-card/70 dark:hover:bg-muted/80 dark:text-foreground/90 dark:border-border/60 shadow-2xs",
-                  isTechnique &&
-                    "bg-white/90 hover:bg-white text-slate-600 border border-slate-200/60 dark:bg-card/50 dark:hover:bg-muted/60 dark:text-foreground/80 dark:border-border/40 shadow-2xs text-[11px]",
-                  // Selected state
-                  isSelected &&
-                    "ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-background border-indigo-500 dark:border-indigo-400 shadow-md",
-                  // Search Highlighted state
-                  isHighlighted &&
-                    "ring-4 ring-amber-500 ring-offset-2 animate-pulse"
-                )}
               >
-                {/* Node Title & Icon */}
-                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
-                  <NodeIcon node={item.node} />
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedNode(item.node);
+                  }}
+                  className={cn(
+                    "size-full rounded-xl flex items-center justify-between px-3 cursor-pointer shadow-xs group dsa-card-enter",
+                    "transition-[background-color,border-color,box-shadow,color] duration-150",
+                    // Depth-Based Visual Hierarchy (NeetCode Style)
+                    isRoot &&
+                      "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold border-2 border-indigo-400 shadow-md",
+                    isTopic &&
+                      "bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#312E81] border border-[#C7D2FE] dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 dark:text-indigo-200 dark:border-indigo-800 shadow-2xs font-semibold",
+                    isSubtopic &&
+                      "bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 dark:bg-card/90 dark:hover:bg-muted dark:text-foreground dark:border-border/80 shadow-2xs font-medium",
+                    isPattern &&
+                      "bg-slate-50 hover:bg-white text-slate-700 border border-slate-200/80 dark:bg-card/70 dark:hover:bg-muted/80 dark:text-foreground/90 dark:border-border/60 shadow-2xs",
+                    isTechnique &&
+                      "bg-white/90 hover:bg-white text-slate-600 border border-slate-200/60 dark:bg-card/50 dark:hover:bg-muted/60 dark:text-foreground/80 dark:border-border/40 shadow-2xs text-[11px]",
+                    // Selected state
+                    isSelected &&
+                      "ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-background border-indigo-500 dark:border-indigo-400 shadow-md",
+                    // Search Highlighted state
+                    isHighlighted &&
+                      "ring-4 ring-amber-500 ring-offset-2 animate-pulse"
+                  )}
+                >
+                  {/* Node Title & Icon */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                    <NodeIcon node={item.node} />
 
-                  <span
-                    className={cn(
-                      "truncate leading-tight",
-                      isRoot ? "text-sm text-white font-bold" : isTopic ? "text-xs font-semibold" : "text-xs"
-                    )}
-                    title={item.node.name}
-                  >
-                    {item.node.name}
-                  </span>
+                    <span
+                      className={cn(
+                        "truncate leading-tight",
+                        isRoot ? "text-sm text-white font-bold" : isTopic ? "text-xs font-semibold" : "text-xs"
+                      )}
+                      title={item.node.name}
+                    >
+                      {item.node.name}
+                    </span>
+                  </div>
+
+                  {/* Expansion Toggle Button (Direct children count) */}
+                  {item.hasChildren && (
+                    <button
+                      type="button"
+                      onClick={(e) => toggleNodeExpansion(item.node.id, e)}
+                      className={cn(
+                        "size-5 rounded-md flex items-center justify-center shrink-0 ml-1.5 transition-colors cursor-pointer touch-manipulation",
+                        isRoot
+                          ? "bg-white/20 hover:bg-white/30 text-white"
+                          : item.isExpanded
+                          ? "bg-indigo-200/80 hover:bg-indigo-300 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
+                          : "bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
+                      )}
+                      title={item.isExpanded ? "Collapse children" : `Expand (${item.childrenCount})`}
+                    >
+                      {item.isExpanded ? (
+                        <ChevronDown className="size-3.5" />
+                      ) : (
+                        <span className="text-[10px] font-mono font-bold leading-none">
+                          +{item.childrenCount}
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </div>
-
-                {/* Expansion Toggle Button (Direct children count) */}
-                {item.hasChildren && (
-                  <button
-                    type="button"
-                    onClick={(e) => toggleNodeExpansion(item.node.id, e)}
-                    className={cn(
-                      "size-5 rounded-md flex items-center justify-center shrink-0 ml-1.5 transition-colors cursor-pointer touch-manipulation",
-                      isRoot
-                        ? "bg-white/20 hover:bg-white/30 text-white"
-                        : item.isExpanded
-                        ? "bg-indigo-200/80 hover:bg-indigo-300 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
-                        : "bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
-                    )}
-                    title={item.isExpanded ? "Collapse children" : `Expand (${item.childrenCount})`}
-                  >
-                    {item.isExpanded ? (
-                      <ChevronDown className="size-3.5" />
-                    ) : (
-                      <span className="text-[10px] font-mono font-bold leading-none">
-                        +{item.childrenCount}
-                      </span>
-                    )}
-                  </button>
-                )}
               </div>
             );
           })}
