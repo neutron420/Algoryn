@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function StandaloneRoadmapPage() {
   return (
-    <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
+    <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-background">
       {/* Top Bar */}
       <header className="h-14 border-b border-border/60 bg-background/95 backdrop-blur-md px-4 flex items-center justify-between z-30 shrink-0">
         <div className="flex items-center gap-3">
@@ -38,7 +38,7 @@ export default function StandaloneRoadmapPage() {
       </header>
 
       {/* Main Canvas View */}
-      <main className="flex-1 w-full h-[calc(100vh-3.5rem)] overflow-hidden">
+      <main className="flex-1 w-full h-full overflow-hidden">
         <DsaTreeCanvas />
       </main>
     </div>

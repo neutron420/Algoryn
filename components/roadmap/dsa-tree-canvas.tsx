@@ -178,30 +178,41 @@ export function DsaTreeCanvas() {
   const fitView = useCallback(() => {
     if (!containerRef.current || layoutNodes.length === 0) return;
     const container = containerRef.current.getBoundingClientRect();
+    const isMobile = container.width < 640;
 
     const treeWidth = Math.max(boundingBox.width, 240);
     const treeHeight = Math.max(boundingBox.height, 80);
-    const paddingX = 72;
-    const paddingY = 110; // Clearance for top search bar
-    const availableWidth = Math.max(container.width - paddingX * 2, 240);
-    const availableHeight = Math.max(container.height - paddingY * 2, 200);
+    const paddingX = isMobile ? 16 : 72;
+    const paddingY = isMobile ? 75 : 110; // Clearance for top search bar
+    const availableWidth = Math.max(container.width - paddingX * 2, 200);
+    const availableHeight = Math.max(container.height - paddingY * 2, 180);
 
     const scaleX = availableWidth / treeWidth;
     const scaleY = availableHeight / treeHeight;
-    const targetZoom = Math.min(Math.max(Math.min(scaleX, scaleY), 0.38), 1.15);
+    const baseScale = Math.min(scaleX, scaleY);
+
+    // On mobile, scale proportionally so nodes never look overly big or bloated
+    const targetZoom = isMobile
+      ? Math.min(Math.max(baseScale, 0.48), 0.76)
+      : Math.min(Math.max(baseScale, 0.38), 1.15);
 
     const treeCenterX = (boundingBox.minX + boundingBox.maxX) / 2;
     const targetPanX = container.width / 2 - treeCenterX * targetZoom;
-    const targetPanY = Math.max((container.height - treeHeight * targetZoom) / 2, 90);
+    const targetPanY = Math.max((container.height - treeHeight * targetZoom) / 2, isMobile ? 65 : 90);
 
     setZoom(targetZoom);
     setPan({ x: targetPanX, y: targetPanY });
   }, [boundingBox, layoutNodes.length]);
 
-  // Trigger fitView on initial mount
+  const initialMountedRef = useRef(false);
+
+  // Trigger fitView ONCE on initial mount only (never automatically shrink/zoom-out when expanding nodes)
   useEffect(() => {
-    fitView();
-  }, [fitView]);
+    if (!initialMountedRef.current && layoutNodes.length > 0) {
+      initialMountedRef.current = true;
+      fitView();
+    }
+  }, [fitView, layoutNodes.length]);
 
   // Search auto-focus on newly computed layout
   useEffect(() => {
@@ -403,7 +414,7 @@ export function DsaTreeCanvas() {
   };
 
   return (
-    <div className="relative w-full h-[calc(100vh-3.5rem)] overflow-hidden bg-[#FAFAFC] dark:bg-[#090D16] select-none">
+    <div className="relative w-full h-full min-h-[calc(100dvh-3.5rem)] sm:min-h-0 overflow-hidden bg-[#FAFAFC] dark:bg-[#090D16] select-none">
       {/* ─── 0. PURE CSS HARDWARE-ACCELERATED DOT GRID ─── */}
       <div
         className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20 text-slate-400 dark:text-slate-600"
@@ -415,24 +426,24 @@ export function DsaTreeCanvas() {
       />
 
       {/* ─── 1. TOP FLOATING CONTROL BAR (RESPONSIVE SEARCH + STATS) ─── */}
-      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 pointer-events-none">
+      <div className="absolute top-2.5 sm:top-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-3 pointer-events-none">
         {/* Search Bar */}
         <div className="relative pointer-events-auto w-full sm:max-w-md">
           <div className="relative flex items-center">
-            <Search className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 size-3.5 sm:size-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
-              placeholder="Search 500+ DSA concepts (Kadane, DFS, Segment Tree)..."
-              className="w-full pl-8 sm:pl-9 pr-8 py-1.5 sm:py-2 text-xs sm:text-sm rounded-xl border border-border/80 bg-background/95 backdrop-blur-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-foreground placeholder:text-muted-foreground/60"
+              placeholder="Search concepts (e.g. Kadane, DP, DFS)..."
+              className="w-full pl-8 pr-7 py-1.5 sm:py-2 text-xs sm:text-sm rounded-xl border border-border/80 bg-background/95 backdrop-blur-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all text-foreground placeholder:text-muted-foreground/60"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <X className="size-3.5" />
               </button>
@@ -671,35 +682,35 @@ export function DsaTreeCanvas() {
         </div>
       </div>
 
-      {/* ─── 3. BOTTOM-LEFT FLOATING CANVAS ZOOM CONTROLS (EXACT NEETCODE STYLE) ─── */}
-      <div className="absolute bottom-5 left-5 z-20 flex flex-col gap-1.5 bg-background/95 backdrop-blur-md border border-border/80 p-1 rounded-xl shadow-lg">
+      {/* ─── 3. FLOATING CANVAS ZOOM CONTROLS (HORIZONTAL PILL ON MOBILE, VERTICAL ON DESKTOP) ─── */}
+      <div className="absolute bottom-4 left-3 sm:bottom-6 sm:left-5 z-20 flex flex-row sm:flex-col items-center gap-1 sm:gap-1.5 bg-background/95 backdrop-blur-md border border-border/80 p-1 rounded-xl shadow-lg">
         <button
           type="button"
           onClick={zoomIn}
-          className="size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+          className="size-7 sm:size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
           title="Zoom In"
         >
-          <Plus className="size-4" />
+          <Plus className="size-3.5 sm:size-4" />
         </button>
 
         <button
           type="button"
           onClick={zoomOut}
-          className="size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+          className="size-7 sm:size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
           title="Zoom Out"
         >
-          <Minus className="size-4" />
+          <Minus className="size-3.5 sm:size-4" />
         </button>
 
-        <span className="w-full h-px bg-border/60 my-0.5" />
+        <span className="h-4 w-px sm:h-px sm:w-full bg-border/60 mx-0.5 sm:mx-0 sm:my-0.5" />
 
         <button
           type="button"
           onClick={fitView}
-          className="size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+          className="size-7 sm:size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
           title="Fit / Center Visible Tree"
         >
-          <Maximize2 className="size-3.5" />
+          <Maximize2 className="size-3 sm:size-3.5" />
         </button>
       </div>
 
