@@ -53,14 +53,14 @@ export function GoogleAdBanner({
   useEffect(() => {
     if (!isClient) return;
 
-    // Small delay to ensure script & DOM are fully mounted
-    const timer = setTimeout(() => {
-      const el = adRef.current;
-      if (!el) return;
+    const el = adRef.current;
+    if (!el) return;
 
-      // Prevent duplicate push to the same element
+    const pushAd = () => {
       if (
         isPushedRef.current ||
+        !el ||
+        el.offsetWidth === 0 ||
         el.getAttribute("data-adsbygoogle-status") ||
         el.innerHTML.trim().length > 0
       ) {
@@ -76,9 +76,28 @@ export function GoogleAdBanner({
       } catch (err) {
         console.warn("Google AdSense load warning:", err);
       }
-    }, 150);
+    };
 
-    return () => clearTimeout(timer);
+    // Small delay to allow DOM & styles to compute
+    const timer = setTimeout(pushAd, 150);
+
+    // Watch for visibility/width change (e.g. responsive breakpoints)
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.contentRect.width > 0 && !isPushedRef.current) {
+            pushAd();
+          }
+        }
+      });
+      observer.observe(el);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      observer?.disconnect();
+    };
   }, [isClient, slot, format]);
 
   return (

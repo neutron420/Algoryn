@@ -601,8 +601,10 @@ export default function InterviewExperiencesPage() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto p-3.5 sm:p-6 space-y-6 pb-20">
-      <div className="space-y-4">
+    <div className="max-w-7xl mx-auto p-3.5 sm:p-6 pb-20">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Main Feed Column */}
+        <div className="flex-1 min-w-0 space-y-4 w-full">
           {/* Hero Banner (What's on your mind? with Share Experience button) */}
           <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card p-5 sm:p-7 shadow-xs">
             {/* Ambient Gradient Glows */}
@@ -1006,7 +1008,7 @@ export default function InterviewExperiencesPage() {
                       );
                     }}
                   />
-                  {idx === 2 && (
+                  {(idx === 2 || (experiences.length < 3 && idx === experiences.length - 1)) && (
                     <div className="my-4">
                       <GoogleAdBanner format="horizontal" minHeight={160} />
                     </div>
@@ -1016,6 +1018,60 @@ export default function InterviewExperiencesPage() {
             </div>
           )}
         </div>
+
+        {/* Right Sticky Sidebar (Desktop): Full Rectangle Ad & Community Widget */}
+        <aside className="hidden lg:flex flex-col gap-5 w-80 shrink-0 sticky top-20">
+          {/* Top Rectangle Ad Unit with Rounded Corners */}
+          <GoogleAdBanner
+            format="rectangle"
+            minHeight={280}
+            className="w-full bg-card border border-border/70 rounded-2xl shadow-2xs"
+          />
+
+          {/* Community Debrief Guidelines Card */}
+          <div className="bg-card border border-border/70 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3.5">
+            <div className="flex items-center gap-2">
+              <div className="size-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
+                <Briefcase className="size-4" />
+              </div>
+              <div>
+                <h3 className="font-bold text-xs text-foreground">Interview Debriefs</h3>
+                <p className="text-[10px] text-muted-foreground">Community verified experiences</p>
+              </div>
+            </div>
+
+            <ul className="space-y-2 text-[11px] text-muted-foreground">
+              <li className="flex items-start gap-1.5">
+                <span className="text-blue-500 font-bold">•</span>
+                <span>Real OA questions & coding round breakdowns</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-blue-500 font-bold">•</span>
+                <span>Compensation & offer verdict transparency</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-blue-500 font-bold">•</span>
+                <span>System design architecture insights</span>
+              </li>
+            </ul>
+
+            <Link
+              href="/dashboard/interview-experiences/share"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs"
+            >
+              <Plus className="size-3.5" />
+              <span>Share Your Experience</span>
+            </Link>
+          </div>
+
+          {/* Sticky Skyscraper / Vertical Ad Unit with Rounded Corners */}
+          <GoogleAdBanner
+            format="auto"
+            minHeight={340}
+            className="w-full bg-card border border-border/70 rounded-2xl shadow-2xs"
+          />
+        </aside>
+      </div>
     </div>
   );
 }
