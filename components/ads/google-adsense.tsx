@@ -3,20 +3,11 @@
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 
-// Explicitly exclude routes where Google strictly prohibits ads:
-// - /login: Authentication / behavioral screen without publisher content
-// - /dashboard: User application shell behind login wall
-const EXCLUDED_ROUTES = ["/login", "/dashboard"];
-
 export function GoogleAdSenseClient() {
   const pathname = usePathname();
 
-  // If the user is on /login or /dashboard, DO NOT inject the AdSense script
-  const isExcluded = EXCLUDED_ROUTES.some(
-    (route) => pathname === route || pathname?.startsWith(`${route}/`)
-  );
-
-  if (isExcluded) {
+  // Exclude /login authentication screen
+  if (pathname === "/login") {
     return null;
   }
 
@@ -29,3 +20,5 @@ export function GoogleAdSenseClient() {
     />
   );
 }
+
+export default GoogleAdSenseClient;

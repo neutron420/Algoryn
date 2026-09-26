@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import InterviewExperienceDetailSkeleton from "@/components/interview-experience-detail-skeleton";
+import { GoogleAdBanner } from "@/components/ads/google-ad-banner";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                              */
@@ -1325,6 +1326,9 @@ export default function InterviewExperienceDetailPage() {
           </div>
         </div>
       </article>
+
+      {/* Google Ads Placement */}
+      <GoogleAdBanner format="horizontal" minHeight={160} className="my-6" />
 
       {/* ─── Recommended Reads Section (Image 3 Style) ─── */}
       {recommendedReads.length > 0 && (

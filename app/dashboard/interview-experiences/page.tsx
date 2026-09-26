@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useRouter } from "next/navigation";
+import { GoogleAdBanner } from "@/components/ads/google-ad-banner";
 
 /* ------------------------------------------------------------------ */
 /* Constants & Types                                                  */
@@ -989,22 +990,28 @@ export default function InterviewExperiencesPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {experiences.map((item) => (
-                <ExperienceCard
-                  key={item.id}
-                  item={item}
-                  currentUserId={currentUserId}
-                  onLikeToggle={(id, nextLiked, count) => {
-                    setExperiences((prev) =>
-                      prev.map((e) => (e.id === id ? { ...e, isLiked: nextLiked, likesCount: count } : e))
-                    );
-                  }}
-                  onBookmarkToggle={(id, nextBookmarked) => {
-                    setExperiences((prev) =>
-                      prev.map((e) => (e.id === id ? { ...e, isBookmarked: nextBookmarked } : e))
-                    );
-                  }}
-                />
+              {experiences.map((item, idx) => (
+                <React.Fragment key={item.id}>
+                  <ExperienceCard
+                    item={item}
+                    currentUserId={currentUserId}
+                    onLikeToggle={(id, nextLiked, count) => {
+                      setExperiences((prev) =>
+                        prev.map((e) => (e.id === id ? { ...e, isLiked: nextLiked, likesCount: count } : e))
+                      );
+                    }}
+                    onBookmarkToggle={(id, nextBookmarked) => {
+                      setExperiences((prev) =>
+                        prev.map((e) => (e.id === id ? { ...e, isBookmarked: nextBookmarked } : e))
+                      );
+                    }}
+                  />
+                  {idx === 2 && (
+                    <div className="my-4">
+                      <GoogleAdBanner format="horizontal" minHeight={160} />
+                    </div>
+                  )}
+                </React.Fragment>
               ))}
             </div>
           )}

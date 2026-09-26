@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "sonner";
+import { GoogleAdBanner } from "@/components/ads/google-ad-banner";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -872,6 +873,15 @@ function DiscussionsSidebarWidgets({
             ))}
           </div>
         )}
+      </div>
+      
+      {/* Widget 4: Google Ads (TakeUForward Image 2 Style) */}
+      <div className="sticky top-20">
+        <GoogleAdBanner
+          format="auto"
+          className="bg-card border border-border/70 rounded-2xl shadow-2xs"
+          minHeight={320}
+        />
       </div>
     </div>
   );

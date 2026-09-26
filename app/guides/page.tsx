@@ -12,6 +12,7 @@ import {
   Clock,
   Compass,
 } from "lucide-react";
+import { GoogleAdBanner } from "@/components/ads/google-ad-banner";
 
 export const metadata: Metadata = {
   title: "Coding Interview Guides & DSA Roadmaps | Algoryn",
@@ -234,6 +235,9 @@ export default function GuidesPage() {
               </table>
             </div>
           </section>
+
+          {/* Google Ads Placement */}
+          <GoogleAdBanner format="horizontal" minHeight={160} className="my-8" />
 
           {/* Bottom Call to Action */}
           <div className="text-center p-8 sm:p-10 rounded-2xl bg-gradient-to-br from-orange-500/10 via-background to-card border border-orange-500/20">
