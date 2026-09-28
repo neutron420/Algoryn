@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NotificationService } from "@/lib/services/notification.service";
 
 export async function GET(req: Request) {
   try {
@@ -90,6 +91,30 @@ export async function POST(req: Request) {
             problemId,
           },
         });
+
+        // Trigger dynamic notification
+        try {
+          const problem = await prisma.problem.findUnique({
+            where: { id: problemId },
+            include: {
+              companies: {
+                include: { company: true },
+                take: 1,
+              },
+            },
+          });
+
+          if (problem) {
+            const primaryCompany = problem.companies[0]?.company;
+            await NotificationService.notifyBookmarkAdded(
+              userId,
+              problem.title,
+              primaryCompany?.slug
+            );
+          }
+        } catch (notifErr) {
+          console.warn("[BookmarksAPI] Failed to trigger notification:", notifErr);
+        }
       }
     }
 

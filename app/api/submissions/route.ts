@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CodingPlatform, Difficulty } from "@/app/generated/prisma/client";
 import { invalidateCache } from "@/lib/redis";
+import { NotificationService } from "@/lib/services/notification.service";
 
 export async function GET(req: Request) {
   try {
@@ -302,6 +303,19 @@ export async function POST(req: Request) {
       `cache:company:${company.slug}:problems`,
       "cache:companies:sidebar"
     );
+
+    // Trigger dynamic notifications
+    try {
+      if (userId && typeof userId === "string") {
+        await NotificationService.notifyCommunityQuestionSubmitted(
+          userId,
+          company.name,
+          trimmedTitle
+        );
+      }
+    } catch (notifErr) {
+      console.warn("[SubmissionsAPI] Failed to trigger notification:", notifErr);
+    }
 
     return NextResponse.json({
       success: true,

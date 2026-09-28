@@ -108,6 +108,7 @@ model User {
   discussionComments DiscussionComment[]
   platformAccounts   UserPlatformAccount[]
   leaderboardEntry   LeaderboardEntry?
+  notifications      Notification[]
 }
 
 model UserTargetCompany {
@@ -319,3 +320,35 @@ model LeaderboardRun {
   snapshot  Json
   createdAt DateTime @default(now())
 }
+
+enum NotificationType {
+  PROBLEM_SOLVED
+  TARGET_MILESTONE
+  TARGET_ADDED
+  BOOKMARK_ADDED
+  DISCUSSION_REPLY
+  DISCUSSION_LIKE
+  INTERVIEW_COMMENT
+  COMMUNITY_QUESTION_ADDED
+  PLATFORM_SYNCED
+  SYSTEM_ANNOUNCEMENT
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  linkUrl   String?
+  metadata  Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+

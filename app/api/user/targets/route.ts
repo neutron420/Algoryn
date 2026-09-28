@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NotificationService } from "@/lib/services/notification.service";
 
 export async function GET(req: Request) {
   try {
@@ -113,6 +114,13 @@ export async function POST(req: Request) {
             companyId: company.id,
           },
         });
+
+        // Trigger dynamic notification
+        try {
+          await NotificationService.notifyTargetAdded(userId, company.name, company.slug);
+        } catch (notifErr) {
+          console.warn("[TargetsAPI] Failed to trigger notification:", notifErr);
+        }
       }
     }
 

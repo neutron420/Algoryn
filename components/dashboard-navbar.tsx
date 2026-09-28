@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { NavbarSearch } from "@/components/navbar-search";
 import { NavbarShareButton } from "@/components/navbar-share-button";
+import { NotificationBell } from "@/components/notification-bell";
 import Link from "next/link";
 import { CompanySidebarItem } from "@/components/kodeprep-sidebar";
 
@@ -57,6 +58,9 @@ export function DashboardNavbar({ companies }: DashboardNavbarProps) {
           companySlug={activeSlug}
           companyName={activeCompanyName}
         />
+
+        {/* Dynamic Notification Bell */}
+        <NotificationBell />
       </div>
     </header>
   );

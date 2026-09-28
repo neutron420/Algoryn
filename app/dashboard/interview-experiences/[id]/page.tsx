@@ -893,6 +893,35 @@ export default function InterviewExperienceDetailPage() {
     loadComments();
   }, [postId, currentUserId]);
 
+  // Auto-scroll to comments when arriving via notification (#comments in hash)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const scrollToCommentsSection = () => {
+      if (window.location.hash === "#comments") {
+        const el = document.getElementById("comments");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          const input = el.querySelector<HTMLInputElement>("input[type='text']");
+          if (input) {
+            setTimeout(() => input.focus(), 300);
+          }
+        }
+      }
+    };
+
+    scrollToCommentsSection();
+    const t1 = setTimeout(scrollToCommentsSection, 300);
+    const t2 = setTimeout(scrollToCommentsSection, 800);
+
+    window.addEventListener("hashchange", scrollToCommentsSection);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener("hashchange", scrollToCommentsSection);
+    };
+  }, [loading, commentsLoading]);
+
   // Handle Post Like
   const handleToggleLike = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     const nextLiked = !liked;
@@ -1377,7 +1406,7 @@ export default function InterviewExperienceDetailPage() {
       )}
 
       {/* ─── Comments Section (Image 3 Style) ─── */}
-      <section className="space-y-4 pt-2">
+      <section id="comments" className="space-y-4 pt-2 scroll-mt-20">
         {/* Comments Header: Message Icon + Comments + Count Badge on Left, Sort on Right */}
         <div className="flex items-center justify-between pb-1">
           <div className="flex items-center gap-2 text-foreground font-bold text-sm sm:text-base">

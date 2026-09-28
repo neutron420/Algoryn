@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRedisClient } from "@/lib/redis";
+import { NotificationService } from "@/lib/services/notification.service";
 
 export const runtime = "nodejs";
 
@@ -218,6 +219,49 @@ export async function POST(
         dislikesCount: 0,
       },
     });
+
+    // Trigger dynamic notifications for discussion / interview experience
+    try {
+      const post = await prisma.discussionPost.findUnique({
+        where: { id: postId },
+        select: { userId: true, title: true, category: true },
+      });
+
+      if (post) {
+        const isInterviewExperience = post.category?.toLowerCase() === "interview experience";
+
+        // 1. If replying to a parent comment, notify the parent comment's author
+        if (parentId) {
+          const parentComment = await prisma.discussionComment.findUnique({
+            where: { id: parentId },
+            select: { userId: true, content: true },
+          });
+
+          if (parentComment?.userId && parentComment.userId !== validUserId) {
+            await NotificationService.notifyCommentReply(
+              parentComment.userId,
+              resolvedAuthorName,
+              parentComment.content,
+              postId,
+              isInterviewExperience
+            );
+          }
+        }
+
+        // 2. Notify the post author if commenter is someone else
+        if (post.userId && post.userId !== validUserId) {
+          await NotificationService.notifyDiscussionComment(
+            post.userId,
+            resolvedAuthorName,
+            post.title || (isInterviewExperience ? "Interview Experience" : "Discussion"),
+            postId,
+            isInterviewExperience
+          );
+        }
+      }
+    } catch (notifErr) {
+      console.warn("[CommentsAPI] Failed to trigger notification:", notifErr);
+    }
 
     const newCommentNode = {
       id: created.id,

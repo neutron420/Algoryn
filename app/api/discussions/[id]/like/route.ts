@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NotificationService } from "@/lib/services/notification.service";
 
 export async function POST(
   req: Request,
@@ -16,7 +17,7 @@ export async function POST(
 
     const post = await prisma.discussionPost.findUnique({
       where: { id: postId },
-      select: { id: true, likesCount: true },
+      select: { id: true, likesCount: true, userId: true, title: true, category: true },
     });
 
     if (!post) {
@@ -67,6 +68,31 @@ export async function POST(
       ]);
       liked = true;
       newLikesCount = post.likesCount + 1;
+
+      // Trigger dynamic notification for post author
+      try {
+        if (post.userId && post.userId !== effectiveUserId) {
+          let likerName = "A developer";
+          if (effectiveUserId && !effectiveUserId.startsWith("anonymous")) {
+            const liker = await prisma.user.findUnique({
+              where: { id: effectiveUserId },
+              select: { displayName: true },
+            });
+            if (liker?.displayName) likerName = liker.displayName;
+          }
+
+          const isInterviewExperience = post.category?.toLowerCase() === "interview experience";
+          await NotificationService.notifyDiscussionLiked(
+            post.userId,
+            likerName,
+            post.title || (isInterviewExperience ? "Interview Experience" : "Discussion"),
+            postId,
+            isInterviewExperience
+          );
+        }
+      } catch (notifErr) {
+        console.warn("[LikeAPI] Failed to trigger notification:", notifErr);
+      }
     }
 
     return NextResponse.json({

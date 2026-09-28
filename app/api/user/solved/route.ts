@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NotificationService } from "@/lib/services/notification.service";
 
 export async function GET(req: Request) {
   try {
@@ -89,6 +90,40 @@ export async function POST(req: Request) {
             problemId,
           },
         });
+
+        // Trigger dynamic notification and target milestone check
+        try {
+          const problem = await prisma.problem.findUnique({
+            where: { id: problemId },
+            include: {
+              companies: {
+                include: { company: true },
+                take: 1,
+              },
+            },
+          });
+
+          if (problem) {
+            const primaryCompany = problem.companies[0]?.company;
+            await NotificationService.notifyProblemSolved(
+              userId,
+              problem.title,
+              problem.difficulty,
+              primaryCompany?.slug
+            );
+
+            if (primaryCompany) {
+              await NotificationService.checkAndNotifyTargetMilestone(
+                userId,
+                primaryCompany.id,
+                primaryCompany.name,
+                primaryCompany.slug
+              );
+            }
+          }
+        } catch (notifErr) {
+          console.warn("[SolvedAPI] Failed to trigger notification:", notifErr);
+        }
       }
     }
 

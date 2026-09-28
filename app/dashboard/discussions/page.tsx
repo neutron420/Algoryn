@@ -3010,6 +3010,38 @@ function CommunityPostCard({
     }
   }, [menuOpen]);
 
+  // Auto-expand and scroll to comments when targeted via notification deep-link
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const checkTarget = () => {
+      const params = new URLSearchParams(window.location.search);
+      const targetId = params.get("id");
+      const isThisPost = targetId === post.id || window.location.hash === `#${post.id}`;
+      if (isThisPost) {
+        setCommentsOpen(true);
+        setTimeout(() => {
+          const el = document.getElementById(post.id);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            const input = el.querySelector<HTMLInputElement>("input[placeholder*='comment'], input[type='text']");
+            if (input) {
+              setTimeout(() => input.focus(), 300);
+            }
+          }
+        }, 350);
+      }
+    };
+
+    checkTarget();
+    window.addEventListener("popstate", checkTarget);
+    window.addEventListener("hashchange", checkTarget);
+    return () => {
+      window.removeEventListener("popstate", checkTarget);
+      window.removeEventListener("hashchange", checkTarget);
+    };
+  }, [post.id]);
+
   // Keep postData & editImages in sync if prop changes
   const [prevPost, setPrevPost] = useState(post);
   if (post !== prevPost) {
