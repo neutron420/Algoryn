@@ -5,8 +5,7 @@ import { TimelineContent } from "@/components/ui/timeline-animation";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
 import { Briefcase, CheckCheck, Database, Server, Sparkles } from "lucide-react";
-import { motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { TextureButton } from "@/components/ui/texture-button";
 
@@ -16,7 +15,6 @@ const plans = [
     description:
       "Free forever for all developers practicing for technical coding interviews.",
     price: 0,
-    yearlyPrice: 0,
     buttonText: "Start Practicing Free",
     buttonVariant: "outline" as const,
     badge: "Free Forever",
@@ -40,8 +38,7 @@ const plans = [
     name: "Pro Interview",
     description:
       "Advanced AI mock interviews, company hiring analytics, and revision streaks.",
-    price: 12,
-    yearlyPrice: 99,
+    price: 500,
     buttonText: "Get Pro Access",
     buttonVariant: "default" as const,
     badge: "Most Popular",
@@ -66,8 +63,7 @@ const plans = [
     name: "Campus & Teams",
     description:
       "Placement drive preparation tracks for colleges, bootcamps, and coding clubs.",
-    price: 39,
-    yearlyPrice: 329,
+    price: 900,
     buttonText: "Get Team Access",
     buttonVariant: "outline" as const,
     badge: "For Teams",
@@ -89,74 +85,7 @@ const plans = [
   },
 ];
 
-const PricingSwitch = ({
-  onSwitch,
-  className,
-}: {
-  onSwitch: (value: string) => void;
-  className?: string;
-}) => {
-  const [selected, setSelected] = useState("0");
-
-  const handleSwitch = (value: string) => {
-    setSelected(value);
-    onSwitch(value);
-  };
-
-  return (
-    <div className={cn("flex justify-center sm:justify-start", className)}>
-      <div className="relative z-10 flex w-fit rounded-xl bg-neutral-100 dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 p-1">
-        <button
-          type="button"
-          onClick={() => handleSwitch("0")}
-          className={cn(
-            "relative z-10 w-fit cursor-pointer h-10 sm:h-11 rounded-lg sm:px-5 px-3 py-1 font-medium transition-colors text-xs sm:text-sm",
-            selected === "0"
-              ? "text-white font-semibold"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {selected === "0" && (
-            <motion.span
-              layoutId={"switch"}
-              className="absolute inset-0 rounded-lg shadow-sm bg-gradient-to-tr from-orange-600 via-orange-500 to-amber-500"
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            />
-          )}
-          <span className="relative">Monthly Billing</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleSwitch("1")}
-          className={cn(
-            "relative z-10 w-fit cursor-pointer h-10 sm:h-11 rounded-lg sm:px-5 px-3 py-1 font-medium transition-colors text-xs sm:text-sm",
-            selected === "1"
-              ? "text-white font-semibold"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {selected === "1" && (
-            <motion.span
-              layoutId={"switch"}
-              className="absolute inset-0 rounded-lg shadow-sm bg-gradient-to-tr from-orange-600 via-orange-500 to-amber-500"
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            />
-          )}
-          <span className="relative flex items-center gap-1.5">
-            Yearly Billing
-            <span className="rounded-full bg-orange-100 dark:bg-orange-950/80 px-1.5 py-0.5 text-[10px] font-bold text-orange-700 dark:text-orange-300">
-              Save 25%
-            </span>
-          </span>
-        </button>
-      </div>
-    </div>
-  );
-};
-
 export default function PricingSection5() {
-  const [isYearly, setIsYearly] = useState(false);
   const pricingRef = useRef<HTMLDivElement>(null);
 
   const revealVariants = {
@@ -176,9 +105,6 @@ export default function PricingSection5() {
     },
   };
 
-  const togglePricingPeriod = (value: string) =>
-    setIsYearly(Number.parseInt(value) === 1);
-
   return (
     <section id="pricing" className="bg-background py-16 sm:py-24 overflow-hidden">
       <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative" ref={pricingRef}>
@@ -190,7 +116,7 @@ export default function PricingSection5() {
             <span>Pricing Plans</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-[1.15]">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-serif text-foreground tracking-tight leading-[1.15]">
             We&apos;ve got a plan that&apos;s perfect for you
           </h2>
 
@@ -199,7 +125,10 @@ export default function PricingSection5() {
           </p>
 
           <div className="pt-2">
-            <PricingSwitch onSwitch={togglePricingPeriod} className="w-fit" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-xs sm:text-sm font-medium text-muted-foreground shadow-sm">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Monthly Subscription • Cancel Anytime</span>
+            </div>
           </div>
         </article>
 
@@ -240,24 +169,17 @@ export default function PricingSection5() {
                     {plan.description}
                   </p>
                   
-                  {/* Clearly Visible Price Tag with NumberFlow Animation */}
+                  {/* Clearly Visible Price Tag with NumberFlow Animation in Rupees */}
                   <div className="flex items-baseline gap-1 py-1">
-                    <span className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tight">
-                      $
+                    <span className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tight flex items-baseline">
+                      <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold mr-0.5 text-foreground">₹</span>
                       <NumberFlow
-                        format={{
-                          currency: "USD",
-                        }}
-                        value={isYearly ? plan.yearlyPrice : plan.price}
+                        value={plan.price}
                         className="text-3xl sm:text-4xl md:text-5xl font-black"
                       />
                     </span>
-                    <span className="text-muted-foreground text-xs sm:text-sm font-medium">
-                      {plan.price === 0
-                        ? "/forever"
-                        : isYearly
-                          ? "/year"
-                          : "/month"}
+                    <span className="text-muted-foreground text-xs sm:text-sm font-medium ml-1">
+                      {plan.price === 0 ? "/forever" : "/month"}
                     </span>
                   </div>
                 </CardHeader>

@@ -92,13 +92,21 @@ model ProblemTopic {
 }
 
 model User {
-  id          String   @id // Firebase UID
-  email       String?  @unique
-  phoneNumber String?  @unique
-  displayName String?
-  photoUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id // Firebase UID
+  email            String?  @unique
+  phoneNumber      String?  @unique
+  displayName      String?
+  photoUrl         String?
+  bannerUrl        String?
+  headline         String?
+  bio              String?
+  collegeOrCompany String?
+  location         String?
+  githubUrl        String?
+  linkedinUrl      String?
+  portfolioUrl     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   targets            UserTargetCompany[]
   solved             UserSolvedProblem[]
