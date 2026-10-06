@@ -7,196 +7,141 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
+    const username = searchParams.get("username");
 
-    if (!userId) {
+    if (!userId && !username) {
       return NextResponse.json(
-        { error: "Missing required userId parameter" },
+        { error: "Missing required userId or username parameter" },
         { status: 400 }
       );
     }
 
-    let user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        targets: {
-          include: {
-            company: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                _count: {
-                  select: { problems: true, communityProblems: true },
-                },
+    const userInclude = {
+      targets: {
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              _count: {
+                select: { problems: true, communityProblems: true },
               },
             },
           },
-          orderBy: { createdAt: "desc" },
         },
-        solved: {
-          include: {
-            problem: {
-              select: {
-                id: true,
-                title: true,
-                slug: true,
-                difficulty: true,
-                leetcodeUrl: true,
-                companies: {
-                  select: {
-                    company: {
-                      select: { id: true, name: true, slug: true },
-                    },
-                  },
-                },
-                topics: {
-                  select: {
-                    topic: { select: { id: true, name: true } },
-                  },
-                },
-              },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-        },
-        bookmarks: {
-          select: { problemId: true },
-        },
-        submissions: {
-          select: {
-            id: true,
-            title: true,
-            difficulty: true,
-            platform: true,
-            roundType: true,
-            createdAt: true,
-            company: {
-              select: { name: true, slug: true },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 15,
-        },
-        discussionPosts: {
-          select: {
-            id: true,
-            title: true,
-            content: true,
-            category: true,
-            viewsCount: true,
-            likesCount: true,
-            bookmarksCount: true,
-            createdAt: true,
-            _count: {
-              select: { comments: true },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 15,
-        },
-        platformAccounts: {
-          include: {
-            stats: {
-              orderBy: { fetchedAt: "desc" },
-            },
-          },
-        },
-        leaderboardEntry: true,
+        orderBy: { createdAt: "desc" as const },
       },
-    });
-
-    if (!user) {
-      await prisma.user.create({
-        data: {
-          id: userId,
+      solved: {
+        include: {
+          problem: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              difficulty: true,
+              leetcodeUrl: true,
+              companies: {
+                select: {
+                  company: {
+                    select: { id: true, name: true, slug: true },
+                  },
+                },
+              },
+              topics: {
+                select: {
+                  topic: { select: { id: true, name: true } },
+                },
+              },
+            },
+          },
         },
+        orderBy: { createdAt: "desc" as const },
+      },
+      bookmarks: {
+        select: { problemId: true },
+      },
+      submissions: {
+        select: {
+          id: true,
+          title: true,
+          difficulty: true,
+          platform: true,
+          roundType: true,
+          createdAt: true,
+          company: {
+            select: { name: true, slug: true },
+          },
+        },
+        orderBy: { createdAt: "desc" as const },
+        take: 15,
+      },
+      discussionPosts: {
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          viewsCount: true,
+          likesCount: true,
+          bookmarksCount: true,
+          createdAt: true,
+          _count: {
+            select: { comments: true },
+          },
+        },
+        orderBy: { createdAt: "desc" as const },
+        take: 15,
+      },
+      platformAccounts: {
+        include: {
+          stats: {
+            orderBy: { fetchedAt: "desc" as const },
+          },
+        },
+      },
+      leaderboardEntry: true,
+    };
+
+    let user = null;
+
+    if (username) {
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { username: { equals: username, mode: "insensitive" } },
+            { id: username },
+          ],
+        },
+        include: userInclude,
       });
 
+      if (!user) {
+        return NextResponse.json(
+          { error: `User with username '${username}' not found` },
+          { status: 404 }
+        );
+      }
+    } else if (userId) {
       user = await prisma.user.findUnique({
         where: { id: userId },
-        include: {
-          targets: {
-            include: {
-              company: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  _count: {
-                    select: { problems: true, communityProblems: true },
-                  },
-                },
-              },
-            },
-          },
-          solved: {
-            include: {
-              problem: {
-                select: {
-                  id: true,
-                  title: true,
-                  slug: true,
-                  difficulty: true,
-                  leetcodeUrl: true,
-                  companies: {
-                    select: {
-                      company: {
-                        select: { id: true, name: true, slug: true },
-                      },
-                    },
-                  },
-                  topics: {
-                    select: {
-                      topic: { select: { id: true, name: true } },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          bookmarks: { select: { problemId: true } },
-          submissions: {
-            select: {
-              id: true,
-              title: true,
-              difficulty: true,
-              platform: true,
-              roundType: true,
-              createdAt: true,
-              company: { select: { name: true, slug: true } },
-            },
-            take: 15,
-          },
-          discussionPosts: {
-            select: {
-              id: true,
-              title: true,
-              content: true,
-              category: true,
-              viewsCount: true,
-              likesCount: true,
-              bookmarksCount: true,
-              createdAt: true,
-              _count: { select: { comments: true } },
-            },
-            take: 15,
-          },
-          platformAccounts: {
-            include: {
-              stats: {
-                orderBy: { fetchedAt: "desc" },
-              },
-            },
-          },
-          leaderboardEntry: true,
-        },
+        include: userInclude,
       });
+
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            id: userId,
+          },
+          include: userInclude,
+        });
+      }
     }
 
     if (!user) {
       return NextResponse.json(
         { error: "User profile could not be retrieved" },
-        { status: 500 }
+        { status: 404 }
       );
     }
 
