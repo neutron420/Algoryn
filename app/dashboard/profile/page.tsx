@@ -192,10 +192,6 @@ function ProfileSkeleton() {
 
           {/* RIGHT COLUMN */}
           <div className="lg:col-span-4 space-y-5 sm:space-y-6">
-            <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-zinc-800 p-4 sm:p-5 shadow-xs space-y-2">
-              <div className="h-3 w-20 rounded bg-slate-200 dark:bg-zinc-800" />
-              <div className="h-8 w-full rounded-xl bg-slate-100 dark:bg-zinc-900" />
-            </div>
 
             <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-zinc-800 p-4 sm:p-5 shadow-xs space-y-3">
               <div className="h-3 w-24 rounded bg-slate-200 dark:bg-zinc-800" />
@@ -340,7 +336,6 @@ export default function ProfilePage() {
       : (["#bfdbfe", "#60a5fa", "#2563eb", "#1d4ed8"] as const);
   }, [activeHeatmapPlatform, isDark]);
 
-  const [isCopied, setIsCopied] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -604,16 +599,6 @@ export default function ProfilePage() {
     return "user";
   }, [profile?.username, profile?.displayName, user?.email]);
 
-  const publicUrl = useMemo(() => {
-    return `https://algoryn.dev/profile/${username}`;
-  }, [username]);
-
-  const handleCopyPublicUrl = () => {
-    navigator.clipboard.writeText(publicUrl);
-    setIsCopied(true);
-    toast.success("Profile link copied to clipboard!");
-    setTimeout(() => setIsCopied(false), 2000);
-  };
 
   const handleOpenEdit = () => {
     router.push("/dashboard/profile/edit");
@@ -1717,25 +1702,6 @@ export default function ProfilePage() {
           {/* ================================================================= */}
           <div className="lg:col-span-4 space-y-5 sm:space-y-6">
 
-            {/* 1. PUBLIC URL CARD */}
-            <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-zinc-800 p-4 sm:p-5 shadow-xs">
-              <h3 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-2.5">
-                Public URL
-              </h3>
-              <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs">
-                <span className="font-mono text-slate-700 dark:text-zinc-300 truncate flex-1">
-                  {publicUrl}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopyPublicUrl}
-                  title="Copy Link"
-                  className="p-1 rounded-md text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer shrink-0"
-                >
-                  {isCopied ? <Check className="size-4 text-emerald-500" /> : <Copy className="size-4" />}
-                </button>
-              </div>
-            </div>
 
             {/* 2. AT A GLANCE CARD */}
             <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-zinc-800 p-4 sm:p-5 shadow-xs">
