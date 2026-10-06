@@ -244,8 +244,8 @@ const STYLES = `
 @keyframes ga-pop{from{opacity:0;transform:translateY(-4px) scale(.97)}}
 .ga-stats[data-layout="row"]>div+div{border-left:1px solid var(--ga-border);padding-left:24px}
 @container (max-width:620px){
-  .ga-stats[data-layout="row"],.ga-stats[data-layout="cards"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;row-gap:16px!important}
-  .ga-stats[data-layout="cards"]{row-gap:8px!important}
+  .ga-stats[data-layout="row"],.ga-stats[data-layout="cards"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;row-gap:8px!important;column-gap:8px!important}
+  .ga-stats[data-layout="cards"]>div{padding:10px 12px!important}
   .ga-stats[data-layout="row"]>div:nth-child(odd){border-left:0;padding-left:0}
   .github-activity .heatmap3d__scene{height:240px}
 }

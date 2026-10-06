@@ -1178,7 +1178,7 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-zinc-400 pt-0.5 flex-wrap">
                     {userLocation ? (
                       <span className="inline-flex items-center gap-1">
-                        <span>{userLocation}</span>
+                        <span>{userLocation.replace(/\s+,/g, ",")}</span>
                       </span>
                     ) : null}
                     {userLocation && <span className="text-slate-300 dark:text-zinc-700">•</span>}
@@ -1638,25 +1638,46 @@ export default function ProfilePage() {
                             {pageItems.map((t) => {
                               const pct = maxVal > 0 && t.count > 0 ? Math.min(Math.round((t.count / maxVal) * 100), 100) : 0;
                               return (
-                                <div key={t.name} className="flex items-center gap-2 sm:gap-3 text-xs group">
-                                  <span className="w-28 sm:w-36 md:w-44 text-right text-slate-600 dark:text-zinc-400 group-hover:text-slate-900 dark:group-hover:text-zinc-200 font-medium text-[11px] sm:text-xs truncate shrink-0 transition-colors">
-                                    {t.name}
-                                  </span>
-                                  <div className="flex-1 flex items-center min-h-[22px]">
+                                <div key={t.name} className="group py-0.5">
+                                  {/* Mobile View (< sm): Full topic title + count, followed by full-width progress bar */}
+                                  <div className="flex sm:hidden items-center justify-between gap-2 text-xs mb-1">
+                                    <span className="font-medium text-[11px] text-slate-700 dark:text-zinc-300">
+                                      {t.name}
+                                    </span>
+                                    <span className="font-bold text-[11px] text-blue-600 dark:text-blue-400 font-mono">
+                                      {t.count}
+                                    </span>
+                                  </div>
+                                  <div className="sm:hidden h-2 w-full bg-slate-100 dark:bg-zinc-800/80 rounded-full overflow-hidden mb-1.5">
                                     {t.count > 0 ? (
                                       <div
-                                        className="h-5 sm:h-6 bg-[#dbeafe] dark:bg-blue-900/60 rounded-md sm:rounded-lg flex items-center justify-end pr-2.5 transition-all duration-500 shadow-2xs"
-                                        style={{ width: `${Math.max(pct, 12)}%` }}
-                                      >
-                                        <span className="text-[10px] sm:text-[11px] font-bold text-blue-900 dark:text-blue-100">
-                                          {t.count}
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <div className="h-5 sm:h-6 px-2.5 rounded-md bg-slate-100/70 dark:bg-zinc-800/60 flex items-center justify-center text-[10px] text-slate-400 font-medium">
-                                        0
-                                      </div>
-                                    )}
+                                        className="h-full bg-blue-500 dark:bg-blue-400 rounded-full transition-all duration-500 shadow-2xs"
+                                        style={{ width: `${Math.max(pct, 3)}%` }}
+                                      />
+                                    ) : null}
+                                  </div>
+
+                                  {/* Tablet & Desktop View (>= sm): Side-by-side pill layout with right-aligned title */}
+                                  <div className="hidden sm:flex items-center gap-3 text-xs">
+                                    <span className="w-36 md:w-44 text-right text-slate-600 dark:text-zinc-400 group-hover:text-slate-900 dark:group-hover:text-zinc-200 font-medium text-xs truncate shrink-0 transition-colors">
+                                      {t.name}
+                                    </span>
+                                    <div className="flex-1 flex items-center min-h-[22px]">
+                                      {t.count > 0 ? (
+                                        <div
+                                          className="h-5 sm:h-6 bg-[#dbeafe] dark:bg-blue-900/60 rounded-md sm:rounded-lg flex items-center justify-end pr-2.5 transition-all duration-500 shadow-2xs"
+                                          style={{ width: `${Math.max(pct, 12)}%` }}
+                                        >
+                                          <span className="text-[11px] font-bold text-blue-900 dark:text-blue-100">
+                                            {t.count}
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <div className="h-5 sm:h-6 px-2.5 rounded-md bg-slate-100/70 dark:bg-zinc-800/60 flex items-center justify-center text-[10px] text-slate-400 font-medium">
+                                          0
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -2053,13 +2074,13 @@ export default function ProfilePage() {
                       >
                         {/* Row 1: Icon + Name + Solved Badge | Sync + Status */}
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
                             <IconComp className={`size-5 ${platMeta.color} shrink-0`} />
-                            <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 leading-tight">
+                            <span className="text-sm font-bold text-slate-900 dark:text-zinc-100 leading-tight truncate">
                               {platMeta.label}
                             </span>
                             {totalSolved !== undefined && totalSolved > 0 && (
-                              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded-md">
+                              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded-md shrink-0">
                                 {totalSolved} solved
                               </span>
                             )}
@@ -2099,7 +2120,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         {/* Row 2: @handle • Rating (Rank) */}
-                        <div className="mt-1 pl-[30px] text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
+                        <div className="mt-1 pl-[28px] text-[11px] text-slate-500 dark:text-zinc-400 font-mono truncate">
                           @{account.username}
                           {rating ? (
                             <span className="text-slate-600 dark:text-zinc-300">
@@ -2153,7 +2174,7 @@ export default function ProfilePage() {
                         href={social.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between group"
+                        className="flex items-center justify-between gap-2 p-1.5 -mx-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-colors group"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <IconComp className={`size-4.5 ${social.color} shrink-0`} />
@@ -2166,10 +2187,10 @@ export default function ProfilePage() {
                             </p>
                           </div>
                         </div>
-                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200/60 shrink-0 inline-flex items-center gap-1">
-                          <CheckCircle2 className="size-2.5" />
-                          Synced
-                        </span>
+                        <div className="flex items-center gap-1 text-[11px] font-medium text-slate-400 dark:text-zinc-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors shrink-0">
+                          <span className="hidden xs:inline">Visit</span>
+                          <ExternalLink className="size-3" />
+                        </div>
                       </a>
                     );
                   })}

@@ -135,12 +135,22 @@ export function NavbarSearch({ companies, currentCompanySlug }: NavbarSearchProp
 
   return (
     <>
-      {/* Spectrum UI Navbar Search Trigger Bar */}
+      {/* Mobile Search Icon Trigger (< sm): Compact, zero-collision icon */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search companies"
-        className="group relative flex h-8.5 sm:h-9 items-center gap-2.5 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted/70 hover:border-primary/40 px-3 transition-all duration-150 cursor-pointer text-muted-foreground text-xs shadow-2xs hover:shadow-xs w-[170px] xs:w-[200px] sm:w-[240px] md:w-[280px] min-w-0"
+        className="sm:hidden flex size-8.5 items-center justify-center rounded-lg border border-border/80 bg-muted/40 hover:bg-muted/70 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-2xs shrink-0"
+      >
+        <Search className="size-4 shrink-0" />
+      </button>
+
+      {/* Desktop Spectrum UI Navbar Search Trigger Bar (>= sm) */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Search companies"
+        className="hidden sm:flex group relative h-8.5 sm:h-9 items-center gap-2.5 rounded-lg border border-border/80 bg-muted/40 hover:bg-muted/70 hover:border-primary/40 px-3 transition-all duration-150 cursor-pointer text-muted-foreground text-xs shadow-2xs hover:shadow-xs w-[180px] md:w-[240px] lg:w-[280px] min-w-0"
       >
         <Search className="size-3.5 sm:size-4 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
         <div className="flex min-w-0 flex-1 items-center overflow-hidden text-left font-normal text-xs">
@@ -154,7 +164,7 @@ export function NavbarSearch({ companies, currentCompanySlug }: NavbarSearchProp
             transition={{ duration: 1.1, repeat: Infinity, times: [0, 0.5, 0.5, 1] }}
           />
         </div>
-        <kbd className="hidden sm:inline-flex shrink-0 ml-auto items-center text-[10px] text-muted-foreground font-mono bg-background/80 border border-border/80 px-1.5 py-0.5 rounded shadow-2xs group-hover:border-primary/30 group-hover:text-foreground transition-colors pointer-events-none">
+        <kbd className="inline-flex shrink-0 ml-auto items-center text-[10px] text-muted-foreground font-mono bg-background/80 border border-border/80 px-1.5 py-0.5 rounded shadow-2xs group-hover:border-primary/30 group-hover:text-foreground transition-colors pointer-events-none">
           ⌘K
         </kbd>
       </button>
