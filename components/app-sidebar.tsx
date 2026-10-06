@@ -47,6 +47,7 @@ import {
   Network,
   Trophy,
   MessagesSquare,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -716,6 +717,30 @@ export function AppSidebar({
                 </div>
               </div>
             </button>
+
+            {/* My Profile */}
+            <Link
+              href="/dashboard/profile"
+              onClick={() => {
+                if (isMobile) setOpenMobile(false);
+              }}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 ${
+                pathname === "/dashboard/profile"
+                  ? "bg-muted text-foreground font-semibold"
+                  : "text-foreground/90"
+              }`}
+              title="My Profile"
+            >
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <User className="size-4 shrink-0 text-blue-500 group-hover:scale-105 transition-transform" />
+                <div className="flex flex-col items-start min-w-0 text-left">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-xs text-foreground leading-tight">My Profile</span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Heatmap, Stats &amp; Badges</span>
+                </div>
+              </div>
+            </Link>
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -783,8 +808,12 @@ export function AppSidebar({
       <SidebarFooter className="shrink-0 p-2.5 border-t border-border/40 bg-transparent space-y-2">
         {user ? (
           <div className="rounded-xl border border-border/50 bg-muted/40 p-2 flex items-center justify-between gap-2 shadow-2xs">
-            {/* User Details */}
-            <div className="flex items-center gap-2.5 min-w-0">
+            {/* User Details Link to Profile */}
+            <Link
+              href="/dashboard/profile"
+              onClick={() => isMobile && setOpenMobile(false)}
+              className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-85 transition-opacity cursor-pointer"
+            >
               {user.photoURL ? (
                 <img
                   src={user.photoURL}
@@ -811,7 +840,7 @@ export function AppSidebar({
                   {user.email || user.phoneNumber || "Signed in"}
                 </p>
               </div>
-            </div>
+            </Link>
 
             {/* Quick Sign Out Action */}
             <button

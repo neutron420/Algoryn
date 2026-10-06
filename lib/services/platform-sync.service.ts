@@ -317,6 +317,40 @@ export async function syncAllUserPlatforms(userId: string) {
     where: { userId },
   });
 
+  const existingPlatforms = new Set(accounts.map((a) => a.platform));
+
+  // Also check user's connectionsData.codingProfiles for handles not yet in userPlatformAccount
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { connectionsData: true },
+  });
+
+  const profilesObj = (user?.connectionsData as any)?.codingProfiles;
+  if (profilesObj && typeof profilesObj === "object") {
+    const validPlatforms = Object.values(CodingPlatform);
+    for (const [key, obj] of Object.entries(profilesObj) as [string, { value?: string }][]) {
+      const norm = key.toUpperCase().trim() as CodingPlatform;
+      if (validPlatforms.includes(norm) && !existingPlatforms.has(norm) && obj?.value) {
+        const raw = obj.value.trim();
+        const handle = raw.replace(/\/$/, "").split("/").pop() || raw;
+        if (handle) {
+          accounts.push({
+            id: 0,
+            userId,
+            platform: norm,
+            username: handle,
+            isVerified: false,
+            lastSyncedAt: null,
+            syncError: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as any);
+          existingPlatforms.add(norm);
+        }
+      }
+    }
+  }
+
   const results = [];
   for (const account of accounts) {
     try {

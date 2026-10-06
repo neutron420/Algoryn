@@ -17,15 +17,29 @@ export async function POST(req: Request) {
     if (platform) {
       const normalizedPlatform = platform.toUpperCase().trim() as CodingPlatform;
 
-      const account = await prisma.userPlatformAccount.findUnique({
+      let account = await prisma.userPlatformAccount.findUnique({
         where: { userId_platform: { userId, platform: normalizedPlatform } },
       });
 
       if (!account) {
-        return NextResponse.json(
-          { error: `No linked account found for platform ${normalizedPlatform}` },
-          { status: 404 }
-        );
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { connectionsData: true },
+        });
+
+        const rawObj = (user?.connectionsData as any)?.codingProfiles?.[platform.toLowerCase()];
+        const rawVal = body.username || rawObj?.value || "";
+        const cleanHandle = typeof rawVal === "string" ? rawVal.replace(/\/$/, "").split("/").pop() || "" : "";
+
+        if (!cleanHandle) {
+          return NextResponse.json(
+            { error: `No linked account found for platform ${normalizedPlatform}` },
+            { status: 404 }
+          );
+        }
+
+        const result = await syncUserPlatform(userId, normalizedPlatform, cleanHandle);
+        return NextResponse.json({ success: result.success, result });
       }
 
       // Check cooldown

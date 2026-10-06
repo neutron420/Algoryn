@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/context/auth-context";
-import { LogOut, Phone } from "lucide-react";
+import { LogOut, Phone, User, Edit3 } from "lucide-react";
 import Link from "next/link";
 import { TextureButton } from "@/components/ui/texture-button";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
@@ -98,6 +98,26 @@ export function UserNav() {
             )}
           </div>
 
+
+          {/* Navigation Links */}
+          <div className="py-1">
+            <Link
+              href="/dashboard/profile"
+              onClick={() => setIsDropdownOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/90 hover:text-foreground hover:bg-muted/70 transition-colors font-medium group"
+            >
+              <User className="size-3.5 text-blue-500 group-hover:scale-110 transition-transform shrink-0" />
+              <span>My Profile</span>
+            </Link>
+            <Link
+              href="/dashboard/profile/edit"
+              onClick={() => setIsDropdownOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground/90 hover:text-foreground hover:bg-muted/70 transition-colors font-medium group"
+            >
+              <Edit3 className="size-3.5 text-muted-foreground group-hover:scale-110 transition-transform shrink-0" />
+              <span>Edit Profile</span>
+            </Link>
+          </div>
 
           {/* Sign Out Button */}
           <div className="pt-1 border-t border-border/60">

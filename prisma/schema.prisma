@@ -104,9 +104,20 @@ model User {
   location         String?
   githubUrl        String?
   linkedinUrl      String?
-  portfolioUrl     String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  twitterUrl        String?
+  instagramUrl      String?
+  portfolioUrl      String?
+  username          String?  @unique
+  roleType          String?
+  graduationYear    Int?
+  educationHistory  Json?
+  experienceHistory Json?
+  skillsData        Json?
+  projectList       Json?
+  connectionsData   Json?
+  sectionVisibility Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   targets            UserTargetCompany[]
   solved             UserSolvedProblem[]

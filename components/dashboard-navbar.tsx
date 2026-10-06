@@ -13,6 +13,7 @@ import {
 import { NavbarSearch } from "@/components/navbar-search";
 import { NavbarShareButton } from "@/components/navbar-share-button";
 import { NotificationBell } from "@/components/notification-bell";
+import { UserNav } from "@/components/user-nav";
 import Link from "next/link";
 import { CompanySidebarItem } from "@/components/kodeprep-sidebar";
 
@@ -27,7 +28,7 @@ export function DashboardNavbar({ companies }: DashboardNavbarProps) {
   const activeCompanyName = foundCompany?.name || (activeSlug.charAt(0).toUpperCase() + activeSlug.slice(1));
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/95 backdrop-blur-md px-3 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/95 backdrop-blur-md px-3 sm:px-6">
       <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
         <SidebarTrigger className="-ml-1" />
 
@@ -61,6 +62,9 @@ export function DashboardNavbar({ companies }: DashboardNavbarProps) {
 
         {/* Dynamic Notification Bell */}
         <NotificationBell />
+
+        {/* User Nav Dropdown */}
+        <UserNav />
       </div>
     </header>
   );

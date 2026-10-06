@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twitterUrl" TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "instagramUrl" TEXT;

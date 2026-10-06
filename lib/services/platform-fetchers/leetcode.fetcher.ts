@@ -7,6 +7,7 @@ const USER_QUERY = `
   query getUserProfile($username: String!) {
     matchedUser(username: $username) {
       username
+      submissionCalendar
       profile {
         ranking
         reputation
@@ -17,6 +18,23 @@ const USER_QUERY = `
           count
         }
       }
+      tagProblemCounts {
+        advanced {
+          tagName
+          tagSlug
+          problemsSolved
+        }
+        intermediate {
+          tagName
+          tagSlug
+          problemsSolved
+        }
+        fundamental {
+          tagName
+          tagSlug
+          problemsSolved
+        }
+      }
     }
     userContestRanking(username: $username) {
       attendedContestsCount
@@ -25,6 +43,40 @@ const USER_QUERY = `
     }
   }
 `;
+
+const TOPIC_MAPPING: Record<string, string> = {
+  "Array": "Arrays",
+  "Dynamic Programming": "Dynamic Programming",
+  "String": "Strings",
+  "Hash Table": "Hashing",
+  "Graph": "Graphs",
+  "Graph Theory": "Graphs",
+  "Depth-First Search": "Graphs",
+  "Breadth-First Search": "Graphs",
+  "Union-Find": "Graphs",
+  "Shortest Path": "Graphs",
+  "Recursion": "Recursion & Backtracking",
+  "Backtracking": "Recursion & Backtracking",
+  "Linked List": "Linked List",
+  "Stack": "Stack & Queues",
+  "Queue": "Stack & Queues",
+  "Monotonic Stack": "Stack & Queues",
+  "Monotonic Queue": "Stack & Queues",
+  "Binary Search": "Binary Search",
+  "Binary Tree": "Binary Trees",
+  "Tree": "Binary Trees",
+  "Math": "Mathematics",
+  "Bit Manipulation": "Bit Manipulation",
+  "Bitmask": "Bit Manipulation",
+  "Greedy": "Greedy Algorithms",
+  "Heap (Priority Queue)": "Heaps",
+  "Sorting": "Sorting",
+  "Binary Search Tree": "Binary Search Trees",
+  "Trie": "Tries",
+  "Segment Tree": "Advanced Range Data Structures",
+  "Binary Indexed Tree": "Advanced Range Data Structures",
+  "Ordered Set": "Ordered Sets & Maps",
+};
 
 export async function fetchLeetCodeStats(username: string): Promise<PlatformFetchResult> {
   const cleanUsername = username.trim();
@@ -112,6 +164,39 @@ export async function fetchLeetCodeStats(username: string): Promise<PlatformFetc
       : null;
     const contributions = matchedUser.profile?.reputation ?? null;
 
+    // Parse submissionCalendar (epoch timestamp -> submission count)
+    const dailySubmissions: Record<string, number> = {};
+    if (matchedUser.submissionCalendar) {
+      try {
+        const rawCalendar = JSON.parse(matchedUser.submissionCalendar);
+        for (const [secStr, count] of Object.entries(rawCalendar)) {
+          const epoch = parseInt(secStr, 10);
+          if (!isNaN(epoch) && typeof count === "number") {
+            const dateStr = new Date(epoch * 1000).toISOString().split("T")[0];
+            dailySubmissions[dateStr] = (dailySubmissions[dateStr] || 0) + count;
+          }
+        }
+      } catch {
+        // Fallback gracefully if JSON parse fails
+      }
+    }
+
+    // Parse tagProblemCounts into topic stats
+    const topicStats: Record<string, number> = {};
+    const tagsObj = matchedUser.tagProblemCounts;
+    if (tagsObj) {
+      const allTags: Array<{ tagName: string; tagSlug?: string; problemsSolved: number }> = [
+        ...(tagsObj.fundamental || []),
+        ...(tagsObj.intermediate || []),
+        ...(tagsObj.advanced || []),
+      ];
+
+      for (const t of allTags) {
+        const targetTopic = TOPIC_MAPPING[t.tagName] || t.tagName;
+        topicStats[targetTopic] = Math.max(topicStats[targetTopic] || 0, t.problemsSolved);
+      }
+    }
+
     return {
       success: true,
       platform: CodingPlatform.LEETCODE,
@@ -132,6 +217,8 @@ export async function fetchLeetCodeStats(username: string): Promise<PlatformFetc
         rating,
         ranking: rank,
         contestsCount,
+        dailySubmissions,
+        topicStats,
       },
     };
   } catch (err: unknown) {
