@@ -92,18 +92,18 @@ model ProblemTopic {
 }
 
 model User {
-  id               String   @id // Firebase UID
-  email            String?  @unique
-  phoneNumber      String?  @unique
-  displayName      String?
-  photoUrl         String?
-  bannerUrl        String?
-  headline         String?
-  bio              String?
-  collegeOrCompany String?
-  location         String?
-  githubUrl        String?
-  linkedinUrl      String?
+  id                String   @id // Firebase UID
+  email             String?  @unique
+  phoneNumber       String?  @unique
+  displayName       String?
+  photoUrl          String?
+  bannerUrl         String?
+  headline          String?
+  bio               String?
+  collegeOrCompany  String?
+  location          String?
+  githubUrl         String?
+  linkedinUrl       String?
   twitterUrl        String?
   instagramUrl      String?
   portfolioUrl      String?
