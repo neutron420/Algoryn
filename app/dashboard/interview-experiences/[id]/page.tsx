@@ -25,6 +25,7 @@ import {
   ArrowBigUp,
   MessageSquare,
   Eye,
+  EyeOff,
 } from "lucide-react";
 import { useAuth } from "@/lib/context/auth-context";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import InterviewExperienceDetailSkeleton from "@/components/interview-experience-detail-skeleton";
 import { GoogleAdBanner } from "@/components/ads/google-ad-banner";
+import { InterviewMarkdownPreview } from "@/components/interview-experiences/markdown-preview";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                              */
@@ -269,16 +271,35 @@ function MarkdownViewer({
   if (!content) return null;
 
   const lines = content.split("\n");
-  const blocks: Array<{ type: string; content: string; lang?: string; num?: string; label?: string }> = [];
+  const blocks: Array<{ type: string; content: string; lang?: string; num?: string; label?: string; headers?: string[]; rows?: string[][] }> = [];
   let inCodeBlock = false;
   let codeLang = "";
   let codeBuffer: string[] = [];
+
+  let inTable = false;
+  let tableHeaders: string[] = [];
+  let tableRows: string[][] = [];
+
+  const flushTable = () => {
+    if (inTable && tableHeaders.length > 0) {
+      blocks.push({
+        type: "table",
+        content: "",
+        headers: tableHeaders,
+        rows: tableRows,
+      });
+      inTable = false;
+      tableHeaders = [];
+      tableRows = [];
+    }
+  };
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
 
     if (trimmed.startsWith("```")) {
+      flushTable();
       if (inCodeBlock) {
         blocks.push({ type: "code", content: codeBuffer.join("\n"), lang: codeLang });
         inCodeBlock = false;
@@ -295,6 +316,29 @@ function MarkdownViewer({
     if (inCodeBlock) {
       codeBuffer.push(line);
       continue;
+    }
+
+    // Markdown table support
+    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+      const cells = trimmed
+        .slice(1, -1)
+        .split("|")
+        .map((c) => c.trim());
+
+      const isSeparator = cells.every((c) => /^:?-+:?$/.test(c));
+
+      if (!inTable) {
+        inTable = true;
+        tableHeaders = cells;
+        tableRows = [];
+      } else if (isSeparator) {
+        continue;
+      } else {
+        tableRows.push(cells);
+      }
+      continue;
+    } else {
+      flushTable();
     }
 
     // Horizontal divider
@@ -356,6 +400,8 @@ function MarkdownViewer({
     }
   }
 
+  flushTable();
+
   if (inCodeBlock && codeBuffer.length > 0) {
     blocks.push({ type: "code", content: codeBuffer.join("\n"), lang: codeLang });
   }
@@ -363,6 +409,39 @@ function MarkdownViewer({
   return (
     <div className={`space-y-3.5 ${className}`}>
       {blocks.map((block, idx) => {
+        if (block.type === "table" && block.headers && block.rows) {
+          return (
+            <div
+              key={idx}
+              className="my-4 rounded-xl border border-border/70 overflow-hidden bg-background shadow-xs"
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                  <thead>
+                    <tr className="bg-muted/70 border-b border-border/60 text-foreground font-semibold">
+                      {block.headers.map((h, hIdx) => (
+                        <th key={hIdx} className="px-3.5 py-2.5 font-semibold">
+                          {formatInline(h, knownMentions)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {block.rows.map((row, rIdx) => (
+                      <tr key={rIdx} className="hover:bg-muted/30 transition-colors">
+                        {row.map((cell, cIdx) => (
+                          <td key={cIdx} className="px-3.5 py-2.5 text-foreground/90">
+                            {formatInline(cell, knownMentions)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        }
         if (block.type === "hr") {
           return <hr key={idx} className="my-6 border-t border-border/60" />;
         }
@@ -1231,8 +1310,16 @@ export default function InterviewExperienceDetailPage() {
         {/* Candidate Info Bar */}
         <div className="flex items-center justify-between gap-3 pt-2 pb-4 border-b border-border/50">
           <div className="flex items-center gap-2.5">
-            <div className="size-9 rounded-full bg-linear-to-tr from-blue-600 to-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
-              {experience.avatarUrl ? (
+            <div
+              className={`size-9 rounded-full text-white font-bold flex items-center justify-center text-sm shadow-xs ${
+                experience.authorName === "Anonymous"
+                  ? "bg-slate-800 dark:bg-zinc-700 text-slate-200"
+                  : "bg-linear-to-tr from-blue-600 to-indigo-600"
+              }`}
+            >
+              {experience.authorName === "Anonymous" ? (
+                <EyeOff className="size-4 text-emerald-400" />
+              ) : experience.avatarUrl ? (
                 <img src={experience.avatarUrl} alt="" className="size-full rounded-full object-cover" />
               ) : (
                 experience.authorName?.[0]?.toUpperCase() || "C"
@@ -1241,7 +1328,13 @@ export default function InterviewExperienceDetailPage() {
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-xs sm:text-sm text-foreground">{experience.authorName}</span>
-                <span className="text-[11px] text-muted-foreground font-mono">{experience.authorHandle}</span>
+                {experience.authorName === "Anonymous" ? (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
+                    Anonymous Candidate
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-muted-foreground font-mono">{experience.authorHandle}</span>
+                )}
               </div>
               <p className="text-[11px] text-muted-foreground">{experience.authorRole}</p>
             </div>
@@ -1253,9 +1346,9 @@ export default function InterviewExperienceDetailPage() {
           </div>
         </div>
 
-        {/* Debrief Content (Rich Markdown) */}
+        {/* Debrief Content (TakeUforward-Style Rich Markdown) */}
         <div className="pt-2 leading-relaxed">
-          <MarkdownViewer content={experience.content} className="text-sm sm:text-base" />
+          <InterviewMarkdownPreview content={experience.content} className="text-sm sm:text-base" />
         </div>
 
         {/* Photos / Attachments */}

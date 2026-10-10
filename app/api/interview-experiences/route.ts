@@ -8,6 +8,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const company = searchParams.get("company");
     const round = searchParams.get("round");
+    const difficulty = searchParams.get("difficulty");
+    const authorId = searchParams.get("authorId");
     const search = searchParams.get("search");
     const sort = searchParams.get("sort") || "latest";
     const currentUserId = searchParams.get("userId");
@@ -17,6 +19,10 @@ export async function GET(req: Request) {
     const andConditions: Record<string, unknown>[] = [
       { category: { equals: "Interview Experience", mode: "insensitive" } },
     ];
+
+    if (authorId) {
+      andConditions.push({ userId: authorId });
+    }
 
     if (company && company !== "ALL" && company !== "All Companies") {
       andConditions.push({
@@ -33,6 +39,17 @@ export async function GET(req: Request) {
         OR: [
           { tags: { has: `round:${round}` } },
           { tags: { has: round } },
+        ],
+      });
+    }
+
+    if (difficulty && difficulty !== "ALL" && difficulty !== "All Difficulties") {
+      andConditions.push({
+        OR: [
+          { tags: { has: `difficulty:${difficulty}` } },
+          { tags: { has: `difficulty:${difficulty.toLowerCase()}` } },
+          { tags: { has: difficulty } },
+          { content: { contains: `Difficulty:** ${difficulty}`, mode: "insensitive" } },
         ],
       });
     }
@@ -135,6 +152,7 @@ export async function GET(req: Request) {
       let roundType = "Full Loop";
       let verdict = "Offer";
       let role = post.authorRole || "Software Engineer";
+      let difficulty = "Medium";
       const userTags: string[] = [];
 
       for (const t of post.tags || []) {
@@ -142,7 +160,15 @@ export async function GET(req: Request) {
         else if (t.startsWith("round:")) roundType = t.replace("round:", "");
         else if (t.startsWith("verdict:")) verdict = t.replace("verdict:", "");
         else if (t.startsWith("role:")) role = t.replace("role:", "");
+        else if (t.startsWith("difficulty:")) difficulty = t.replace("difficulty:", "");
         else userTags.push(t);
+      }
+
+      if (difficulty === "Medium" && post.content) {
+        const match = post.content.match(/\*\*Difficulty:\*\*\s*([^\n\r]+)/i);
+        if (match && match[1]) {
+          difficulty = match[1].trim();
+        }
       }
 
       return {
@@ -160,6 +186,7 @@ export async function GET(req: Request) {
         company: companyName,
         round: roundType,
         verdict,
+        difficulty,
         tags: userTags,
         viewsCount: post.viewsCount || 0,
         likesCount: post.likesCount || 0,
@@ -213,6 +240,7 @@ export async function POST(req: Request) {
       round = "Round 1 - Technical",
       verdict = "Offer",
       role = "Software Engineer",
+      difficulty = "Medium",
       title,
       content,
       imageUrls = [],
@@ -231,12 +259,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
+    const isAnonymous = Boolean(body.isAnonymous);
     let validUserId: string | null = null;
-    let resolvedAuthorName = authorName ? String(authorName).trim() : "Coder";
-    let resolvedAuthorHandle = authorHandle ? String(authorHandle).trim() : null;
-    let resolvedAvatarUrl = avatarUrl ? String(avatarUrl).trim() : null;
+    let resolvedAuthorName = isAnonymous ? "Anonymous" : authorName ? String(authorName).trim() : "Coder";
+    let resolvedAuthorHandle = isAnonymous ? "@anonymous" : authorHandle ? String(authorHandle).trim() : null;
+    let resolvedAvatarUrl = isAnonymous ? null : avatarUrl ? String(avatarUrl).trim() : null;
 
-    if (userId && typeof userId === "string" && userId.trim()) {
+    if (!isAnonymous && userId && typeof userId === "string" && userId.trim()) {
       const trimmedUserId = userId.trim();
       const dbUser = await prisma.user.upsert({
         where: { id: trimmedUserId },
@@ -271,6 +300,7 @@ export async function POST(req: Request) {
       `round:${String(round).trim()}`,
       `verdict:${String(verdict).trim()}`,
       `role:${String(role).trim()}`,
+      `difficulty:${String(difficulty).trim()}`,
       ...cleanedCustomTags,
     ];
 

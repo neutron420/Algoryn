@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect, useTransition } from "react";
+import React, { useState, useMemo, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-
+import Link from "next/link";
 import {
   Sidebar,
   SidebarContent,
@@ -14,42 +14,44 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  ChevronRight,
-  ChevronDown,
+  LayoutDashboard,
+  Code2,
   Building2,
-  Flame,
-  TrendingUp,
+  MessagesSquare,
   Briefcase,
-  Crown,
+  GitBranch,
+  Trophy,
+  UserRound,
+  Bookmark,
+  Boxes,
+  Network,
+  Newspaper,
+  ChevronDown,
+  ChevronRight,
+  ArrowLeft,
+  Search,
+  LogOut,
+  LogIn,
   X,
+  Flame,
+  Sparkles,
+  TrendingUp,
   Landmark,
+  Crown,
   Cloud,
+  ShieldCheck,
   Cpu,
   ShoppingBag,
-  Gamepad2,
-  Activity,
-  Sparkles,
-  ShieldCheck,
   Car,
   UtensilsCrossed,
   MessageSquare,
+  Gamepad2,
+  Activity,
   GraduationCap,
   Compass,
   Radio,
   Zap,
-  LogOut,
-  LogIn,
-  ArrowLeft,
-  Search,
-  Plus,
-  Bookmark,
-  Boxes,
-  Network,
-  Trophy,
-  MessagesSquare,
-  User,
 } from "lucide-react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/context/auth-context";
 import { useBookmarks } from "@/lib/hooks/use-bookmarks";
@@ -59,50 +61,203 @@ import { CompanyLogo } from "@/components/company-logo";
 import { KodePrepLogo } from "@/components/kodeprep-logo";
 import { cn } from "@/lib/utils";
 
-function CategoryIcon({ name }: { name: CompanyCategoryDef["iconName"] | string }) {
+/* ------------------------------------------------------------------ */
+/* Category Icon Helper (Monochrome Outline Style)                    */
+/* ------------------------------------------------------------------ */
+
+function CategoryIcon({
+  name,
+  className,
+}: {
+  name: CompanyCategoryDef["iconName"] | string;
+  className?: string;
+}) {
+  const common = cn("size-4 shrink-0 text-slate-500 dark:text-zinc-400", className);
   switch (name) {
     case "Flame":
-      return <Flame className="size-4 text-rose-500 shrink-0" />;
+      return <Flame className={common} />;
     case "Sparkles":
-      return <Sparkles className="size-4 text-fuchsia-500 shrink-0" />;
+      return <Sparkles className={common} />;
     case "TrendingUp":
-      return <TrendingUp className="size-4 text-amber-500 shrink-0" />;
+      return <TrendingUp className={common} />;
     case "Landmark":
-      return <Landmark className="size-4 text-emerald-500 shrink-0" />;
+      return <Landmark className={common} />;
     case "Crown":
-      return <Crown className="size-4 text-purple-500 shrink-0" />;
+      return <Crown className={common} />;
     case "Cloud":
-      return <Cloud className="size-4 text-sky-500 shrink-0" />;
+      return <Cloud className={common} />;
     case "ShieldCheck":
-      return <ShieldCheck className="size-4 text-teal-500 shrink-0" />;
+      return <ShieldCheck className={common} />;
     case "Cpu":
-      return <Cpu className="size-4 text-indigo-500 shrink-0" />;
+      return <Cpu className={common} />;
     case "ShoppingBag":
-      return <ShoppingBag className="size-4 text-pink-500 shrink-0" />;
+      return <ShoppingBag className={common} />;
     case "Car":
-      return <Car className="size-4 text-blue-600 shrink-0" />;
+      return <Car className={common} />;
     case "UtensilsCrossed":
-      return <UtensilsCrossed className="size-4 text-orange-500 shrink-0" />;
+      return <UtensilsCrossed className={common} />;
     case "MessageSquare":
-      return <MessageSquare className="size-4 text-cyan-500 shrink-0" />;
+      return <MessageSquare className={common} />;
     case "Gamepad2":
-      return <Gamepad2 className="size-4 text-violet-500 shrink-0" />;
+      return <Gamepad2 className={common} />;
     case "Activity":
-      return <Activity className="size-4 text-rose-600 shrink-0" />;
+      return <Activity className={common} />;
     case "Briefcase":
-      return <Briefcase className="size-4 text-blue-500 shrink-0" />;
+      return <Briefcase className={common} />;
     case "GraduationCap":
-      return <GraduationCap className="size-4 text-yellow-500 shrink-0" />;
+      return <GraduationCap className={common} />;
     case "Compass":
-      return <Compass className="size-4 text-emerald-600 shrink-0" />;
+      return <Compass className={common} />;
     case "Radio":
-      return <Radio className="size-4 text-violet-600 shrink-0" />;
+      return <Radio className={common} />;
     case "Zap":
-      return <Zap className="size-4 text-amber-600 shrink-0" />;
+      return <Zap className={common} />;
     default:
-      return <Building2 className="size-4 text-cyan-500 shrink-0" />;
+      return <Building2 className={common} />;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Reusable Navigation Item Component (TakeUforward Quality)          */
+/* ------------------------------------------------------------------ */
+
+interface NavItemProps {
+  href?: string;
+  onClick?: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  badge?: string | number;
+  badgeVariant?: "default" | "pro" | "new" | "tree" | "soon" | "count";
+  isActive?: boolean;
+  isExpanded?: boolean;
+  hasChevron?: boolean;
+  isSubItem?: boolean;
+  title?: string;
+  className?: string;
+}
+
+function NavItem({
+  href,
+  onClick,
+  icon: Icon,
+  label,
+  badge,
+  badgeVariant = "default",
+  isActive = false,
+  isExpanded,
+  hasChevron = false,
+  isSubItem = false,
+  title,
+  className,
+}: NavItemProps) {
+  const content = (
+    <div
+      className={cn(
+        "w-full flex items-center justify-between text-xs font-medium rounded-lg transition-colors cursor-pointer select-none group",
+        isSubItem ? "py-1.5 px-2.5 pl-8" : "py-2 px-2.5",
+        isActive
+          ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-semibold shadow-2xs"
+          : "text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100",
+        className
+      )}
+      title={title || label}
+    >
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <Icon
+          className={cn(
+            "size-4 shrink-0 transition-colors",
+            isActive
+              ? "text-slate-900 dark:text-zinc-100"
+              : "text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-300"
+          )}
+        />
+        <span className="truncate leading-none">{label}</span>
+      </div>
+
+      <div className="flex items-center gap-1.5 shrink-0 ml-1">
+        {badge !== undefined && badge !== null && (
+          <span
+            className={cn(
+              "text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded leading-none",
+              badgeVariant === "new"
+                ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40"
+                : badgeVariant === "tree"
+                ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/40"
+                : badgeVariant === "soon"
+                ? "bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200/60 dark:border-zinc-700/60"
+                : "bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 font-medium"
+            )}
+          >
+            {badge}
+          </span>
+        )}
+
+        {hasChevron && (
+          <ChevronDown
+            className={cn(
+              "size-3 text-slate-400 dark:text-zinc-500 transition-transform duration-150",
+              isExpanded && "rotate-180"
+            )}
+          />
+        )}
+      </div>
+    </div>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} onClick={onClick} aria-current={isActive ? "page" : undefined} className="block w-full">
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} className="block w-full text-left">
+      {content}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Tree Branch Connector Item (TakeUForward Hierarchy Style)          */
+/* ------------------------------------------------------------------ */
+
+interface TreeBranchItemProps {
+  isLast?: boolean;
+  children: React.ReactNode;
+  className?: string;
+}
+
+function TreeBranchItem({
+  isLast = false,
+  children,
+  className,
+}: TreeBranchItemProps) {
+  return (
+    <div className={cn("relative flex items-center min-h-[30px]", className)}>
+      {/* Tree connector lines */}
+      <div
+        className="absolute left-[13px] top-0 bottom-0 pointer-events-none w-3.5"
+        aria-hidden="true"
+      >
+        {/* Top-half to horizontal branch curve */}
+        <div className="absolute left-0 top-0 h-1/2 w-3.5 border-l border-b border-slate-300/80 dark:border-zinc-700 rounded-bl-[7px]" />
+        {/* Continuous downward stem to next sibling */}
+        {!isLast && (
+          <div className="absolute left-0 top-1/2 bottom-0 w-px border-l border-slate-300/80 dark:border-zinc-700" />
+        )}
+      </div>
+
+      {/* Indented child content */}
+      <div className="pl-6 w-full">{children}</div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Types & Sidebar Props                                              */
+/* ------------------------------------------------------------------ */
 
 export interface CompanySidebarItem {
   id: number;
@@ -118,12 +273,30 @@ export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 const PRIMARY_CATEGORY_LIMIT = 5;
 
+/* ------------------------------------------------------------------ */
+/* Main Application Sidebar Component                                 */
+/* ------------------------------------------------------------------ */
+
 export function AppSidebar({
   companies = [],
   selectedCompanySlug = "google",
   className,
   ...props
 }: AppSidebarProps) {
+  const { user, signOut } = useAuth();
+  const { count: bookmarkCount } = useBookmarks();
+  const { isMobile, setOpenMobile, toggleSidebar } = useSidebar();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
+  // Collapsible section state
+  const [practiceOpen, setPracticeOpen] = useState(true);
+  const [companiesOpen, setCompaniesOpen] = useState(true);
+  const [systemDesignOpen, setSystemDesignOpen] = useState(false);
+
+  // Drilldown state for company categories
   const [drilldownCategory, setDrilldownCategory] = useState<
     | (CompanyCategoryDef & { items: CompanySidebarItem[] })
     | { id: string; name: string; iconName?: string; items: CompanySidebarItem[] }
@@ -131,20 +304,12 @@ export function AppSidebar({
   >(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [categorySearchQuery, setCategorySearchQuery] = useState("");
-  const { user, signOut } = useAuth();
-  const { count: bookmarkCount } = useBookmarks();
-  const { isMobile, setOpenMobile, toggleSidebar } = useSidebar();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
   const [pendingCompanySlug, setPendingCompanySlug] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
 
   const isBookmarksActive = searchParams.get("status") === "BOOKMARKED";
   const activeCompanySlug = searchParams.get("company") || selectedCompanySlug || "google";
   const displayedCompanySlug = pendingCompanySlug || activeCompanySlug;
 
-  // Clear pending state once searchParams reflects the new company
   if (pendingCompanySlug && searchParams.get("company") === pendingCompanySlug) {
     setPendingCompanySlug(null);
   }
@@ -179,7 +344,7 @@ export function AppSidebar({
     };
   }, [companies]);
 
-  // Find which category contains the selected company
+  // Find active category
   const activeCategoryId = useMemo(() => {
     for (const cat of categorizedCompanies.categories) {
       if (cat.items.some((c) => c.slug === displayedCompanySlug)) {
@@ -192,7 +357,7 @@ export function AppSidebar({
     return null;
   }, [categorizedCompanies, displayedCompanySlug]);
 
-  // Prefetch top companies in category as soon as category is viewed
+  // Prefetch top companies in category on drilldown
   useEffect(() => {
     if (drilldownCategory && drilldownCategory.items.length > 0) {
       drilldownCategory.items.slice(0, 4).forEach((c) => {
@@ -231,14 +396,12 @@ export function AppSidebar({
     router.push("/login");
   };
 
-  // Filter drilldown items by internal search query
+  // Filter drilldown items
   const filteredDrilldownItems = useMemo(() => {
     if (!drilldownCategory) return [];
     if (!categorySearchQuery.trim()) return drilldownCategory.items;
     const q = categorySearchQuery.toLowerCase().trim();
-    return drilldownCategory.items.filter((c) =>
-      c.name.toLowerCase().includes(q)
-    );
+    return drilldownCategory.items.filter((c) => c.name.toLowerCase().includes(q));
   }, [drilldownCategory, categorySearchQuery]);
 
   const primaryCategories = categorizedCompanies.categories.slice(0, PRIMARY_CATEGORY_LIMIT);
@@ -247,18 +410,21 @@ export function AppSidebar({
   return (
     <Sidebar
       collapsible="offcanvas"
-      className={cn("border-r border-border/40 bg-sidebar/95 backdrop-blur-md", className)}
+      className={cn(
+        "border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#0c101c] select-none",
+        className
+      )}
       {...props}
     >
       {/* ========================================================================= */}
-      {/* 1. HEADER (BRANDING + CLOSE BUTTON)                                       */}
+      {/* 1. HEADER (LOGO + COLLAPSE/CLOSE BUTTON)                                   */}
       {/* ========================================================================= */}
-      <SidebarHeader className="h-14 flex-row items-center justify-between p-0 px-4 border-b border-border/40 shrink-0 bg-transparent">
+      <SidebarHeader className="h-14 flex-row items-center justify-between p-0 px-4 border-b border-slate-200/80 dark:border-zinc-800/80 shrink-0 bg-transparent">
         <KodePrepLogo />
         <button
           type="button"
           onClick={handleClose}
-          className="size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+          className="size-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           title="Close sidebar"
           aria-label="Close sidebar"
         >
@@ -267,12 +433,12 @@ export function AppSidebar({
       </SidebarHeader>
 
       {/* ========================================================================= */}
-      {/* 2. SCROLLABLE NAVIGATION AREA                                             */}
+      {/* 2. SCROLLABLE NAVIGATION CONTENT                                          */}
       {/* ========================================================================= */}
-      <SidebarContent className="flex-1 overflow-y-auto no-scrollbar p-2.5 space-y-2">
+      <SidebarContent className="flex-1 overflow-y-auto no-scrollbar p-2.5 pb-6 space-y-4">
         {drilldownCategory ? (
           /* --------------------------------------------------------------------- */
-          /* DRILL-DOWN VIEW (LEVEL 2: COMPANIES IN SELECTED CATEGORY)             */
+          /* DRILLDOWN VIEW: COMPANIES IN SELECTED CATEGORY                        */
           /* --------------------------------------------------------------------- */
           <SidebarGroup className="p-0 space-y-2 animate-in fade-in-50 duration-150">
             {/* Back Button */}
@@ -282,41 +448,41 @@ export function AppSidebar({
                 setDrilldownCategory(null);
                 setCategorySearchQuery("");
               }}
-              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer group"
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer group"
             >
               <ArrowLeft className="size-3.5 group-hover:-translate-x-0.5 transition-transform" />
-              <span>All Categories</span>
+              <span>Back to Categories</span>
             </button>
 
             {/* Category Header Card */}
-            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/40 border border-border/50">
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 dark:bg-zinc-800/50 border border-slate-200/60 dark:border-zinc-700/60">
               <div className="flex items-center gap-2 min-w-0">
                 <CategoryIcon name={drilldownCategory.iconName || "Building2"} />
-                <span className="text-xs font-bold text-foreground truncate">
+                <span className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">
                   {drilldownCategory.name}
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground shrink-0">
+              <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-white dark:bg-zinc-900 text-slate-500 border border-slate-200 dark:border-zinc-700 shrink-0">
                 {drilldownCategory.items.length}
               </span>
             </div>
 
-            {/* Quick Search inside category if more than 6 companies */}
+            {/* Quick Search inside Category */}
             {drilldownCategory.items.length > 6 && (
               <div className="relative pt-0.5">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground pointer-events-none" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   value={categorySearchQuery}
                   onChange={(e) => setCategorySearchQuery(e.target.value)}
-                  placeholder={`Filter ${drilldownCategory.name}...`}
-                  className="w-full pl-7 pr-7 py-1.5 text-xs rounded-lg border border-border/70 bg-card/60 placeholder:text-muted-foreground/60 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder={`Search ${drilldownCategory.name}...`}
+                  className="w-full pl-7 pr-7 py-1 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 placeholder:text-slate-400 text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-slate-400"
                 />
                 {categorySearchQuery && (
                   <button
                     type="button"
                     onClick={() => setCategorySearchQuery("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     <X className="size-3" />
                   </button>
@@ -325,7 +491,7 @@ export function AppSidebar({
             )}
 
             {/* Companies List */}
-            <SidebarGroupContent className="space-y-1 pt-1">
+            <SidebarGroupContent className="space-y-0.5 pt-1">
               {filteredDrilldownItems.map((company) => {
                 const isActive = displayedCompanySlug === company.slug;
                 return (
@@ -333,482 +499,389 @@ export function AppSidebar({
                     key={company.id}
                     type="button"
                     onClick={() => selectCompany(company.slug)}
-                    onMouseEnter={() => router.prefetch(`/dashboard?company=${company.slug}`)}
-                    onTouchStart={() => router.prefetch(`/dashboard?company=${company.slug}`)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group ${
+                    className={cn(
+                      "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer group",
                       isActive
-                        ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                        : "hover:bg-muted/60 text-foreground/90"
-                    }`}
+                        ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-semibold shadow-2xs"
+                        : "text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60"
+                    )}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
                       <CompanyLogo
                         name={company.name}
-                        className="size-5 text-[10px] rounded-md border border-border/50 shrink-0"
+                        className="size-4 text-[9px] rounded border border-slate-200 dark:border-zinc-700 shrink-0"
                       />
-                      <span className="truncate font-medium">{company.name}</span>
+                      <span className="truncate">{company.name}</span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-medium ${
-                          isActive
-                            ? "bg-primary-foreground/20 text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {company.problemCount}
-                      </span>
-                      {isActive && (
-                        <span className="size-1.5 rounded-full bg-primary-foreground shrink-0" />
+                    <span
+                      className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0",
+                        isActive
+                          ? "bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
+                          : "text-slate-400"
                       )}
-                    </div>
+                    >
+                      {company.problemCount}
+                    </span>
                   </button>
                 );
               })}
 
               {filteredDrilldownItems.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-4">
-                  No matching companies
-                </p>
+                <p className="text-xs text-slate-400 text-center py-4">No matching companies</p>
               )}
             </SidebarGroupContent>
           </SidebarGroup>
         ) : (
-          /* --------------------------------------------------------------------- */
-          /* MAIN CATEGORIES VIEW (LEVEL 1)                                        */
-          /* --------------------------------------------------------------------- */
-          <SidebarGroup className="p-0 space-y-3">
-            {/* Section Header */}
-            <SidebarGroupLabel className="flex items-center justify-between px-2 pt-1 pb-0.5 h-auto">
-              <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">
-                Companies
-              </span>
-              <span className="text-[10px] font-mono text-muted-foreground">
-                {companies.length} Total
-              </span>
-            </SidebarGroupLabel>
+          <>
+            {/* =================================================================== */}
+            {/* SECTION A — LEARN                                                   */}
+            {/* =================================================================== */}
+            <SidebarGroup className="p-0 space-y-0.5">
+              <SidebarGroupLabel className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest px-2.5 pb-1 h-auto">
+                Learn
+              </SidebarGroupLabel>
 
-            {/* Primary Top Categories */}
-            <SidebarGroupContent className="space-y-0.5">
-              {primaryCategories.map((category) => {
-                const isCatActive = activeCategoryId === category.id;
-                return (
-                  <button
-                    key={category.id}
-                    type="button"
-                    onClick={() => {
-                      setDrilldownCategory(category);
-                      setCategorySearchQuery("");
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer group ${
-                      isCatActive
-                        ? "bg-muted/80 text-foreground font-semibold border border-border/60 shadow-2xs"
-                        : "hover:bg-muted/50 text-foreground/90"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <CategoryIcon name={category.iconName} />
-                      <span className="truncate font-medium">{category.name}</span>
+              <SidebarGroupContent className="space-y-0.5">
+                {/* Dashboard */}
+                <NavItem
+                  href="/dashboard"
+                  onClick={() => isMobile && setOpenMobile(false)}
+                  icon={LayoutDashboard}
+                  label="Dashboard"
+                  isActive={pathname === "/dashboard" && !searchParams.get("track") && !isBookmarksActive}
+                />
+
+                {/* Practice Collapsible Group (DSA, SQL, Aptitude) with TakeUForward Tree Branch Lines */}
+                <div>
+                  <NavItem
+                    onClick={() => setPracticeOpen(!practiceOpen)}
+                    icon={Code2}
+                    label="Practice"
+                    hasChevron
+                    isExpanded={practiceOpen}
+                  />
+
+                  {practiceOpen && (
+                    <div className="space-y-0.5 mt-0.5 ml-1 animate-in fade-in-50 duration-150">
+                      <TreeBranchItem isLast={false}>
+                        <Link
+                          href="/dashboard?track=dsa"
+                          onClick={() => isMobile && setOpenMobile(false)}
+                          className={cn(
+                            "w-full flex items-center py-1.5 px-2.5 rounded-lg text-xs transition-colors cursor-pointer",
+                            searchParams.get("track") === "dsa"
+                              ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-semibold"
+                              : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100"
+                          )}
+                        >
+                          DSA
+                        </Link>
+                      </TreeBranchItem>
+
+                      <TreeBranchItem isLast={false}>
+                        <Link
+                          href="/dashboard?track=sql"
+                          onClick={() => isMobile && setOpenMobile(false)}
+                          className={cn(
+                            "w-full flex items-center py-1.5 px-2.5 rounded-lg text-xs transition-colors cursor-pointer",
+                            searchParams.get("track") === "sql"
+                              ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-semibold"
+                              : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100"
+                          )}
+                        >
+                          SQL
+                        </Link>
+                      </TreeBranchItem>
+
+                      <TreeBranchItem isLast={true}>
+                        <Link
+                          href="/dashboard?track=aptitude"
+                          onClick={() => isMobile && setOpenMobile(false)}
+                          className={cn(
+                            "w-full flex items-center py-1.5 px-2.5 rounded-lg text-xs transition-colors cursor-pointer",
+                            searchParams.get("track") === "aptitude"
+                              ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-semibold"
+                              : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100"
+                          )}
+                        >
+                          Aptitude
+                        </Link>
+                      </TreeBranchItem>
                     </div>
+                  )}
+                </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md font-mono text-muted-foreground bg-muted/60">
-                        {category.items.length}
-                      </span>
-                      {isCatActive && (
-                        <span className="w-1 h-3.5 rounded-full bg-primary shrink-0" />
+                {/* Company Preparation Collapsible Group */}
+                <div className="pt-0.5">
+                  <NavItem
+                    onClick={() => setCompaniesOpen(!companiesOpen)}
+                    icon={Building2}
+                    label="Company Preparation"
+                    badge={companies.length}
+                    badgeVariant="count"
+                    hasChevron
+                    isExpanded={companiesOpen}
+                  />
+
+                  {companiesOpen && (
+                    <div className="space-y-0.5 mt-0.5 ml-1 animate-in fade-in-50 duration-150">
+                      {primaryCategories.map((category, idx) => {
+                        const isCatActive = activeCategoryId === category.id;
+                        const isLast =
+                          remainingCategories.length === 0 &&
+                          idx === primaryCategories.length - 1;
+
+                        return (
+                          <TreeBranchItem key={category.id} isLast={isLast}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDrilldownCategory(category);
+                                setCategorySearchQuery("");
+                              }}
+                              className={cn(
+                                "w-full flex items-center justify-between py-1.5 px-2.5 text-xs rounded-lg transition-colors cursor-pointer group text-left",
+                                isCatActive
+                                  ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-semibold"
+                                  : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100"
+                              )}
+                            >
+                              <span className="truncate pr-1">{category.name}</span>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <span className="text-[10px] font-mono text-slate-400">
+                                  {category.items.length}
+                                </span>
+                                <ChevronRight className="size-3 text-slate-300 group-hover:text-slate-500" />
+                              </div>
+                            </button>
+                          </TreeBranchItem>
+                        );
+                      })}
+
+                      {/* View More Categories */}
+                      {remainingCategories.length > 0 && (
+                        <>
+                          {showAllCategories ? (
+                            <>
+                              {remainingCategories.map((category) => (
+                                <TreeBranchItem key={category.id} isLast={false}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setDrilldownCategory(category);
+                                      setCategorySearchQuery("");
+                                    }}
+                                    className="w-full flex items-center justify-between py-1.5 px-2.5 text-xs rounded-lg text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors cursor-pointer group text-left"
+                                  >
+                                    <span className="truncate pr-1">{category.name}</span>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <span className="text-[10px] font-mono text-slate-400">
+                                        {category.items.length}
+                                      </span>
+                                      <ChevronRight className="size-3 text-slate-300 group-hover:text-slate-500" />
+                                    </div>
+                                  </button>
+                                </TreeBranchItem>
+                              ))}
+                              <TreeBranchItem isLast={true}>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAllCategories(false)}
+                                  className="w-full text-left py-1.5 px-2.5 text-[11px] font-medium text-slate-400 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors"
+                                >
+                                  Show fewer categories
+                                </button>
+                              </TreeBranchItem>
+                            </>
+                          ) : (
+                            <TreeBranchItem isLast={true}>
+                              <button
+                                type="button"
+                                onClick={() => setShowAllCategories(true)}
+                                className="w-full text-left py-1.5 px-2.5 text-xs text-blue-600 dark:text-blue-400 hover:underline transition-colors flex items-center justify-between"
+                              >
+                                <span>View more categories</span>
+                                <span className="text-[10px] font-mono text-slate-400">
+                                  +{remainingCategories.length}
+                                </span>
+                              </button>
+                            </TreeBranchItem>
+                          )}
+                        </>
                       )}
-                      <ChevronRight className="size-3.5 text-muted-foreground/50 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
                     </div>
-                  </button>
-                );
-              })}
-            </SidebarGroupContent>
+                  )}
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-            {/* Progressive Disclosure: Remaining Categories */}
-            {remainingCategories.length > 0 && (
-              <div className="space-y-1 pt-0.5 border-t border-border/40">
-                {showAllCategories ? (
-                  <div className="space-y-0.5 pt-1 animate-in fade-in-50 duration-200">
-                    {remainingCategories.map((category) => {
-                      const isCatActive = activeCategoryId === category.id;
-                      return (
+            {/* Separator */}
+            <div className="border-t border-slate-100 dark:border-zinc-800/80 my-2" />
+
+            {/* =================================================================== */}
+            {/* SECTION B — COMMUNITY                                               */}
+            {/* =================================================================== */}
+            <SidebarGroup className="p-0 space-y-0.5">
+              <SidebarGroupLabel className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest px-2.5 pb-1 h-auto">
+                Community
+              </SidebarGroupLabel>
+
+              <SidebarGroupContent className="space-y-0.5">
+                <NavItem
+                  href="/dashboard/discussions"
+                  onClick={() => isMobile && setOpenMobile(false)}
+                  icon={MessagesSquare}
+                  label="Discussions"
+                  badge="NEW"
+                  badgeVariant="new"
+                  isActive={pathname === "/dashboard/discussions"}
+                />
+
+                <NavItem
+                  href="/dashboard/interview-experiences"
+                  onClick={() => isMobile && setOpenMobile(false)}
+                  icon={Briefcase}
+                  label="Interview Experiences"
+                  badge="NEW"
+                  badgeVariant="new"
+                  isActive={pathname?.startsWith("/dashboard/interview-experiences")}
+                />
+
+                <NavItem
+                  href="/dashboard/roadmap"
+                  onClick={() => isMobile && setOpenMobile(false)}
+                  icon={GitBranch}
+                  label="DSA Roadmap"
+                  badge="TREE"
+                  badgeVariant="tree"
+                  isActive={pathname === "/dashboard/roadmap"}
+                />
+
+                <NavItem
+                  onClick={() => {
+                    toast.info("Leaderboard is coming soon!", {
+                      description: "Global community solver rankings, streaks, and milestone badges are launching soon.",
+                    });
+                  }}
+                  icon={Trophy}
+                  label="Leaderboard"
+                  badge="Soon"
+                  badgeVariant="soon"
+                />
+
+                <NavItem
+                  href="/dashboard/profile"
+                  onClick={() => isMobile && setOpenMobile(false)}
+                  icon={UserRound}
+                  label="My Profile"
+                  isActive={pathname === "/dashboard/profile"}
+                />
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Separator */}
+            <div className="border-t border-slate-100 dark:border-zinc-800/80 my-2" />
+
+            {/* =================================================================== */}
+            {/* SECTION C — RESOURCES                                               */}
+            {/* =================================================================== */}
+            <SidebarGroup className="p-0 space-y-0.5">
+              <SidebarGroupLabel className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest px-2.5 pb-1 h-auto">
+                Resources
+              </SidebarGroupLabel>
+
+              <SidebarGroupContent className="space-y-0.5">
+                {/* Bookmarks */}
+                <NavItem
+                  onClick={() => {
+                    const targetUrl = isBookmarksActive
+                      ? `/dashboard${activeCompanySlug ? `?company=${activeCompanySlug}` : ""}`
+                      : `/dashboard?status=BOOKMARKED${activeCompanySlug ? `&company=${activeCompanySlug}` : ""}`;
+                    startTransition(() => {
+                      router.push(targetUrl);
+                      if (isMobile) setOpenMobile(false);
+                    });
+                  }}
+                  icon={Bookmark}
+                  label="Bookmarks"
+                  badge={bookmarkCount > 0 ? bookmarkCount : undefined}
+                  badgeVariant="count"
+                  isActive={isBookmarksActive}
+                />
+
+                {/* System Design Collapsible Group (LLD / HLD) */}
+                <div>
+                  <NavItem
+                    onClick={() => setSystemDesignOpen(!systemDesignOpen)}
+                    icon={Boxes}
+                    label="System Design"
+                    hasChevron
+                    isExpanded={systemDesignOpen}
+                  />
+
+                  {systemDesignOpen && (
+                    <div className="space-y-0.5 mt-0.5 ml-1 animate-in fade-in-50 duration-150">
+                      <TreeBranchItem isLast={false}>
                         <button
-                          key={category.id}
                           type="button"
                           onClick={() => {
-                            setDrilldownCategory(category);
-                            setCategorySearchQuery("");
+                            toast.info("Low Level Design (LLD) is coming soon!", {
+                              description: "OOP patterns, machine coding rounds, and schema templates are in development.",
+                            });
                           }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group ${
-                            isCatActive
-                              ? "bg-muted/80 text-foreground font-semibold border border-border/60 shadow-2xs"
-                              : "hover:bg-muted/50 text-foreground/90"
-                          }`}
+                          className="w-full flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors cursor-pointer text-left"
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <CategoryIcon name={category.iconName} />
-                            <span className="truncate font-medium">{category.name}</span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-md font-mono text-muted-foreground bg-muted/60">
-                              {category.items.length}
-                            </span>
-                            {isCatActive && (
-                              <span className="w-1 h-3.5 rounded-full bg-primary shrink-0" />
-                            )}
-                            <ChevronRight className="size-3.5 text-muted-foreground/50 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
-                          </div>
+                          <span>LLD</span>
+                          <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded leading-none bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200/60 dark:border-zinc-700/60">
+                            Soon
+                          </span>
                         </button>
-                      );
-                    })}
+                      </TreeBranchItem>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowAllCategories(false)}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    >
-                      <span>Show Fewer Categories</span>
-                      <ChevronDown className="size-3.5 rotate-180 transition-transform" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllCategories(true)}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer group"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Plus className="size-3.5 text-primary group-hover:rotate-90 transition-transform" />
-                      <span>View More Categories</span>
-                    </span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted/70 text-muted-foreground">
-                      +{remainingCategories.length}
-                    </span>
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Other Uncategorized Companies (if any) */}
-            {categorizedCompanies.otherItems.length > 0 && (
-              <div className="pt-1 border-t border-border/40">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDrilldownCategory({
-                      id: "__other",
-                      name: "Other Companies",
-                      iconName: "Building2",
-                      items: categorizedCompanies.otherItems,
-                    });
-                    setCategorySearchQuery("");
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer group ${
-                    activeCategoryId === "__other"
-                      ? "bg-muted/80 text-foreground font-semibold border border-border/60 shadow-2xs"
-                      : "hover:bg-muted/50 text-foreground/90"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Building2 className="size-4 text-primary shrink-0" />
-                    <span className="truncate font-medium">All Other Companies</span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md font-mono text-muted-foreground bg-muted/60">
-                      {categorizedCompanies.otherItems.length}
-                    </span>
-                    {activeCategoryId === "__other" && (
-                      <span className="w-1 h-3.5 rounded-full bg-primary shrink-0" />
-                    )}
-                    <ChevronRight className="size-3.5 text-muted-foreground/50 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
-                  </div>
-                </button>
-              </div>
-            )}
-          </SidebarGroup>
-        )}
-
-        {/* ========================================================================= */}
-        {/* SYSTEM DESIGN TRACKS (LLD & HLD)                                          */}
-        {/* ========================================================================= */}
-        <SidebarGroup className="p-0 pt-2.5 mt-2 border-t border-border/40 space-y-1">
-          <SidebarGroupLabel className="flex items-center justify-between px-2.5 pt-1 pb-0.5 h-auto">
-            <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">
-              System Design
-            </span>
-            <span className="text-[10px] font-mono text-muted-foreground/60 font-medium">
-              2 Tracks
-            </span>
-          </SidebarGroupLabel>
-
-          <SidebarGroupContent className="space-y-1">
-            {/* LLD (Low Level Design) */}
-            <button
-              type="button"
-              onClick={() => {
-                toast.info("Low Level Design (LLD) is coming soon!", {
-                  description: "Object-oriented design patterns, machine coding rounds, and schema templates are currently in development.",
-                });
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 text-foreground/90"
-              title="Low Level Design (LLD) - Coming Soon"
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <Boxes className="size-4 shrink-0 text-violet-500 group-hover:scale-105 transition-transform" />
-                <div className="flex flex-col items-start min-w-0 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-xs text-foreground leading-tight">LLD</span>
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[3px] bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
-                      Coming Soon
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Low Level Design</span>
+                      <TreeBranchItem isLast={true}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toast.info("High Level Design (HLD) is coming soon!", {
+                              description: "Distributed architectures, microservices, and interview blueprints are launching soon.",
+                            });
+                          }}
+                          className="w-full flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors cursor-pointer text-left"
+                        >
+                          <span>HLD</span>
+                          <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded leading-none bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200/60 dark:border-zinc-700/60">
+                            Soon
+                          </span>
+                        </button>
+                      </TreeBranchItem>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </button>
 
-            {/* HLD (High Level Design) */}
-            <button
-              type="button"
-              onClick={() => {
-                toast.info("High Level Design (HLD) is coming soon!", {
-                  description: "Distributed system architectures, microservices, and large-scale interview blueprints are launching soon.",
-                });
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 text-foreground/90"
-              title="High Level Design (HLD) - Coming Soon"
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <Network className="size-4 shrink-0 text-emerald-500 group-hover:scale-105 transition-transform" />
-                <div className="flex flex-col items-start min-w-0 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-xs text-foreground leading-tight">HLD</span>
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[3px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      Coming Soon
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">High Level Design</span>
-                </div>
-              </div>
-            </button>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* ========================================================================= */}
-        {/* COMMUNITY SECTION                                                         */}
-        {/* ========================================================================= */}
-        <SidebarGroup className="p-0 pt-2.5 mt-2 border-t border-border/40 space-y-1">
-          <SidebarGroupLabel className="flex items-center justify-between px-2.5 pt-1 pb-0.5 h-auto">
-            <span className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-widest">
-              Community
-            </span>
-            <span className="text-[10px] font-mono text-muted-foreground/60 font-medium">
-              Connect
-            </span>
-          </SidebarGroupLabel>
-
-          <SidebarGroupContent className="space-y-1">
-            {/* DSA Roadmap / Tree */}
-            <Link
-              href="/dashboard/roadmap"
-              onClick={() => {
-                if (isMobile) setOpenMobile(false);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 ${
-                pathname === "/dashboard/roadmap"
-                  ? "bg-muted text-foreground font-semibold"
-                  : "text-foreground/90"
-              }`}
-              title="DSA Roadmap"
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <Network className="size-4 shrink-0 text-indigo-500 group-hover:scale-105 transition-transform" />
-                <div className="flex flex-col items-start min-w-0 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-xs text-foreground leading-tight">DSA Roadmap</span>
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[3px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                      TREE
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Visual Learning Hierarchy</span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Discussions */}
-            <Link
-              href="/dashboard/discussions"
-              onClick={() => {
-                if (isMobile) setOpenMobile(false);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 ${
-                pathname === "/dashboard/discussions"
-                  ? "bg-muted text-foreground font-semibold"
-                  : "text-foreground/90"
-              }`}
-              title="Discussions"
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <MessagesSquare className="size-4 shrink-0 text-cyan-500 group-hover:scale-105 transition-transform" />
-                <div className="flex flex-col items-start min-w-0 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-xs text-foreground leading-tight">Discussions</span>
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[3px] bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-                      NEW
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Q&amp;A &amp; Strategy</span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Interview Experience */}
-            <Link
-              href="/dashboard/interview-experiences"
-              onClick={() => {
-                if (isMobile) setOpenMobile(false);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 ${
-                pathname?.startsWith("/dashboard/interview-experiences")
-                  ? "bg-muted text-foreground font-semibold"
-                  : "text-foreground/90"
-              }`}
-              title="Interview Experiences"
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <Briefcase className="size-4 shrink-0 text-orange-500 group-hover:scale-105 transition-transform" />
-                <div className="flex flex-col items-start min-w-0 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-xs text-foreground leading-tight">Interview Experience</span>
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[3px] bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
-                      NEW
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Recent Company Rounds</span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Leaderboard */}
-            <button
-              type="button"
-              onClick={() => {
-                toast.info("Leaderboard is coming soon!", {
-                  description: "Global community solver rankings, streaks, and milestone badges are launching soon.",
-                });
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 text-foreground/90"
-              title="Leaderboard - Coming Soon"
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <Trophy className="size-4 shrink-0 text-amber-500 group-hover:scale-105 transition-transform" />
-                <div className="flex flex-col items-start min-w-0 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-xs text-foreground leading-tight">Leaderboard</span>
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[3px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                      Soon
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Top Solvers &amp; Streaks</span>
-                </div>
-              </div>
-            </button>
-
-            {/* My Profile */}
-            <Link
-              href="/dashboard/profile"
-              onClick={() => {
-                if (isMobile) setOpenMobile(false);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer group hover:bg-muted/50 ${
-                pathname === "/dashboard/profile"
-                  ? "bg-muted text-foreground font-semibold"
-                  : "text-foreground/90"
-              }`}
-              title="My Profile"
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <User className="size-4 shrink-0 text-blue-500 group-hover:scale-105 transition-transform" />
-                <div className="flex flex-col items-start min-w-0 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-xs text-foreground leading-tight">My Profile</span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Heatmap, Stats &amp; Badges</span>
-                </div>
-              </div>
-            </Link>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* ========================================================================= */}
-        {/* BOOKMARKS (SAVED PROBLEMS - NO HEADING)                                   */}
-        {/* ========================================================================= */}
-        <SidebarGroup className="p-0 pt-1.5 mt-1 border-t border-border/40">
-          <SidebarGroupContent>
-            <button
-              type="button"
-              onClick={() => {
-                const targetUrl = isBookmarksActive
-                  ? `/dashboard${activeCompanySlug ? `?company=${activeCompanySlug}` : ""}`
-                  : `/dashboard?status=BOOKMARKED${activeCompanySlug ? `&company=${activeCompanySlug}` : ""}`;
-                startTransition(() => {
-                  router.push(targetUrl);
-                  if (isMobile) setOpenMobile(false);
-                });
-              }}
-              onMouseEnter={() => {
-                const targetUrl = isBookmarksActive
-                  ? `/dashboard${activeCompanySlug ? `?company=${activeCompanySlug}` : ""}`
-                  : `/dashboard?status=BOOKMARKED${activeCompanySlug ? `&company=${activeCompanySlug}` : ""}`;
-                router.prefetch(targetUrl);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer group ${
-                isBookmarksActive
-                  ? "bg-muted text-foreground font-semibold border border-border/60 shadow-2xs"
-                  : "text-foreground/90 hover:bg-muted/50 hover:text-foreground"
-              }`}
-              title="Bookmarks"
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <Bookmark
-                  className={`size-4 shrink-0 transition-colors ${
-                    isBookmarksActive
-                      ? "text-cyan-400 fill-cyan-400/20"
-                      : "text-cyan-400 group-hover:text-cyan-300"
-                  }`}
+                {/* Blogs & Guides */}
+                <NavItem
+                  href="/guides"
+                  onClick={() => isMobile && setOpenMobile(false)}
+                  icon={Newspaper}
+                  label="Blogs & Guides"
+                  isActive={pathname === "/guides"}
                 />
-                <div className="flex flex-col items-start min-w-0 text-left">
-                  <span className="font-bold text-xs text-foreground leading-tight">Bookmarks</span>
-                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">Saved Problems</span>
-                </div>
-              </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-              <div className="flex items-center gap-1.5 shrink-0">
-                {bookmarkCount > 0 && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-md font-mono text-muted-foreground bg-muted/60">
-                    {bookmarkCount}
-                  </span>
-                )}
-                {isBookmarksActive && (
-                  <span className="w-1 h-3.5 rounded-full bg-cyan-400 shrink-0" />
-                )}
-              </div>
-            </button>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
 
       {/* ========================================================================= */}
-      {/* 3. DOWNSIDE NAVIGATION & ACCOUNT FOOTER                                   */}
+      {/* 3. SECTION E — ACCOUNT (BOTTOM ANCHORED)                                  */}
       {/* ========================================================================= */}
-      <SidebarFooter className="shrink-0 p-2.5 border-t border-border/40 bg-transparent space-y-2">
+      <SidebarFooter className="shrink-0 p-3 pb-3.5 border-t border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c]">
         {user ? (
-          <div className="rounded-xl border border-border/50 bg-muted/40 p-2 flex items-center justify-between gap-2 shadow-2xs">
-            {/* User Details Link to Profile */}
+          <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 p-2.5 px-3 flex items-center justify-between gap-2 shadow-2xs">
+            {/* User Profile Info */}
             <Link
               href="/dashboard/profile"
               onClick={() => isMobile && setOpenMobile(false)}
@@ -818,37 +891,37 @@ export function AppSidebar({
                 <img
                   src={user.photoURL}
                   alt={user.displayName || "User"}
-                  className="size-8 rounded-lg object-cover border border-border/60 shrink-0"
+                  className="size-8 rounded-md object-cover border border-slate-200 dark:border-zinc-700 shrink-0"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="size-8 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs shrink-0">
+                <div className="size-8 rounded-md bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 flex items-center justify-center font-bold text-xs shrink-0">
                   {(user.displayName || user.email || "U").charAt(0).toUpperCase()}
                 </div>
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <p className="text-xs font-bold text-foreground truncate leading-tight">
-                    {user.displayName || user.email?.split("@")[0] || user.phoneNumber || "User"}
+                  <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate leading-snug">
+                    {user.displayName || user.email?.split("@")[0] || "User"}
                   </p>
-                  <VerifiedBadge className="size-3.5 shrink-0" />
-                  <span className="text-[9.5px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 leading-none shrink-0">
+                  <VerifiedBadge className="size-3 shrink-0" />
+                  <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 leading-none shrink-0">
                     Pro
                   </span>
                 </div>
-                <p className="text-[10.5px] text-muted-foreground truncate font-mono mt-0.5 leading-tight">
-                  {user.email || user.phoneNumber || "Signed in"}
+                <p className="text-[11px] text-slate-400 dark:text-zinc-500 truncate leading-normal pt-0.5 min-h-[16px]">
+                  {user.email || "Free Tier"}
                 </p>
               </div>
             </Link>
 
-            {/* Quick Sign Out Action */}
+            {/* Sign Out Button */}
             <button
               type="button"
               onClick={handleSignOut}
               title="Sign Out"
               aria-label="Sign Out"
-              className="size-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+              className="size-7 rounded-md flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer shrink-0"
             >
               <LogOut className="size-3.5" />
             </button>
@@ -857,7 +930,7 @@ export function AppSidebar({
           <Link
             href="/login"
             onClick={() => isMobile && setOpenMobile(false)}
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs transition-all shadow-xs cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-slate-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-semibold text-xs transition-all shadow-xs cursor-pointer"
           >
             <LogIn className="size-3.5" />
             <span>Login to Algoryn</span>
