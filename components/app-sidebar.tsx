@@ -419,7 +419,7 @@ export function AppSidebar({
       {/* ========================================================================= */}
       {/* 1. HEADER (LOGO + COLLAPSE/CLOSE BUTTON)                                   */}
       {/* ========================================================================= */}
-      <SidebarHeader className="h-14 flex-row items-center justify-between p-0 px-4 border-b border-slate-200/80 dark:border-zinc-800/80 shrink-0 bg-transparent">
+      <SidebarHeader className="h-14 flex-row items-center justify-between p-0 px-4 border-b border-slate-200/80 dark:border-zinc-800/80 shrink-0 bg-white dark:bg-[#0c101c]">
         <KodePrepLogo />
         <button
           type="button"
@@ -435,7 +435,7 @@ export function AppSidebar({
       {/* ========================================================================= */}
       {/* 2. SCROLLABLE NAVIGATION CONTENT                                          */}
       {/* ========================================================================= */}
-      <SidebarContent className="flex-1 overflow-y-auto no-scrollbar p-2.5 pb-6 space-y-4">
+      <SidebarContent className="flex-1 overflow-y-auto no-scrollbar p-2.5 pb-6 space-y-4 bg-white dark:bg-[#0c101c]">
         {drilldownCategory ? (
           /* --------------------------------------------------------------------- */
           /* DRILLDOWN VIEW: COMPANIES IN SELECTED CATEGORY                        */
@@ -880,7 +880,7 @@ export function AppSidebar({
       {/* ========================================================================= */}
       <SidebarFooter className="shrink-0 p-3 pb-3.5 border-t border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c]">
         {user ? (
-          <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/60 p-2.5 px-3 flex items-center justify-between gap-2 shadow-2xs">
+          <div className="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-2.5 px-3 flex items-center justify-between gap-2 shadow-2xs">
             {/* User Profile Info */}
             <Link
               href="/dashboard/profile"
