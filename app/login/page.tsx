@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/context/auth-context";
 import { Loader2 } from "lucide-react";
+import { KodePrepLogo } from "@/components/kodeprep-logo";
 
 export default function LoginPage() {
   const { user, loading, signInWithGoogle, signInWithGithub } = useAuth();
@@ -132,19 +133,7 @@ export default function LoginPage() {
           
           {/* Top Bar: Brand Logo & Back to workspace */}
           <div className="flex justify-between items-center w-full z-20">
-            <Link href="/" className="flex items-center gap-2 select-none group">
-              <img
-                src="/logos/algorynlog.png"
-                alt="Algoryn"
-                className="h-6 sm:h-7 w-auto object-contain object-left group-hover:scale-105 transition-transform"
-              />
-              <span
-                className="font-instrument text-xl font-bold tracking-tight text-neutral-900 dark:text-white"
-                style={{ fontFamily: "var(--font-instrument), var(--font-heading), sans-serif" }}
-              >
-                Algo<span className="text-orange-500">ryn</span>
-              </span>
-            </Link>
+            <KodePrepLogo imageClassName="h-6 sm:h-7" />
 
             <Link
               href="/"

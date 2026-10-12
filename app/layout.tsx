@@ -31,11 +31,12 @@ export const metadata: Metadata = {
   description: "Practice LeetCode problems by company, filter by topic, and track your solved progress.",
   icons: {
     icon: [
-      { url: "/logos/algorynlog.png" },
-      { url: "/favicon.png" },
+      { url: "/favicon.ico" },
+      { url: "/logos/algoryn-icon.png", type: "image/png" },
+      { url: "/favicon.png", type: "image/png" },
     ],
-    shortcut: "/logos/algorynlog.png",
-    apple: "/logos/algorynlog.png",
+    shortcut: "/logos/algoryn-icon.png",
+    apple: "/logos/algoryn-icon.png",
   },
   verification: {
     google: "sKduJUpBtwb0W5gAe9_Jr9uotMP45E7LVwBF0hQwsvI",
@@ -54,8 +55,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="google-adsense-account" content="ca-pub-7449708956977518" />
-        <link rel="icon" href="/logos/algorynlog.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/logos/algorynlog.png" />
+        <link rel="icon" href="/logos/algoryn-icon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logos/algoryn-icon.png" />
         <GoogleAdSenseClient />
       </head>
       <body className={`${fontSans.variable} ${fontHeading.variable} ${fontInstrument.variable} antialiased`} suppressHydrationWarning>

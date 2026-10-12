@@ -32,14 +32,9 @@ export function KodePrepLogoIcon({ className }: { className?: string }) {
       className={`inline-flex items-center group select-none shrink-0 ${className ?? ""}`}
     >
       <img
-        src="/logos/algoryn-logo-light.png"
+        src="/logos/algoryn-icon.png"
         alt="Algoryn Icon"
-        className={`h-5.5 sm:h-6 w-auto object-contain object-left dark:hidden group-hover:scale-105 transition-transform ${className ?? ""}`}
-      />
-      <img
-        src="/logos/algoryn-logo-dark.png"
-        alt="Algoryn Icon"
-        className={`h-5.5 sm:h-6 w-auto object-contain object-left hidden dark:block group-hover:scale-105 transition-transform ${className ?? ""}`}
+        className={`size-6 object-contain group-hover:scale-105 transition-transform ${className ?? ""}`}
       />
     </Link>
   );

@@ -3,6 +3,7 @@ import { ArrowUpRight, Mail } from 'lucide-react';
 import { FaDiscord, FaGithub, FaLinkedinIn, FaXTwitter } from 'react-icons/fa6';
 import { cn } from '@/lib/utils';
 import { description, owner } from '@/app/layout.config';
+import { KodePrepLogo } from '@/components/kodeprep-logo';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -42,16 +43,7 @@ export function Footer() {
           <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-x-8 md:grid-cols-12 md:gap-x-12">
             {/* Brand Column */}
             <div className="sm:col-span-2 md:col-span-4">
-              <Link href="/" className="inline-flex items-center gap-2.5 group">
-                <img
-                  src="/logos/algorynlog.png"
-                  alt="Algoryn"
-                  className="size-11 object-contain transition-transform group-hover:scale-105"
-                />
-                <span className="font-bold text-2xl text-foreground tracking-tight">
-                  {owner}
-                </span>
-              </Link>
+              <KodePrepLogo imageClassName="h-8 sm:h-9" />
               <p className="mt-5 max-w-xs text-muted-foreground text-sm leading-relaxed">
                 {description}
               </p>
