@@ -232,7 +232,7 @@ export interface AppSidebarProps {
   items?: DashboardNavItem[];
   flat?: boolean;
   className?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const DEFAULT_COMPANIES: CompanySidebarItem[] = [
@@ -252,7 +252,7 @@ export function DashboardSidebar({
   mobile = false,
   onClose,
   fluid = false,
-  showThemeToggle = false,
+  showThemeToggle: _showThemeToggle = false,
   selected,
   flat = false,
   className,
@@ -384,8 +384,8 @@ export function DashboardSidebar({
     >
       <div
         className={cx(
-          "flex min-h-0 flex-col gap-2 overflow-y-auto overflow-x-hidden [scrollbar-width:none]",
-          collapsed ? "w-full items-center p-0" : "-m-1 w-[calc(100%+8px)] p-1"
+          "flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto overflow-x-hidden [scrollbar-width:none] overscroll-contain",
+          collapsed ? "w-full items-center p-0" : "-m-1 w-[calc(100%+8px)] p-1 pb-6"
         )}
       >
         {/* Workspace switcher / collapse control */}
@@ -527,7 +527,7 @@ export function DashboardSidebar({
           </BaseButton>
 
           {/* Primary Navigation Rows */}
-          <nav className={cx("flex w-full flex-col gap-0.5", !collapsed && "px-0.5")}>
+          <nav className={cx("flex w-full flex-col gap-0.5 pb-6", !collapsed && "px-0.5")}>
             {/* 1. Dashboard */}
             {matches("Dashboard") && (
               <NavItem
@@ -698,7 +698,7 @@ export function DashboardSidebar({
       </div>
 
       {/* Bottom section (Support, Settings, and User profile card) */}
-      <div className="flex w-full shrink-0 flex-col gap-1.5 pt-1 border-t border-slate-100/80 dark:border-zinc-800/60">
+      <div className="flex w-full shrink-0 flex-col gap-1.5 pt-2 border-t border-slate-100 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] z-10">
         <nav className="flex w-full flex-col gap-0.5">
           {matches("Support") && (
             <NavItem
