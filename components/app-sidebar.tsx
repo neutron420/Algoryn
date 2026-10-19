@@ -12,16 +12,9 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import {
-  RiAsterisk,
-  RiBankLine,
-  RiCalendarLine,
-  RiChatAiLine,
   RiCloseLine,
   RiCustomerServiceLine,
   RiHomeLine,
-  RiImageAiLine,
-  RiKanbanView2,
-  RiMegaphoneLine,
   RiSearchLine,
   RiSettings4Line,
   RiSideBarFill,
@@ -34,6 +27,13 @@ import {
   RiBookmarkLine,
   RiArrowDownSLine,
   RiAddFill,
+  RiServerLine,
+  RiArrowLeftLine,
+  RiYoutubeLine,
+  RiGithubLine,
+  RiGlobalLine,
+  RiBookOpenLine,
+  RiStackLine,
 } from "@remixicon/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -45,7 +45,6 @@ import { Kbd } from "@/components/base/kbd/kbd";
 import { cx } from "@/utils/cx";
 import { DashboardTeamMenu } from "@/components/application/dashboard/dashboard-team-menu";
 import { DashboardUserMenu } from "@/components/application/dashboard/dashboard-user-menu";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useSidebar } from "@/components/ui/sidebar";
 
 const SubmitQuestionDialog = dynamic(
@@ -252,7 +251,6 @@ export function DashboardSidebar({
   mobile = false,
   onClose,
   fluid = false,
-  showThemeToggle: _showThemeToggle = false,
   selected,
   flat = false,
   className,
@@ -265,6 +263,8 @@ export function DashboardSidebar({
   // Active company slug from URL or prop
   const currentCompanySlug = searchParams.get("company") || selectedCompanySlug || "google";
   const isBookmarksActive = searchParams.get("status") === "BOOKMARKED";
+  const isSystemDesignPage = pathname?.startsWith("/dashboard/system-design");
+  const currentDesignTab = searchParams.get("tab") || "all";
 
   // Effective selected route
   let defaultSelected = "dashboard";
@@ -273,6 +273,7 @@ export function DashboardSidebar({
   else if (pathname?.startsWith("/dashboard/discussions")) defaultSelected = "discussions";
   else if (pathname?.startsWith("/dashboard/interview-experiences")) defaultSelected = "interviews";
   else if (pathname?.startsWith("/roadmap") || pathname?.startsWith("/dashboard/roadmap")) defaultSelected = "roadmap";
+  else if (pathname?.startsWith("/dashboard/system-design")) defaultSelected = "system-design";
   else if (pathname?.startsWith("/dashboard/leaderboard")) defaultSelected = "leaderboard";
 
   const effectiveSelected = selected || defaultSelected;
@@ -384,8 +385,12 @@ export function DashboardSidebar({
     >
       <div
         className={cx(
-          "flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto overflow-x-hidden [scrollbar-width:none] overscroll-contain",
-          collapsed ? "w-full items-center p-0" : "-m-1 w-[calc(100%+8px)] p-1 pb-6"
+          "flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto overflow-x-hidden overscroll-contain",
+          "[scrollbar-width:thin] [scrollbar-color:rgba(156,163,175,0.45)_transparent]",
+          "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent",
+          "[&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700",
+          "[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400 dark:hover:[&::-webkit-scrollbar-thumb]:bg-zinc-500",
+          collapsed ? "w-full items-center p-0" : "w-full pr-1 pb-6"
         )}
       >
         {/* Workspace switcher / collapse control */}
@@ -509,189 +514,359 @@ export function DashboardSidebar({
               </Collapsible>
             </button>
           ))}
-
-          {/* Share Interview Question Button in Sidebar */}
-          <BaseButton
-            variant="primary"
-            size="small"
-            leadingIcon={RiAddFill}
-            iconOnly={collapsed}
-            aria-label="Share Question"
-            onClick={() => setShareDialogOpen(true)}
-            className={cx(
-              "font-semibold transition-all shadow-xs",
-              collapsed ? "!size-8 !p-0 mx-auto" : "w-full rounded-xl"
-            )}
-          >
-            Share Question
-          </BaseButton>
+          {/* Action Button: Back to Prep on System Design page, otherwise Share Question */}
+          {isSystemDesignPage ? (
+            <BaseButton
+              variant="secondary"
+              size="small"
+              leadingIcon={RiArrowLeftLine}
+              iconOnly={collapsed}
+              aria-label="Back to Company Prep"
+              onClick={() => {
+                router.push("/dashboard");
+                if (mobile && onClose) onClose();
+              }}
+              className={cx(
+                "font-semibold transition-all border border-slate-200/80 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800",
+                collapsed ? "!size-8 !p-0 mx-auto" : "w-full rounded-xl"
+              )}
+            >
+              Back to Prep
+            </BaseButton>
+          ) : (
+            <BaseButton
+              variant="primary"
+              size="small"
+              leadingIcon={RiAddFill}
+              iconOnly={collapsed}
+              aria-label="Share Question"
+              onClick={() => setShareDialogOpen(true)}
+              className={cx(
+                "font-semibold transition-all shadow-xs",
+                collapsed ? "!size-8 !p-0 mx-auto" : "w-full rounded-xl"
+              )}
+            >
+              Share Question
+            </BaseButton>
+          )}
 
           {/* Primary Navigation Rows */}
           <nav className={cx("flex w-full flex-col gap-0.5 pb-6", !collapsed && "px-0.5")}>
-            {/* 1. Dashboard */}
-            {matches("Dashboard") && (
-              <NavItem
-                icon={RiHomeLine}
-                label="Dashboard"
-                href="/dashboard"
-                isSelected={effectiveSelected === "dashboard" && !searchParams.get("company") && !isBookmarksActive}
-                collapsed={collapsed}
-                onClick={() => {
-                  if (mobile && onClose) onClose();
-                }}
-              />
-            )}
+            {isSystemDesignPage ? (
+              <>
+                {!collapsed && (
+                  <div className="px-2 pt-1 pb-1">
+                    <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                      System Design Library
+                    </span>
+                  </div>
+                )}
 
-            {/* 2. Company Prep with Tree Branch Hierarchy (Matches User's Screenshot) */}
-            {matches("Company Prep") && (
-              <div>
+                {/* All Resources */}
+                {matches("All Resources") && (
+                  <NavItem
+                    icon={RiStackLine}
+                    label="All Resources"
+                    href="/dashboard/system-design?tab=all"
+                    badge={
+                      <Badge
+                        color={currentDesignTab === "all" ? "primary" : "neutral"}
+                        className="text-[9px] font-mono font-bold px-1.5 py-0.2"
+                      >
+                        107
+                      </Badge>
+                    }
+                    isSelected={currentDesignTab === "all"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
+
+                {/* YouTube Videos */}
+                {matches("YouTube Videos") && (
+                  <NavItem
+                    icon={RiYoutubeLine}
+                    label="YouTube Videos"
+                    href="/dashboard/system-design?tab=youtube"
+                    badge={
+                      <Badge
+                        color={currentDesignTab === "youtube" ? "primary" : "neutral"}
+                        className="text-[9px] font-mono font-bold px-1.5 py-0.2"
+                      >
+                        47
+                      </Badge>
+                    }
+                    isSelected={currentDesignTab === "youtube"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
+
+                {/* GitHub Repos */}
+                {matches("GitHub Repos") && (
+                  <NavItem
+                    icon={RiGithubLine}
+                    label="GitHub Repos"
+                    href="/dashboard/system-design?tab=github"
+                    badge={
+                      <Badge
+                        color={currentDesignTab === "github" ? "primary" : "neutral"}
+                        className="text-[9px] font-mono font-bold px-1.5 py-0.2"
+                      >
+                        18
+                      </Badge>
+                    }
+                    isSelected={currentDesignTab === "github"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
+
+                {/* Tech Blogs */}
+                {matches("Tech Blogs") && (
+                  <NavItem
+                    icon={RiGlobalLine}
+                    label="Tech Blogs"
+                    href="/dashboard/system-design?tab=blogs"
+                    badge={
+                      <Badge
+                        color={currentDesignTab === "blogs" ? "primary" : "neutral"}
+                        className="text-[9px] font-mono font-bold px-1.5 py-0.2"
+                      >
+                        25
+                      </Badge>
+                    }
+                    isSelected={currentDesignTab === "blogs"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
+
+                {/* Books & Papers */}
+                {matches("Books & Whitepapers") && (
+                  <NavItem
+                    icon={RiBookOpenLine}
+                    label="Books & Papers"
+                    href="/dashboard/system-design?tab=books"
+                    badge={
+                      <Badge
+                        color={currentDesignTab === "books" ? "primary" : "neutral"}
+                        className="text-[9px] font-mono font-bold px-1.5 py-0.2"
+                      >
+                        17
+                      </Badge>
+                    }
+                    isSelected={currentDesignTab === "books"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
+
+                {/* Quick Switcher back to other platforms */}
+                {!collapsed && (
+                  <div className="px-2 pt-3 pb-1 border-t border-slate-100 dark:border-zinc-800/60 mt-2">
+                    <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                      Quick Switch
+                    </span>
+                  </div>
+                )}
+
                 <NavItem
                   icon={RiBuildingLine}
                   label="Company Prep"
-                  badge={
-                    <Badge color={effectiveSelected === "companies" ? "primary" : "neutral"} className="text-[9px] font-mono font-bold px-1.5 py-0.2">
-                      {allCompanies.length > 0 ? allCompanies.length : 694}
-                    </Badge>
-                  }
-                  hasChevron
-                  isExpanded={companiesOpen}
-                  onClick={() => {
-                    setCompaniesOpen(!companiesOpen);
-                    if (collapsed) setCollapsed(false);
-                  }}
+                  href="/dashboard"
                   collapsed={collapsed}
+                  onClick={() => mobile && onClose && onClose()}
                 />
+                <NavItem
+                  icon={RiGitBranchLine}
+                  label="DSA Roadmap"
+                  href="/dashboard/roadmap"
+                  collapsed={collapsed}
+                  onClick={() => mobile && onClose && onClose()}
+                />
+              </>
+            ) : (
+              <>
+                {/* 1. Dashboard */}
+                {matches("Dashboard") && (
+                  <NavItem
+                    icon={RiHomeLine}
+                    label="Dashboard"
+                    href="/dashboard"
+                    isSelected={effectiveSelected === "dashboard" && !searchParams.get("company") && !isBookmarksActive}
+                    collapsed={collapsed}
+                    onClick={() => {
+                      if (mobile && onClose) onClose();
+                    }}
+                  />
+                )}
 
-                {/* Tree Branch Sub-Items with curved lines */}
-                {companiesOpen && !collapsed && (
-                  <div className="space-y-0.5 mt-0.5 animate-in fade-in-50 duration-150">
-                    {treeCompanies.map((company, index) => {
-                      const isLast = !showMoreCompanies && allCompanies.length > 6
-                        ? false
-                        : index === treeCompanies.length - 1;
-                      const isActive = currentCompanySlug === company.slug;
+                {/* 2. Company Prep with Tree Branch Hierarchy */}
+                {matches("Company Prep") && (
+                  <div>
+                    <NavItem
+                      icon={RiBuildingLine}
+                      label="Company Prep"
+                      badge={
+                        <Badge color={effectiveSelected === "companies" ? "primary" : "neutral"} className="text-[9px] font-mono font-bold px-1.5 py-0.2">
+                          {allCompanies.length > 0 ? allCompanies.length : 694}
+                        </Badge>
+                      }
+                      hasChevron
+                      isExpanded={companiesOpen}
+                      onClick={() => {
+                        setCompaniesOpen(!companiesOpen);
+                        if (collapsed) setCollapsed(false);
+                      }}
+                      collapsed={collapsed}
+                    />
 
-                      return (
-                        <TreeBranchItem key={company.slug} isLast={isLast}>
-                          <button
-                            type="button"
-                            onClick={() => selectCompany(company.slug)}
-                            className={cx(
-                              "w-full flex items-center justify-between py-1 px-2 rounded-lg text-xs transition-colors cursor-pointer group text-left",
-                              isActive
-                                ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-semibold shadow-2xs"
-                                : "text-slate-600 dark:text-zinc-400 hover:bg-slate-100/70 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100"
-                            )}
-                          >
-                            <span className="truncate pr-1 text-[12px]">{company.name}</span>
-                            <span
-                              className={cx(
-                                "text-[10px] font-mono font-medium px-1.5 py-0.2 rounded shrink-0",
-                                isActive
-                                  ? "bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 shadow-2xs"
-                                  : "text-slate-400 dark:text-zinc-500 bg-slate-100/80 dark:bg-zinc-800/80"
-                              )}
+                    {/* Tree Branch Sub-Items with curved lines */}
+                    {companiesOpen && !collapsed && (
+                      <div className="space-y-0.5 mt-0.5 animate-in fade-in-50 duration-150">
+                        {treeCompanies.map((company, index) => {
+                          const isLast = !showMoreCompanies && allCompanies.length > 6
+                            ? false
+                            : index === treeCompanies.length - 1;
+                          const isActive = currentCompanySlug === company.slug;
+
+                          return (
+                            <TreeBranchItem key={company.slug} isLast={isLast}>
+                              <button
+                                type="button"
+                                onClick={() => selectCompany(company.slug)}
+                                className={cx(
+                                  "w-full flex items-center justify-between py-1 px-2 rounded-lg text-xs transition-colors cursor-pointer group text-left",
+                                  isActive
+                                    ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-semibold shadow-2xs"
+                                    : "text-slate-600 dark:text-zinc-400 hover:bg-slate-100/70 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100"
+                                )}
+                              >
+                                <span className="truncate pr-1 text-[12px]">{company.name}</span>
+                                <span
+                                  className={cx(
+                                    "text-[10px] font-mono font-medium px-1.5 py-0.2 rounded shrink-0",
+                                    isActive
+                                      ? "bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 shadow-2xs"
+                                      : "text-slate-400 dark:text-zinc-500 bg-slate-100/80 dark:bg-zinc-800/80"
+                                  )}
+                                >
+                                  {company.problemCount}
+                                </span>
+                              </button>
+                            </TreeBranchItem>
+                          );
+                        })}
+
+                        {allCompanies.length > 6 && (
+                          <TreeBranchItem isLast={true}>
+                            <button
+                              type="button"
+                              onClick={() => setShowMoreCompanies(!showMoreCompanies)}
+                              className="w-full flex items-center justify-between py-1 px-2 rounded-lg text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline transition-colors cursor-pointer text-left"
                             >
-                              {company.problemCount}
-                            </span>
-                          </button>
-                        </TreeBranchItem>
-                      );
-                    })}
-
-                    {allCompanies.length > 6 && (
-                      <TreeBranchItem isLast={true}>
-                        <button
-                          type="button"
-                          onClick={() => setShowMoreCompanies(!showMoreCompanies)}
-                          className="w-full flex items-center justify-between py-1 px-2 rounded-lg text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline transition-colors cursor-pointer text-left"
-                        >
-                          <span>{showMoreCompanies ? "Show fewer" : "Show more companies"}</span>
-                          <span className="text-[10px] font-mono text-slate-400">
-                            {showMoreCompanies ? "" : `+${allCompanies.length - 6}`}
-                          </span>
-                        </button>
-                      </TreeBranchItem>
+                              <span>{showMoreCompanies ? "Show fewer" : "Show more companies"}</span>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                {showMoreCompanies ? "" : `+${allCompanies.length - 6}`}
+                              </span>
+                            </button>
+                          </TreeBranchItem>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* 3. Discussions */}
-            {matches("Discussions") && (
-              <NavItem
-                icon={RiMessage2Line}
-                label="Discussions"
-                href="/dashboard/discussions"
-                badge={<Badge color="primary" className="text-[9px] font-mono font-bold px-1.5 py-0.2">New</Badge>}
-                isSelected={effectiveSelected === "discussions"}
-                collapsed={collapsed}
-                onClick={() => mobile && onClose && onClose()}
-              />
-            )}
+                {/* 3. Discussions */}
+                {matches("Discussions") && (
+                  <NavItem
+                    icon={RiMessage2Line}
+                    label="Discussions"
+                    href="/dashboard/discussions"
+                    badge={<Badge color="primary" className="text-[9px] font-mono font-bold px-1.5 py-0.2">New</Badge>}
+                    isSelected={effectiveSelected === "discussions"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
 
-            {/* 4. Interview Hub */}
-            {matches("Interview Hub") && (
-              <NavItem
-                icon={RiFileTextLine}
-                label="Interview Hub"
-                href="/dashboard/interview-experiences"
-                badge={<Badge color="primary" className="text-[9px] font-mono font-bold px-1.5 py-0.2">New</Badge>}
-                isSelected={effectiveSelected === "interviews"}
-                collapsed={collapsed}
-                onClick={() => mobile && onClose && onClose()}
-              />
-            )}
+                {/* 4. Interview Hub */}
+                {matches("Interview Hub") && (
+                  <NavItem
+                    icon={RiFileTextLine}
+                    label="Interview Hub"
+                    href="/dashboard/interview-experiences"
+                    badge={<Badge color="primary" className="text-[9px] font-mono font-bold px-1.5 py-0.2">New</Badge>}
+                    isSelected={effectiveSelected === "interviews"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
 
-            {/* 5. DSA Roadmap */}
-            {matches("DSA Roadmap") && (
-              <NavItem
-                icon={RiGitBranchLine}
-                label="DSA Roadmap"
-                href="/dashboard/roadmap"
-                badge={<Badge color="neutral" className="text-[9px] font-mono font-bold px-1.5 py-0.2">Tree</Badge>}
-                isSelected={effectiveSelected === "roadmap"}
-                collapsed={collapsed}
-                onClick={() => mobile && onClose && onClose()}
-              />
-            )}
+                {/* 5. DSA Roadmap */}
+                {matches("DSA Roadmap") && (
+                  <NavItem
+                    icon={RiGitBranchLine}
+                    label="DSA Roadmap"
+                    href="/dashboard/roadmap"
+                    badge={<Badge color="neutral" className="text-[9px] font-mono font-bold px-1.5 py-0.2">Tree</Badge>}
+                    isSelected={effectiveSelected === "roadmap"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
 
-            {/* 6. Leaderboard */}
-            {matches("Leaderboard") && (
-              <NavItem
-                icon={RiTrophyLine}
-                label="Leaderboard"
-                href="/dashboard/leaderboard"
-                badge={<Badge color="neutral" className="text-[9px] font-mono font-bold px-1.5 py-0.2">Soon</Badge>}
-                isSelected={effectiveSelected === "leaderboard"}
-                collapsed={collapsed}
-                onClick={() => mobile && onClose && onClose()}
-              />
-            )}
+                {/* 6. System Design */}
+                {matches("System Design") && (
+                  <NavItem
+                    icon={RiServerLine}
+                    label="System Design"
+                    href="/dashboard/system-design"
+                    badge={<Badge color="primary" className="text-[9px] font-mono font-bold px-1.5 py-0.2">HLD</Badge>}
+                    isSelected={effectiveSelected === "system-design"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
 
-            {/* 7. Bookmarks */}
-            {matches("Bookmarks") && (
-              <NavItem
-                icon={RiBookmarkLine}
-                label="Bookmarks"
-                href="/dashboard?status=BOOKMARKED"
-                isSelected={effectiveSelected === "bookmarks"}
-                collapsed={collapsed}
-                onClick={() => mobile && onClose && onClose()}
-              />
-            )}
+                {/* 7. Leaderboard */}
+                {matches("Leaderboard") && (
+                  <NavItem
+                    icon={RiTrophyLine}
+                    label="Leaderboard"
+                    href="/dashboard/leaderboard"
+                    badge={<Badge color="neutral" className="text-[9px] font-mono font-bold px-1.5 py-0.2">Soon</Badge>}
+                    isSelected={effectiveSelected === "leaderboard"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
 
-            {/* 8. My Profile */}
-            {matches("My Profile") && (
-              <NavItem
-                icon={RiUserSmileLine}
-                label="My Profile"
-                href="/dashboard/profile"
-                isSelected={effectiveSelected === "profile"}
-                collapsed={collapsed}
-                onClick={() => mobile && onClose && onClose()}
-              />
+                {/* 8. Bookmarks */}
+                {matches("Bookmarks") && (
+                  <NavItem
+                    icon={RiBookmarkLine}
+                    label="Bookmarks"
+                    href="/dashboard?status=BOOKMARKED"
+                    isSelected={effectiveSelected === "bookmarks"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
+
+                {/* 9. My Profile */}
+                {matches("My Profile") && (
+                  <NavItem
+                    icon={RiUserSmileLine}
+                    label="My Profile"
+                    href="/dashboard/profile"
+                    isSelected={effectiveSelected === "profile"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
+              </>
             )}
           </nav>
         </div>

@@ -16,7 +16,6 @@ import { NotificationBell } from "@/components/notification-bell";
 import { UserNav } from "@/components/user-nav";
 import Link from "next/link";
 import { CompanySidebarItem } from "@/components/kodeprep-sidebar";
-import { NavbarShareButton } from "./navbar-share-button";
 
 interface DashboardNavbarProps {
   companies: CompanySidebarItem[];
@@ -42,6 +41,8 @@ export function DashboardNavbar({ companies }: DashboardNavbarProps) {
     breadcrumbLabel = "DSA Roadmap";
   } else if (pathname.startsWith("/dashboard/interview-experiences")) {
     breadcrumbLabel = "Interview Experiences";
+  } else if (pathname.startsWith("/dashboard/system-design")) {
+    breadcrumbLabel = "System Design";
   }
 
   return (
