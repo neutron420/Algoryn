@@ -78,6 +78,7 @@ export default async function DashboardLayout({
   return (
     <AuthGuard>
       <SidebarProvider
+        className="p-2 sm:p-2.5 md:p-3 gap-2 sm:gap-2.5 md:gap-3 bg-slate-100/70 dark:bg-[#07090e] min-h-svh w-full"
         style={
           {
             "--sidebar-width": "18rem",
@@ -85,12 +86,19 @@ export default async function DashboardLayout({
         }
       >
         <AppSidebar companies={sidebarCompanies} selectedCompanySlug="google" />
-        <SidebarInset>
-          <DashboardNavbar companies={sidebarCompanies} />
-          <main className="flex-1 min-w-0">
-            {children}
-          </main>
-        </SidebarInset>
+        <div className="flex-1 flex flex-col min-w-0 gap-2 sm:gap-2.5 md:gap-3">
+          {/* Floating Separate Rounded Navbar Island (TakeUForward Architecture) */}
+          <header className="rounded-xl sm:rounded-2xl md:rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] shadow-2xs shrink-0">
+            <DashboardNavbar companies={sidebarCompanies} />
+          </header>
+
+          {/* Floating Separate Rounded Dashboard Content Island */}
+          <SidebarInset className="rounded-xl sm:rounded-2xl md:rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] shadow-xs overflow-hidden flex flex-col flex-1 min-w-0 min-h-[calc(100svh-5.5rem)] md:min-h-[calc(100svh-6rem)]">
+            <div className="flex-1 min-w-0">
+              {children}
+            </div>
+          </SidebarInset>
+        </div>
       </SidebarProvider>
     </AuthGuard>
   );

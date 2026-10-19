@@ -1,7 +1,8 @@
 "use client";
 
 import { useSearchParams, usePathname } from "next/navigation";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
+import { RiSideBarFill } from "@remixicon/react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,17 +12,18 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { NavbarSearch } from "@/components/navbar-search";
-import { NavbarShareButton } from "@/components/navbar-share-button";
 import { NotificationBell } from "@/components/notification-bell";
 import { UserNav } from "@/components/user-nav";
 import Link from "next/link";
 import { CompanySidebarItem } from "@/components/kodeprep-sidebar";
+import { NavbarShareButton } from "./navbar-share-button";
 
 interface DashboardNavbarProps {
   companies: CompanySidebarItem[];
 }
 
 export function DashboardNavbar({ companies }: DashboardNavbarProps) {
+  const { openMobile, setOpenMobile } = useSidebar();
   const pathname = usePathname() || "";
   const searchParams = useSearchParams();
   const activeSlug = searchParams.get("company") || companies[0]?.slug || "google";
@@ -43,9 +45,16 @@ export function DashboardNavbar({ companies }: DashboardNavbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/95 backdrop-blur-md px-2.5 sm:px-6">
+    <div className="flex h-13 sm:h-14 shrink-0 items-center justify-between gap-2 px-3 sm:px-5">
       <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-        <SidebarTrigger className="-ml-1" />
+        <button
+          type="button"
+          onClick={() => setOpenMobile(!openMobile)}
+          aria-label="Open sidebar navigation"
+          className="md:hidden flex size-8 items-center justify-center rounded-lg border border-slate-200/80 dark:border-zinc-800/80 bg-slate-50 dark:bg-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 transition-colors cursor-pointer shadow-2xs shrink-0 -ml-0.5"
+        >
+          <RiSideBarFill className="size-4 -scale-x-100" />
+        </button>
 
         <Breadcrumb className="min-w-0">
           <BreadcrumbList>
@@ -69,18 +78,12 @@ export function DashboardNavbar({ companies }: DashboardNavbarProps) {
           currentCompanySlug={activeSlug}
         />
 
-        {/* Share Interview Question Button */}
-        <NavbarShareButton
-          companySlug={activeSlug}
-          companyName={activeCompanyName}
-        />
-
         {/* Dynamic Notification Bell */}
         <NotificationBell />
 
         {/* User Nav Dropdown */}
         <UserNav />
       </div>
-    </header>
+    </div>
   );
 }
