@@ -45,7 +45,6 @@ export function SystemDesignHub() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState<string>("all");
-  const [bookSubFilter, setBookSubFilter] = useState<"all" | "book" | "paper">("all");
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
@@ -147,22 +146,20 @@ export function SystemDesignHub() {
     });
   }, [query, showSavedOnly, savedIds]);
 
-  // Filter Books & Whitepapers
+  // Filter Books
   const filteredBooks = useMemo(() => {
     return SYSTEM_DESIGN_DATA.booksAndWhitepapers.filter((item) => {
       if (showSavedOnly && !savedIds.has(item.id)) return false;
-      if (bookSubFilter !== "all" && item.type !== bookSubFilter) return false;
       if (!query) return true;
       return (
         item.title.toLowerCase().includes(query) ||
         item.author.toLowerCase().includes(query) ||
         item.description.toLowerCase().includes(query) ||
         item.keyTakeaway.toLowerCase().includes(query) ||
-        (item.publisher && item.publisher.toLowerCase().includes(query)) ||
-        (item.venue && item.venue.toLowerCase().includes(query))
+        (item.publisher && item.publisher.toLowerCase().includes(query))
       );
     });
-  }, [query, showSavedOnly, savedIds, bookSubFilter]);
+  }, [query, showSavedOnly, savedIds]);
 
 
 
@@ -175,7 +172,7 @@ export function SystemDesignHub() {
     filteredBooks.length;
 
   return (
-    <div className="flex flex-col min-h-full w-full p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="flex flex-col min-h-full w-full p-3.5 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto overflow-x-hidden">
       {/* 1. Compact Header (Clean, Content-First, Algoryn Standard) */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-zinc-800">
         <div className="space-y-1">
@@ -188,24 +185,24 @@ export function SystemDesignHub() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 max-w-2xl">
-            Curated library of top YouTube breakdowns, GitHub repositories, tier-1 engineering blogs, seminal whitepapers, and architectural cheat sheets.
+            Curated library of top YouTube breakdowns, GitHub repositories, tier-1 engineering blogs, and seminal books.
           </p>
         </div>
       </header>
 
       {/* Interactive Controls & Filters */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
         {/* Responsive Category Selector */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           {/* 1. Mobile & Tablet Category Dropdown (xl:hidden) - Never overflows or truncates */}
-          <div className="relative xl:hidden" ref={categoryDropdownRef}>
+          <div className="relative xl:hidden w-full sm:w-auto" ref={categoryDropdownRef}>
             {(() => {
               const currentCategoryMeta = [
                 { key: "all" as const, label: "All Categories", shortLabel: "All", icon: RiStackLine, count: totalCuratedCount },
                 { key: "youtube" as const, label: "YouTube Breakdowns", shortLabel: "YouTube", icon: RiYoutubeLine, count: SYSTEM_DESIGN_DATA.youtubeChannels.length },
                 { key: "github" as const, label: "GitHub Repositories", shortLabel: "GitHub", icon: RiGithubLine, count: SYSTEM_DESIGN_DATA.githubRepos.length },
                 { key: "blogs" as const, label: "Engineering Blogs", shortLabel: "Blogs", icon: RiGlobalLine, count: SYSTEM_DESIGN_DATA.engineeringBlogs.length },
-                { key: "books" as const, label: "Books & Papers", shortLabel: "Books & Papers", icon: RiBookOpenLine, count: SYSTEM_DESIGN_DATA.booksAndWhitepapers.length },
+                { key: "books" as const, label: "Seminal Books", shortLabel: "Books", icon: RiBookOpenLine, count: SYSTEM_DESIGN_DATA.booksAndWhitepapers.length },
 
               ].find((c) => c.key === activeTab) || {
                 key: "all" as const,
@@ -221,7 +218,7 @@ export function SystemDesignHub() {
                   <button
                     type="button"
                     onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                    className="flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#0c101c] border border-slate-200/80 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 transition-all cursor-pointer min-w-56"
+                    className="w-full sm:w-auto flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#0c101c] border border-slate-200/80 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 transition-all cursor-pointer sm:min-w-56"
                   >
                     <div className="flex items-center gap-2 truncate">
                       <CurIcon className="size-4 text-accent-500 shrink-0" />
@@ -236,7 +233,7 @@ export function SystemDesignHub() {
                   </button>
 
                   {isCategoryDropdownOpen && (
-                    <div className="absolute left-0 top-full mt-1.5 w-64 z-50 rounded-xl bg-white dark:bg-[#0c101c] border border-slate-200 dark:border-zinc-800 shadow-xl p-1.5 space-y-0.5">
+                    <div className="absolute left-0 top-full mt-1.5 w-full sm:w-64 max-w-[calc(100vw-2rem)] z-50 rounded-xl bg-white dark:bg-[#0c101c] border border-slate-200 dark:border-zinc-800 shadow-xl p-1.5 space-y-0.5">
                       <div className="px-2.5 py-1 text-[10px] font-mono font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                         Filter by Category
                       </div>
@@ -245,7 +242,7 @@ export function SystemDesignHub() {
                         { key: "youtube" as const, label: "YouTube Breakdowns", icon: RiYoutubeLine, count: SYSTEM_DESIGN_DATA.youtubeChannels.length },
                         { key: "github" as const, label: "GitHub Repositories", icon: RiGithubLine, count: SYSTEM_DESIGN_DATA.githubRepos.length },
                         { key: "blogs" as const, label: "Engineering Blogs", icon: RiGlobalLine, count: SYSTEM_DESIGN_DATA.engineeringBlogs.length },
-                        { key: "books" as const, label: "Books & Papers", icon: RiBookOpenLine, count: SYSTEM_DESIGN_DATA.booksAndWhitepapers.length },
+                        { key: "books" as const, label: "Seminal Books", icon: RiBookOpenLine, count: SYSTEM_DESIGN_DATA.booksAndWhitepapers.length },
 
                       ].map((tab) => {
                         const Icon = tab.icon;
@@ -292,7 +289,7 @@ export function SystemDesignHub() {
               { key: "youtube" as const, label: "YouTube Videos", icon: RiYoutubeLine, count: SYSTEM_DESIGN_DATA.youtubeChannels.length },
               { key: "github" as const, label: "GitHub Repos", icon: RiGithubLine, count: SYSTEM_DESIGN_DATA.githubRepos.length },
               { key: "blogs" as const, label: "Engineering Blogs", icon: RiGlobalLine, count: SYSTEM_DESIGN_DATA.engineeringBlogs.length },
-              { key: "books" as const, label: "Books & Papers", icon: RiBookOpenLine, count: SYSTEM_DESIGN_DATA.booksAndWhitepapers.length },
+              { key: "books" as const, label: "Seminal Books", icon: RiBookOpenLine, count: SYSTEM_DESIGN_DATA.booksAndWhitepapers.length },
 
             ].map((tab) => {
               const Icon = tab.icon;
@@ -333,7 +330,7 @@ export function SystemDesignHub() {
         </div>
 
         {/* Right side search & saved toggles */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           {/* Quick Search */}
           <div className="relative flex-1 sm:w-64">
             <RiSearchLine className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 dark:text-zinc-500 pointer-events-none" />
@@ -389,28 +386,30 @@ export function SystemDesignHub() {
         {/* 1. YouTube Channels with 100% Guaranteed Visible Video Thumbnails & Fallbacks */}
         {(activeTab === "all" || activeTab === "youtube") && filteredYouTube.length > 0 && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-zinc-800/80 pb-2">
-              <div className="flex items-center gap-2">
-                <RiYoutubeLine className="size-5 text-slate-800 dark:text-zinc-200" />
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
-                  YouTube Video Breakdown & Channels
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-zinc-800/80 pb-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="size-7 rounded-lg bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                  <RiYoutubeLine className="size-4 shrink-0" />
+                </div>
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 truncate">
+                  YouTube Video Breakdowns
                 </h2>
-                <Badge color="neutral" className="text-[10px] font-mono">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 shrink-0">
                   {filteredYouTube.length}
-                </Badge>
+                </span>
               </div>
 
               {activeTab === "youtube" && (
-                <div className="flex items-center gap-1.5 text-xs">
-                  <span className="text-slate-400 dark:text-zinc-500 text-[11px]">Level:</span>
-                  <div className="flex items-center gap-1 border border-slate-200/80 dark:border-zinc-800 rounded-xl p-0.5 bg-slate-50 dark:bg-zinc-900/60">
+                <div className="flex items-center gap-1.5 text-xs overflow-x-auto no-scrollbar max-w-full pb-0.5 sm:pb-0">
+                  <span className="text-slate-400 dark:text-zinc-500 text-[11px] shrink-0 font-medium">Level:</span>
+                  <div className="flex items-center gap-1 border border-slate-200/80 dark:border-zinc-800 rounded-xl p-0.5 bg-slate-50 dark:bg-zinc-900/60 shrink-0">
                     {(["all", "Beginner", "Intermediate", "Advanced"] as const).map((lvl) => (
                       <button
                         key={lvl}
                         type="button"
                         onClick={() => setLevelFilter(lvl)}
                         className={cx(
-                          "px-2.5 py-0.5 rounded-lg text-[11px] transition-all duration-150 cursor-pointer select-none",
+                          "px-2.5 py-0.5 rounded-lg text-[11px] transition-all duration-150 cursor-pointer select-none whitespace-nowrap",
                           levelFilter === lvl
                             ? "bg-linear-to-b from-accent-500 to-accent-600 text-white shadow-nav-selected font-semibold"
                             : "text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-100 font-medium"
@@ -440,14 +439,16 @@ export function SystemDesignHub() {
         {/* 2. GitHub Repositories */}
         {(activeTab === "all" || activeTab === "github") && filteredGithub.length > 0 && (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 border-b border-slate-200/80 dark:border-zinc-800/80 pb-2">
-              <RiGithubLine className="size-5 text-slate-800 dark:text-zinc-200" />
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
+            <div className="flex items-center gap-2.5 border-b border-slate-200/80 dark:border-zinc-800/80 pb-3">
+              <div className="size-7 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 flex items-center justify-center shrink-0">
+                <RiGithubLine className="size-4 shrink-0" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 truncate">
                 Essential GitHub Repositories
               </h2>
-              <Badge color="neutral" className="text-[10px] font-mono">
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 shrink-0">
                 {filteredGithub.length}
-              </Badge>
+              </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -466,14 +467,16 @@ export function SystemDesignHub() {
         {/* 3. Engineering Blogs */}
         {(activeTab === "all" || activeTab === "blogs") && filteredBlogs.length > 0 && (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 border-b border-slate-200/80 dark:border-zinc-800/80 pb-2">
-              <RiGlobalLine className="size-5 text-slate-800 dark:text-zinc-200" />
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
+            <div className="flex items-center gap-2.5 border-b border-slate-200/80 dark:border-zinc-800/80 pb-3">
+              <div className="size-7 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <RiGlobalLine className="size-4 shrink-0" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 truncate">
                 Tier-1 Engineering Blogs
               </h2>
-              <Badge color="neutral" className="text-[10px] font-mono">
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 shrink-0">
                 {filteredBlogs.length}
-              </Badge>
+              </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -489,61 +492,19 @@ export function SystemDesignHub() {
           </div>
         )}
 
-        {/* 4. Books & Whitepapers */}
+        {/* 4. Seminal Books */}
         {(activeTab === "all" || activeTab === "books") && filteredBooks.length > 0 && (
           <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-zinc-800/80 pb-2">
-              <div className="flex items-center gap-2">
-                <RiBookOpenLine className="size-5 text-slate-800 dark:text-zinc-200" />
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
-                  Seminal Books & Research Whitepapers
-                </h2>
-                <Badge color="neutral" className="text-[10px] font-mono">
-                  {filteredBooks.length}
-                </Badge>
+            <div className="flex items-center gap-2.5 border-b border-slate-200/80 dark:border-zinc-800/80 pb-3">
+              <div className="size-7 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <RiBookOpenLine className="size-4 shrink-0" />
               </div>
-
-              {/* Sub-Filter: All / Books Only / Research Papers Only */}
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl border border-slate-200/60 dark:border-zinc-800/80 self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => setBookSubFilter("all")}
-                  className={cx(
-                    "px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
-                    bookSubFilter === "all"
-                      ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-2xs"
-                      : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
-                  )}
-                >
-                  All ({SYSTEM_DESIGN_DATA.booksAndWhitepapers.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBookSubFilter("book")}
-                  className={cx(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
-                    bookSubFilter === "book"
-                      ? "bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow-2xs"
-                      : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
-                  )}
-                >
-                  <span className="size-1.5 rounded-full bg-amber-500" />
-                  Books ({SYSTEM_DESIGN_DATA.booksAndWhitepapers.filter(b => b.type === "book").length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBookSubFilter("paper")}
-                  className={cx(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer",
-                    bookSubFilter === "paper"
-                      ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-2xs"
-                      : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
-                  )}
-                >
-                  <span className="size-1.5 rounded-full bg-blue-500" />
-                  Papers ({SYSTEM_DESIGN_DATA.booksAndWhitepapers.filter(b => b.type === "paper").length})
-                </button>
-              </div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 truncate">
+                Seminal Architecture Books
+              </h2>
+              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 shrink-0">
+                {filteredBooks.length}
+              </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -681,7 +642,7 @@ function ChannelAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string }
 
   if (!avatarUrl || hasError) {
     return (
-      <div className="size-8 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 text-xs font-bold font-mono flex items-center justify-center shrink-0 border border-slate-200 dark:border-zinc-700">
+      <div className="size-8 rounded-full bg-linear-to-br from-accent-500/15 to-accent-600/30 text-accent-700 dark:text-accent-300 text-xs font-bold font-mono flex items-center justify-center shrink-0 border border-accent-500/30">
         {getInitials(name)}
       </div>
     );
@@ -957,52 +918,64 @@ function EngineeringBlogCard({
 /* Guaranteed Working Book & Research Paper Cover Component           */
 /* ------------------------------------------------------------------ */
 
-function BookPaperThumbnail({ item }: { item: BookOrWhitepaper }) {
-  const [hasError, setHasError] = useState(false);
+/* ------------------------------------------------------------------ */
+/* Real Book Cover & Clean Document Header Component                  */
+/* ------------------------------------------------------------------ */
 
-  const fallbackUrl =
-    item.fallbackImageUrl ||
-    (item.type === "book"
-      ? "/images/system-design/book-fallback.svg"
-      : "/images/system-design/paper-fallback.svg");
-
-  const imageSrc = !hasError && item.coverImageUrl ? item.coverImageUrl : fallbackUrl;
-
+function BookPaperHeader({ item }: { item: BookOrWhitepaper }) {
   return (
-    <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-slate-900 border border-slate-200/80 dark:border-zinc-800/80 group">
-      {/* Background ambient subtle glow */}
-      <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-transparent z-10 pointer-events-none" />
-
-      {/* Main image */}
-      <img
-        src={imageSrc}
-        alt={item.title}
-        referrerPolicy="no-referrer"
-        loading="lazy"
-        className={cx(
-          "w-full h-full transition-transform duration-300 group-hover:scale-105",
-          item.type === "book" ? "object-cover object-center" : "object-cover object-top"
-        )}
-        onError={() => {
-          if (!hasError) setHasError(true);
-        }}
-      />
-
-      {/* Top Left: Type Pill Badge */}
-      <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1.5">
+    <div className="flex items-center justify-between gap-2 pb-1">
+      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
         <span
           className={cx(
-            "px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider backdrop-blur-md shadow-xs border",
+            "px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider border shrink-0",
             item.type === "book"
-              ? "bg-amber-500/95 text-white border-amber-400/30"
-              : "bg-blue-600/95 text-white border-blue-400/30"
+              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+              : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
           )}
         >
           {item.type === "book" ? "Book" : "Research Paper"}
         </span>
+        {(item.venue || item.publisher) && (
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/60 truncate max-w-[180px]">
+            {item.venue || item.publisher}
+          </span>
+        )}
+      </div>
+      {item.publicationYear && (
+        <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/60 shrink-0">
+          {item.publicationYear}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function RealBookCover({ item }: { item: BookOrWhitepaper }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!item.coverImageUrl || hasError) {
+    return <BookPaperHeader item={item} />;
+  }
+
+  return (
+    <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-slate-900 border border-slate-200/80 dark:border-zinc-800/80 group">
+      <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-transparent z-10 pointer-events-none" />
+      <img
+        src={item.coverImageUrl}
+        alt={item.title}
+        referrerPolicy="no-referrer"
+        loading="lazy"
+        className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+        onError={() => setHasError(true)}
+      />
+
+      <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1.5">
+        <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider backdrop-blur-md shadow-xs border bg-amber-500/95 text-white border-amber-400/30">
+          Book
+        </span>
       </div>
 
-      {/* Top Right: Publisher or Venue */}
       {(item.publisher || item.venue) && (
         <div className="absolute top-2.5 right-2.5 z-20">
           <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-black/80 text-slate-200 backdrop-blur-md border border-white/15">
@@ -1011,7 +984,6 @@ function BookPaperThumbnail({ item }: { item: BookOrWhitepaper }) {
         </div>
       )}
 
-      {/* Bottom Right: Year Badge */}
       {item.publicationYear && (
         <div className="absolute bottom-2.5 right-2.5 z-20">
           <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-black/85 text-white backdrop-blur-md border border-white/15">
@@ -1035,8 +1007,8 @@ function BookCard({
   return (
     <div className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] p-4 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-xs transition-all overflow-hidden">
       <div className="space-y-3">
-        {/* Real Book Cover or Research Paper Preview */}
-        <BookPaperThumbnail item={item} />
+        {/* Real Book Cover if available, otherwise clean document header */}
+        <RealBookCover item={item} />
 
         <div className="space-y-1">
           <div className="flex items-start justify-between gap-2.5">
@@ -1083,7 +1055,7 @@ function BookCard({
           rel="noopener noreferrer"
           className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold bg-linear-to-b from-accent-500 to-accent-600 text-white shadow-nav-selected hover:opacity-95 transition-opacity cursor-pointer"
         >
-          <span>{item.type === "book" ? "View Book / Details" : "Read Research Paper"}</span>
+          <span>View Book / Details</span>
           <RiExternalLinkLine className="size-3.5" />
         </a>
       </div>
