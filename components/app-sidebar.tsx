@@ -649,7 +649,7 @@ export function DashboardSidebar({
               <NavItem
                 icon={RiGitBranchLine}
                 label="DSA Roadmap"
-                href="/roadmap"
+                href="/dashboard/roadmap"
                 badge={<Badge color="neutral" className="text-[9px] font-mono font-bold px-1.5 py-0.2">Tree</Badge>}
                 isSelected={effectiveSelected === "roadmap"}
                 collapsed={collapsed}
@@ -801,7 +801,7 @@ export const DASHBOARD_NAV: DashboardNavItem[] = [
   { key: "companies", label: "Company Prep", icon: RiBuildingLine, href: "/dashboard", badge: 694 },
   { key: "discussions", label: "Discussions", icon: RiMessage2Line, href: "/dashboard/discussions", badge: "New" },
   { key: "interviews", label: "Interview Hub", icon: RiFileTextLine, href: "/dashboard/interview-experiences", badge: "New" },
-  { key: "roadmap", label: "DSA Roadmap", icon: RiGitBranchLine, href: "/roadmap", badge: "Tree" },
+  { key: "roadmap", label: "DSA Roadmap", icon: RiGitBranchLine, href: "/dashboard/roadmap", badge: "Tree" },
   { key: "leaderboard", label: "Leaderboard", icon: RiTrophyLine, href: "/dashboard/leaderboard", badge: "Soon" },
   { key: "bookmarks", label: "Bookmarks", icon: RiBookmarkLine, href: "/dashboard?status=BOOKMARKED" },
   { key: "profile", label: "My Profile", icon: RiUserSmileLine, href: "/dashboard/profile" },

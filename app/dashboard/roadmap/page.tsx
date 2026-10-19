@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function DsaRoadmapPage() {
   return (
-    <div className="flex flex-col h-[calc(100dvh-3.5rem)] w-full overflow-hidden bg-background">
+    <div className="relative flex flex-col h-[calc(100svh-6rem)] md:h-[calc(100svh-6.5rem)] w-full overflow-hidden bg-white dark:bg-[#0c101c]">
       <DsaTreeCanvas />
     </div>
   );

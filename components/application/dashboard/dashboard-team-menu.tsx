@@ -261,7 +261,7 @@ export function DashboardTeamMenu({
 
             <AriaButton
               type="button"
-              onPress={() => handleNav("/roadmap")}
+              onPress={() => handleNav("/dashboard/roadmap")}
               className="flex w-full cursor-pointer items-center gap-2.5 rounded-2lg p-2 text-start outline-none hover:bg-background-primary-hover transition-colors"
             >
               <RiFolder6Line className="size-5 shrink-0 text-foreground-icon-secondary" aria-hidden />
