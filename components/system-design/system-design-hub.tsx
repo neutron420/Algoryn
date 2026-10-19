@@ -7,7 +7,7 @@ import {
   RiGithubLine,
   RiGlobalLine,
   RiBookOpenLine,
-  RiFlashlightLine,
+
   RiSearchLine,
   RiBookmarkLine,
   RiBookmarkFill,
@@ -25,12 +25,12 @@ import {
   GitHubRepo,
   EngineeringBlog,
   BookOrWhitepaper,
-  ArchitecturalCheatSheet,
+
 } from "@/lib/system-design-data";
 import { Badge } from "@/components/base/badges/badge";
 import { cx } from "@/utils/cx";
 
-type TabKey = "all" | "youtube" | "github" | "blogs" | "books" | "cheatsheets";
+type TabKey = "all" | "youtube" | "github" | "blogs" | "books";
 
 export function SystemDesignHub() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export function SystemDesignHub() {
   // Derive active tab directly from search params
   const rawTab = searchParams.get("tab");
   const activeTab: TabKey =
-    rawTab && ["all", "youtube", "github", "blogs", "books", "cheatsheets"].includes(rawTab)
+    rawTab && ["all", "youtube", "github", "blogs", "books"].includes(rawTab)
       ? (rawTab as TabKey)
       : "all";
 
@@ -164,18 +164,7 @@ export function SystemDesignHub() {
     });
   }, [query, showSavedOnly, savedIds, bookSubFilter]);
 
-  // Filter Cheat Sheets
-  const filteredCheatSheets = useMemo(() => {
-    return SYSTEM_DESIGN_DATA.architecturalCheatSheets.filter((item) => {
-      if (showSavedOnly && !savedIds.has(item.id)) return false;
-      if (!query) return true;
-      return (
-        item.title.toLowerCase().includes(query) ||
-        item.summary.toLowerCase().includes(query) ||
-        item.keyPoints.some((p) => p.toLowerCase().includes(query))
-      );
-    });
-  }, [query, showSavedOnly, savedIds]);
+
 
   const totalCuratedCount = SYSTEM_DESIGN_DATA.metadata.totalResources;
 
@@ -183,8 +172,7 @@ export function SystemDesignHub() {
     filteredYouTube.length +
     filteredGithub.length +
     filteredBlogs.length +
-    filteredBooks.length +
-    filteredCheatSheets.length;
+    filteredBooks.length;
 
   return (
     <div className="flex flex-col min-h-full w-full p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
@@ -218,7 +206,7 @@ export function SystemDesignHub() {
                 { key: "github" as const, label: "GitHub Repositories", shortLabel: "GitHub", icon: RiGithubLine, count: SYSTEM_DESIGN_DATA.githubRepos.length },
                 { key: "blogs" as const, label: "Engineering Blogs", shortLabel: "Blogs", icon: RiGlobalLine, count: SYSTEM_DESIGN_DATA.engineeringBlogs.length },
                 { key: "books" as const, label: "Books & Papers", shortLabel: "Books & Papers", icon: RiBookOpenLine, count: SYSTEM_DESIGN_DATA.booksAndWhitepapers.length },
-                { key: "cheatsheets" as const, label: "Cheat Sheets", shortLabel: "Cheat Sheets", icon: RiFlashlightLine, count: SYSTEM_DESIGN_DATA.architecturalCheatSheets.length },
+
               ].find((c) => c.key === activeTab) || {
                 key: "all" as const,
                 label: "All Categories",
@@ -258,7 +246,7 @@ export function SystemDesignHub() {
                         { key: "github" as const, label: "GitHub Repositories", icon: RiGithubLine, count: SYSTEM_DESIGN_DATA.githubRepos.length },
                         { key: "blogs" as const, label: "Engineering Blogs", icon: RiGlobalLine, count: SYSTEM_DESIGN_DATA.engineeringBlogs.length },
                         { key: "books" as const, label: "Books & Papers", icon: RiBookOpenLine, count: SYSTEM_DESIGN_DATA.booksAndWhitepapers.length },
-                        { key: "cheatsheets" as const, label: "Cheat Sheets", icon: RiFlashlightLine, count: SYSTEM_DESIGN_DATA.architecturalCheatSheets.length },
+
                       ].map((tab) => {
                         const Icon = tab.icon;
                         const isSelected = activeTab === tab.key;
@@ -305,7 +293,7 @@ export function SystemDesignHub() {
               { key: "github" as const, label: "GitHub Repos", icon: RiGithubLine, count: SYSTEM_DESIGN_DATA.githubRepos.length },
               { key: "blogs" as const, label: "Engineering Blogs", icon: RiGlobalLine, count: SYSTEM_DESIGN_DATA.engineeringBlogs.length },
               { key: "books" as const, label: "Books & Papers", icon: RiBookOpenLine, count: SYSTEM_DESIGN_DATA.booksAndWhitepapers.length },
-              { key: "cheatsheets" as const, label: "Cheat Sheets", icon: RiFlashlightLine, count: SYSTEM_DESIGN_DATA.architecturalCheatSheets.length },
+
             ].map((tab) => {
               const Icon = tab.icon;
               const isSelected = activeTab === tab.key;
@@ -571,31 +559,7 @@ export function SystemDesignHub() {
           </div>
         )}
 
-        {/* 5. Architectural Cheat Sheets */}
-        {(activeTab === "all" || activeTab === "cheatsheets") && filteredCheatSheets.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 border-b border-slate-200/80 dark:border-zinc-800/80 pb-2">
-              <RiFlashlightLine className="size-5 text-slate-800 dark:text-zinc-200" />
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
-                Architectural Cheat Sheets
-              </h2>
-              <Badge color="neutral" className="text-[10px] font-mono">
-                {filteredCheatSheets.length}
-              </Badge>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCheatSheets.map((item) => (
-                <CheatSheetCard
-                  key={item.id}
-                  item={item}
-                  isSaved={savedIds.has(item.id)}
-                  onToggleSave={() => toggleSave(item.id)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Empty state */}
         {totalFiltered === 0 && (
@@ -815,7 +779,7 @@ function YouTubeCard({
           href={channel.videoUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-colors"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl text-xs font-semibold bg-linear-to-b from-accent-500 to-accent-600 text-white shadow-nav-selected hover:opacity-95 transition-opacity"
         >
           <RiPlayFill className="size-3.5" />
           <span>Watch Video</span>
@@ -1127,57 +1091,4 @@ function BookCard({
   );
 }
 
-function CheatSheetCard({
-  item,
-  isSaved,
-  onToggleSave,
-}: {
-  item: ArchitecturalCheatSheet;
-  isSaved: boolean;
-  onToggleSave: () => void;
-}) {
-  return (
-    <div className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] p-4.5 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-xs transition-all">
-      <div className="space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="size-9 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0 border border-slate-200 dark:border-zinc-700">
-              <RiFlashlightLine className="size-5 text-slate-800 dark:text-zinc-200" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100 truncate">
-                {item.title}
-              </h3>
-              <p className="text-[11px] font-mono text-slate-500 dark:text-zinc-400">
-                Core Architectural Concept
-              </p>
-            </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={onToggleSave}
-            title={isSaved ? "Remove bookmark" : "Bookmark concept"}
-            className="text-slate-400 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-200 transition-colors cursor-pointer shrink-0"
-          >
-            {isSaved ? <RiBookmarkFill className="size-4 text-slate-900 dark:text-zinc-100" /> : <RiBookmarkLine className="size-4" />}
-          </button>
-        </div>
-
-        <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
-          {item.summary}
-        </p>
-
-        {/* Bullet points */}
-        <div className="space-y-1.5 pt-1">
-          {item.keyPoints.map((pt, idx) => (
-            <div key={idx} className="flex items-start gap-2 text-[11px] text-slate-700 dark:text-zinc-300 leading-normal">
-              <RiCheckLine className="size-3.5 text-slate-900 dark:text-zinc-100 shrink-0 mt-0.5" />
-              <span>{pt}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
