@@ -63,6 +63,7 @@ export function NotesCanvas({
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveRevisionRef = useRef(0);
   const isSavingRef = useRef(false);
+  const hasPendingSaveRef = useRef(false);
 
   // Setup initial template for Fixed Whiteboard if canvas is completely empty
   const preparedElements = useMemo<readonly ExcalidrawElement[]>(() => {
@@ -93,6 +94,11 @@ export function NotesCanvas({
 
   // Perform actual save request to backend
   const performSave = useCallback(async () => {
+    if (isSavingRef.current) {
+      hasPendingSaveRef.current = true;
+      return;
+    }
+
     const currentSerialized = JSON.stringify(latestDataRef.current.elements);
     if (currentSerialized === lastSavedElementsRef.current && !latestDataRef.current.files) {
       onSaveStatusChange("saved");
@@ -101,6 +107,7 @@ export function NotesCanvas({
 
     const currentRev = ++saveRevisionRef.current;
     isSavingRef.current = true;
+    hasPendingSaveRef.current = false;
     onSaveStatusChange("saving");
 
     try {
@@ -121,11 +128,10 @@ export function NotesCanvas({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-        keepalive: true,
       });
 
       if (!res.ok) {
-        throw new Error("Failed to save canvas state");
+        throw new Error(`Failed to save canvas state: ${res.status}`);
       }
 
       // If no new edits happened while this request was in flight, mark saved
@@ -138,6 +144,10 @@ export function NotesCanvas({
       onSaveStatusChange("error");
     } finally {
       isSavingRef.current = false;
+      if (hasPendingSaveRef.current) {
+        hasPendingSaveRef.current = false;
+        setTimeout(() => performSave(), 300);
+      }
     }
   }, [noteId, userId, onSaveStatusChange]);
 
@@ -183,6 +193,11 @@ export function NotesCanvas({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [performSave]);
 
+  const performSaveRef = useRef(performSave);
+  useEffect(() => {
+    performSaveRef.current = performSave;
+  });
+
   // Flush pending save before unmounting or navigating away
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -201,13 +216,13 @@ export function NotesCanvas({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      // Immediately flush pending changes on client navigation
+      // Immediately flush pending changes on actual unmount only
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
-        performSave();
+        performSaveRef.current();
       }
     };
-  }, [noteId, userId, performSave]);
+  }, [noteId, userId]);
 
   // Register Export Handler with parent header
   useEffect(() => {
@@ -288,7 +303,7 @@ export function NotesCanvas({
   const isDark = resolvedTheme === "dark";
 
   return (
-    <div className="relative flex-1 w-full h-full min-h-0 overflow-hidden bg-white dark:bg-[#0c101c]">
+    <div className="relative flex-1 w-full h-[calc(100%-3.5rem)] min-h-[calc(100svh-9rem)] sm:min-h-[calc(100svh-9.5rem)] overflow-hidden bg-white dark:bg-[#0c101c]">
       <ExcalidrawWrapper
         initialElements={preparedElements}
         initialAppState={initialAppState}

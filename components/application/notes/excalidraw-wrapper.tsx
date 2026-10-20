@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Excalidraw, useHandleLibrary } from "@excalidraw/excalidraw";
+import { Excalidraw, MainMenu, useHandleLibrary } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI, BinaryFiles, AppState, LibraryItems } from "@excalidraw/excalidraw/types";
 import type { ExcalidrawElement, OrderedExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 
@@ -105,14 +105,26 @@ export default function ExcalidrawWrapper({
       onChange={onChange}
       UIOptions={{
         canvasActions: {
+          loadScene: true,
           saveAsImage: true,
           toggleTheme: true,
           clearCanvas: true,
           export: {
             saveFileToDisk: true,
           },
+          changeViewBackgroundColor: true,
         },
       }}
-    />
+    >
+      <MainMenu>
+        <MainMenu.DefaultItems.LoadScene />
+        <MainMenu.DefaultItems.SaveAsImage />
+        <MainMenu.DefaultItems.Export />
+        <MainMenu.DefaultItems.ClearCanvas />
+        <MainMenu.Separator />
+        <MainMenu.DefaultItems.ToggleTheme />
+        <MainMenu.DefaultItems.ChangeCanvasBackground />
+      </MainMenu>
+    </Excalidraw>
   );
 }

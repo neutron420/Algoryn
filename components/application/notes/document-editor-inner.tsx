@@ -89,10 +89,16 @@ export default function DocumentEditorInner({
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveRevisionRef = useRef(0);
   const isSavingRef = useRef(false);
+  const hasPendingBlocksRef = useRef<Block[] | null>(null);
 
   // Perform backend autosave
   const performSave = useCallback(
     async (blocks: Block[]) => {
+      if (isSavingRef.current) {
+        hasPendingBlocksRef.current = blocks;
+        return;
+      }
+
       const currentSerialized = JSON.stringify(blocks);
       if (currentSerialized === lastSavedRef.current) {
         onSaveStatusChange("saved");
@@ -101,6 +107,7 @@ export default function DocumentEditorInner({
 
       const currentRev = ++saveRevisionRef.current;
       isSavingRef.current = true;
+      hasPendingBlocksRef.current = null;
       onSaveStatusChange("saving");
 
       try {
@@ -115,7 +122,6 @@ export default function DocumentEditorInner({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-          keepalive: true,
         });
 
         if (!res.ok) {
@@ -131,6 +137,11 @@ export default function DocumentEditorInner({
         onSaveStatusChange("error");
       } finally {
         isSavingRef.current = false;
+        if (hasPendingBlocksRef.current) {
+          const pending = hasPendingBlocksRef.current;
+          hasPendingBlocksRef.current = null;
+          setTimeout(() => performSave(pending), 300);
+        }
       }
     },
     [noteId, userId, onSaveStatusChange]
@@ -171,14 +182,22 @@ export default function DocumentEditorInner({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [editor, performSave]);
 
+  const performSaveRef = useRef(performSave);
+  const editorRef = useRef(editor);
+  useEffect(() => {
+    performSaveRef.current = performSave;
+    editorRef.current = editor;
+  });
+
   // Flush pending save on page leave / unmount
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (saveTimeoutRef.current && editor) {
+      const ed = editorRef.current;
+      if (saveTimeoutRef.current && ed) {
         clearTimeout(saveTimeoutRef.current);
         const payload = JSON.stringify({
           userId,
-          elements: editor.document,
+          elements: ed.document,
           appState: {},
           files: {},
         });
@@ -189,13 +208,14 @@ export default function DocumentEditorInner({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      // Immediately flush save on unmount/navigation with keepalive fetch
-      if (saveTimeoutRef.current && editor) {
+      // Immediately flush save on actual unmount only
+      const ed = editorRef.current;
+      if (saveTimeoutRef.current && ed) {
         clearTimeout(saveTimeoutRef.current);
-        performSave(editor.document);
+        performSaveRef.current(ed.document);
       }
     };
-  }, [noteId, userId, editor, performSave]);
+  }, [noteId, userId]);
 
   // Register Export Handler with parent header
   useEffect(() => {

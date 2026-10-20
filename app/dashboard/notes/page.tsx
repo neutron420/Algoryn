@@ -166,7 +166,7 @@ export default function NotesDashboardPage() {
   );
 
   return (
-    <div className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 md:px-8 py-3 sm:py-5 flex flex-col gap-4">
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-3.5 sm:py-5 flex flex-col gap-4">
       {/* Sleek, Compact Top Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-zinc-800/80">
         <div className="flex items-center gap-2.5">
@@ -183,9 +183,9 @@ export default function NotesDashboardPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 self-stretch sm:self-auto">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           {/* Search Box */}
-          <div className="w-full sm:w-56">
+          <div className="flex-1 min-w-0 sm:w-60">
             <Input
               size="small"
               placeholder="Search..."
@@ -201,9 +201,9 @@ export default function NotesDashboardPage() {
             variant="primary"
             size="small"
             onClick={() => setCreateDialogOpen(true)}
-            className="shrink-0 font-semibold flex items-center gap-1.5 shadow-xs whitespace-nowrap"
+            className="shrink-0 font-semibold flex items-center gap-1.5 shadow-xs px-3 sm:px-4 py-1.5 rounded-xl whitespace-nowrap text-xs sm:text-sm cursor-pointer"
           >
-            <RiAddFill className="size-4" />
+            <RiAddFill className="size-4 shrink-0" />
             <span className="inline sm:hidden">Create</span>
             <span className="hidden sm:inline">Create Workspace</span>
           </Button>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import {
   RiCloseLine,
   RiCompass3Line,
@@ -12,6 +13,8 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { cx } from "@/utils/cx";
 
+const emptySubscribe = () => () => {};
+
 export type NoteWorkspaceModeType = "INFINITE_CANVAS" | "DOCUMENT_NOTE" | "FIXED_WHITEBOARD";
 
 interface CreateNoteDialogProps {
@@ -21,11 +24,12 @@ interface CreateNoteDialogProps {
 }
 
 export function CreateNoteDialog({ isOpen, onClose, onCreate }: CreateNoteDialogProps) {
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [title, setTitle] = useState("");
   const [mode, setMode] = useState<NoteWorkspaceModeType>("INFINITE_CANVAS");
   const [submitting, setSubmitting] = useState(false);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +44,8 @@ export function CreateNoteDialog({ isOpen, onClose, onCreate }: CreateNoteDialog
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
         onClick={onClose}
@@ -49,7 +53,7 @@ export function CreateNoteDialog({ isOpen, onClose, onCreate }: CreateNoteDialog
       />
 
       {/* Modal Dialog Card */}
-      <div className="relative w-full max-w-lg rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] p-4 sm:p-6 shadow-2xl z-10 animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-lg max-h-[calc(100svh-2rem)] overflow-y-auto rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] p-4 sm:p-6 shadow-2xl z-10 animate-in zoom-in-95 duration-200 overscroll-contain">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800/80">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
@@ -174,6 +178,7 @@ export function CreateNoteDialog({ isOpen, onClose, onCreate }: CreateNoteDialog
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

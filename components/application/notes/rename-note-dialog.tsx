@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { RiPencilLine, RiCloseLine } from "@remixicon/react";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
+
+const emptySubscribe = () => () => {};
 
 interface RenameNoteDialogProps {
   isOpen: boolean;
@@ -40,7 +43,7 @@ function RenameNoteForm({
   };
 
   return (
-    <div className="relative w-full max-w-md rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] p-4 sm:p-6 shadow-2xl z-10 animate-in zoom-in-95 duration-200">
+    <div className="relative w-full max-w-md max-h-[calc(100svh-2rem)] overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] p-4 sm:p-6 shadow-2xl z-10 animate-in zoom-in-95 duration-200 overscroll-contain">
       <div className="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-zinc-800/80">
         <div className="flex items-center gap-2.5">
           <div className="size-9 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -110,10 +113,12 @@ export function RenameNoteDialog({
   onClose,
   onConfirm,
 }: RenameNoteDialogProps) {
-  if (!isOpen) return null;
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
         onClick={onClose}
@@ -126,6 +131,7 @@ export function RenameNoteDialog({
         onClose={onClose}
         onConfirm={onConfirm}
       />
-    </div>
+    </div>,
+    document.body
   );
 }
