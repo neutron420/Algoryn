@@ -251,7 +251,7 @@ export function DashboardTeamMenu({
               onPress={() => {
                 setIsOpen(false);
                 if (onOpenSettings) onOpenSettings();
-                else router.push("/dashboard/profile/edit");
+                else router.push("/dashboard/settings");
               }}
               className="flex w-full cursor-pointer items-center gap-2.5 rounded-2lg p-2 text-start outline-none hover:bg-background-primary-hover transition-colors"
             >

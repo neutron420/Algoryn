@@ -38,6 +38,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { SettingsModal } from "@/components/application/settings/settings-modal";
+import { SYSTEM_DESIGN_DATA } from "@/lib/system-design-data";
 import { Badge } from "@/components/base/badges/badge";
 import { Button as BaseButton } from "@/components/base/buttons/button";
 import { CloseButton } from "@/components/base/buttons/close-button";
@@ -231,6 +232,7 @@ export interface AppSidebarProps {
   items?: DashboardNavItem[];
   flat?: boolean;
   className?: string;
+  onOpenSettings?: () => void;
   [key: string]: unknown;
 }
 
@@ -254,6 +256,7 @@ export function DashboardSidebar({
   selected,
   flat = false,
   className,
+  onOpenSettings: propsOnOpenSettings,
 }: AppSidebarProps = {}) {
   const localize = useTemplateCopy();
   const pathname = usePathname();
@@ -281,7 +284,30 @@ export function DashboardSidebar({
   const [collapsedState, setCollapsed] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [companiesOpen, setCompaniesOpen] = useState(true);
+
+  const handleOpenSettings = useCallback(() => {
+    if (mobile && onClose) {
+      onClose();
+    }
+    if (propsOnOpenSettings) {
+      propsOnOpenSettings();
+    } else {
+      setSettingsOpen(true);
+    }
+  }, [mobile, onClose, propsOnOpenSettings]);
+  const [companiesOpen, setCompaniesOpen] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("algoryn_sidebar_companies_open");
+        if (saved !== null) {
+          return saved === "true";
+        }
+      } catch {
+        // ignore in SSR / private mode
+      }
+    }
+    return false;
+  });
   const [showMoreCompanies, setShowMoreCompanies] = useState(false);
   const [suppressUserHover, setSuppressUserHover] = useState(false);
   const [searchActive, setSearchActive] = useState(false);
@@ -573,7 +599,7 @@ export function DashboardSidebar({
                         color={currentDesignTab === "all" ? "primary" : "neutral"}
                         className="text-[9px] font-mono font-bold px-1.5 py-0.2"
                       >
-                        107
+                        {SYSTEM_DESIGN_DATA.metadata.totalResources}
                       </Badge>
                     }
                     isSelected={currentDesignTab === "all"}
@@ -593,7 +619,7 @@ export function DashboardSidebar({
                         color={currentDesignTab === "youtube" ? "primary" : "neutral"}
                         className="text-[9px] font-mono font-bold px-1.5 py-0.2"
                       >
-                        47
+                        {SYSTEM_DESIGN_DATA.youtubeChannels.length}
                       </Badge>
                     }
                     isSelected={currentDesignTab === "youtube"}
@@ -613,7 +639,7 @@ export function DashboardSidebar({
                         color={currentDesignTab === "github" ? "primary" : "neutral"}
                         className="text-[9px] font-mono font-bold px-1.5 py-0.2"
                       >
-                        18
+                        {SYSTEM_DESIGN_DATA.githubRepos.length}
                       </Badge>
                     }
                     isSelected={currentDesignTab === "github"}
@@ -633,7 +659,7 @@ export function DashboardSidebar({
                         color={currentDesignTab === "blogs" ? "primary" : "neutral"}
                         className="text-[9px] font-mono font-bold px-1.5 py-0.2"
                       >
-                        25
+                        {SYSTEM_DESIGN_DATA.engineeringBlogs.length}
                       </Badge>
                     }
                     isSelected={currentDesignTab === "blogs"}
@@ -642,18 +668,18 @@ export function DashboardSidebar({
                   />
                 )}
 
-                {/* Books & Papers */}
-                {matches("Books & Whitepapers") && (
+                {/* Seminal Books */}
+                {(matches("Seminal Books") || matches("Books & Whitepapers") || matches("Books & Papers") || matches("Books")) && (
                   <NavItem
                     icon={RiBookOpenLine}
-                    label="Books & Papers"
+                    label="Seminal Books"
                     href="/dashboard/system-design?tab=books"
                     badge={
                       <Badge
                         color={currentDesignTab === "books" ? "primary" : "neutral"}
                         className="text-[9px] font-mono font-bold px-1.5 py-0.2"
                       >
-                        17
+                        {SYSTEM_DESIGN_DATA.booksAndWhitepapers.length}
                       </Badge>
                     }
                     isSelected={currentDesignTab === "books"}
@@ -716,7 +742,13 @@ export function DashboardSidebar({
                       hasChevron
                       isExpanded={companiesOpen}
                       onClick={() => {
-                        setCompaniesOpen(!companiesOpen);
+                        setCompaniesOpen((prev) => {
+                          const next = !prev;
+                          try {
+                            localStorage.setItem("algoryn_sidebar_companies_open", String(next));
+                          } catch {}
+                          return next;
+                        });
                         if (collapsed) setCollapsed(false);
                       }}
                       collapsed={collapsed}
@@ -889,7 +921,7 @@ export function DashboardSidebar({
               icon={RiSettings4Line}
               label="Settings"
               collapsed={collapsed}
-              onClick={() => setSettingsOpen(true)}
+              onClick={handleOpenSettings}
             />
           )}
         </nav>
@@ -898,15 +930,17 @@ export function DashboardSidebar({
         <DashboardTeamMenu
           collapsed={collapsed}
           className={flat ? "!bg-background-secondary-default" : undefined}
-          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenSettings={handleOpenSettings}
         />
       </div>
 
-      <SettingsModal
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        planArtSrc="/templates/settings-plan-art.png"
-      />
+      {!propsOnOpenSettings && (
+        <SettingsModal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          planArtSrc="/templates/settings-plan-art.png"
+        />
+      )}
 
       {shareDialogOpen && (
         <SubmitQuestionDialog
@@ -928,6 +962,12 @@ export function DashboardSidebar({
  */
 export function AppSidebar(props: AppSidebarProps) {
   const { openMobile, setOpenMobile } = useSidebar();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const handleOpenSettings = useCallback(() => {
+    setOpenMobile(false);
+    setSettingsOpen(true);
+  }, [setOpenMobile]);
 
   // Close on Escape key
   useEffect(() => {
@@ -943,7 +983,7 @@ export function AppSidebar(props: AppSidebarProps) {
     <>
       {/* Desktop Sidebar (visible on md+) */}
       <div className="hidden md:flex shrink-0">
-        <DashboardSidebar {...props} />
+        <DashboardSidebar {...props} onOpenSettings={handleOpenSettings} />
       </div>
 
       {/* Mobile Drawer (visible on < md when triggered by navbar hamburger) */}
@@ -961,11 +1001,19 @@ export function AppSidebar(props: AppSidebarProps) {
               {...props}
               mobile={true}
               onClose={() => setOpenMobile(false)}
+              onOpenSettings={handleOpenSettings}
               className="!h-full !w-full !max-w-full !rounded-2xl sm:!rounded-3xl !border-0 !top-0 !static !shadow-none bg-white dark:bg-[#0c101c]"
             />
           </div>
         </div>
       )}
+
+      {/* Unified Settings Modal at root level (clean backdrop, no stuck mobile drawer behind it!) */}
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        planArtSrc="/templates/settings-plan-art.png"
+      />
     </>
   );
 }

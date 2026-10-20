@@ -1,23 +1,8 @@
 "use client";
 
 import { useTemplateCopy } from "@/components/foundations/template-copy/template-copy";
-
 import type { ComponentType, ReactNode } from "react";
 import { cx } from "@/utils/cx";
-
-/**
- * Shared row chrome for the settings modal pages (Figma "Settings/Profile"
- * node 4081:13943 and "Settings/General" node 4079:13037).
- *
- * Every settings group is the same recipe:
- *   card   bg background/secondary, radius/2xl (16px), pl 12 — the left
- *          padding lives on the card so each row's bottom border stops
- *          12px short of the left edge, exactly like Figma.
- *   row    py 10 pr 10, min-height 52, 1px border/button/default under
- *          every row except the last, label left / control right.
- *   label  Body 1/Regular text/primary, optional Body 2/Regular
- *          text/secondary description underneath.
- */
 
 type IconComponent = ComponentType<{
   className?: string;
@@ -39,15 +24,17 @@ export function SettingsCard({ className, children }: { className?: string; chil
   ));
 }
 
-/** Muted 13px section heading above a card ("Pull Requests", "Notifications"). */
+/** Muted 12px section heading above a card. */
 export function SettingsSectionLabel({ className, children }: { className?: string; children: ReactNode }) {
   const localize = useTemplateCopy();
   return localize((
-    <p className={cx("w-full px-3 text-body-2-medium text-text-secondary", className)}>{children}</p>
+    <p className={cx("w-full px-2 sm:px-3 text-[11px] sm:text-body-2-medium font-semibold uppercase tracking-wider text-text-tertiary", className)}>
+      {children}
+    </p>
   ));
 }
 
-/** One label + control row. Rows separate themselves; the last has no border. */
+/** One label + control row. Fits comfortably on mobile and desktop without overflowing. */
 export function SettingsRow({
   label,
   description,
@@ -56,30 +43,31 @@ export function SettingsRow({
   label: string;
   description?: string;
   children?: ReactNode;
+  layout?: "auto" | "row" | "stack";
 }) {
   const localize = useTemplateCopy();
   return localize((
     <div
       className={cx(
-        "flex min-h-[52px] w-full items-center justify-between gap-4 py-2.5 pe-2.5",
+        "flex min-h-[48px] sm:min-h-[52px] w-full items-center justify-between gap-2 sm:gap-4 py-2.5 pe-2.5",
         "border-b border-separator-border last:border-b-0",
       )}
     >
-      <div className="flex min-w-0 flex-col">
-        <p className="text-body-regular text-text-primary">{label}</p>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <p className="text-xs sm:text-sm font-medium text-text-primary leading-tight truncate">{label}</p>
         {description && (
-          <p className="text-body-2-regular text-text-secondary">{description}</p>
+          <p className="text-[10px] sm:text-xs text-text-secondary mt-0.5 leading-tight truncate">{description}</p>
         )}
       </div>
-      {children}
+      <div className="shrink-0 flex items-center justify-end">
+        {children}
+      </div>
     </div>
   ));
 }
 
 /**
- * The grey read-only value field (Figma "Input" instances — bg
- * background/tertiary, h 32, radius/2lg, 202px wide). Not an editable input
- * in the design: it presents the stored value.
+ * Grey read-only value field, compact on mobile.
  */
 export function SettingsValueField({
   icon: Icon,
@@ -89,7 +77,6 @@ export function SettingsValueField({
 }: {
   icon?: IconComponent;
   children: ReactNode;
-  /** Secondary text color (e.g. the truncated Device ID). */
   muted?: boolean;
   className?: string;
 }) {
@@ -97,14 +84,14 @@ export function SettingsValueField({
   return localize((
     <div
       className={cx(
-        "flex h-8 w-[202px] shrink-0 items-center gap-0.5 rounded-2lg bg-background-tertiary-default px-1.5",
+        "flex h-8 w-[140px] sm:w-[200px] shrink-0 items-center gap-1 rounded-lg bg-background-tertiary-default px-2",
         className,
       )}
     >
-      {Icon && <Icon className="size-5 shrink-0 text-foreground-icon-secondary" aria-hidden />}
+      {Icon && <Icon className="size-4 shrink-0 text-foreground-icon-secondary" aria-hidden />}
       <span
         className={cx(
-          "truncate ps-1 text-body-regular",
+          "truncate text-[11px] sm:text-body-regular",
           muted ? "text-text-secondary" : "text-text-primary",
         )}
       >
