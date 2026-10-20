@@ -372,16 +372,52 @@ button, [role="button"], a.btn, input[type="button"], input[type="submit"] {
   font-family: inherit !important;
 }
 
+/* Provide sufficient left gutter for BlockNote side menu (+ and drag handle) on mobile and desktop */
 .bn-editor {
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
+  padding-left: 48px !important;
+  padding-right: 8px !important;
 }
 
 @media (min-width: 640px) {
   .bn-editor {
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    padding-left: 54px !important;
+    padding-right: 20px !important;
   }
+}
+
+/* Side Menu (+ Add Block & :: Drag Handle) visibility and touch optimization */
+.bn-side-menu {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  opacity: 1 !important;
+}
+
+.bn-side-menu button,
+.bn-side-menu .bn-button {
+  color: #64748b !important;
+  transition: color 150ms ease, background-color 150ms ease !important;
+}
+
+.dark .bn-side-menu button,
+.dark .bn-side-menu .bn-button {
+  color: #94a3b8 !important;
+}
+
+.bn-side-menu button:hover,
+.bn-side-menu .bn-button:hover,
+.bn-side-menu button:active,
+.bn-side-menu .bn-button:active {
+  color: #2563eb !important;
+  background-color: rgba(37, 99, 235, 0.1) !important;
+  border-radius: 4px !important;
+}
+
+/* Mobile formatting toolbar floating styling */
+.bn-mobile-formatting-toolbar {
+  z-index: 50 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 10px !important;
 }
 
 .dark .bn-container {
@@ -391,4 +427,5 @@ button, [role="button"], a.btn, input[type="button"], input[type="submit"] {
 .dark .bn-container [data-mantine-color-scheme] {
   color-scheme: dark !important;
 }
+
 

@@ -111,7 +111,7 @@ export function NotesHeader({
               title="Click to rename"
             >
               <span className="truncate">{title}</span>
-              <RiPencilLine className="size-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              <RiPencilLine className="size-3 text-slate-400 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0" />
             </button>
           )}
 

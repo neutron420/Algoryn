@@ -196,7 +196,7 @@ export default function NotesDashboardPage() {
             />
           </div>
 
-          {/* Create Canvas CTA Button */}
+          {/* Create CTA Button */}
           <Button
             variant="primary"
             size="small"
@@ -204,7 +204,8 @@ export default function NotesDashboardPage() {
             className="shrink-0 font-semibold flex items-center gap-1.5 shadow-xs whitespace-nowrap"
           >
             <RiAddFill className="size-4" />
-            <span>Create Canvas</span>
+            <span className="inline sm:hidden">Create</span>
+            <span className="hidden sm:inline">Create Workspace</span>
           </Button>
         </div>
       </div>
