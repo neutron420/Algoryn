@@ -485,6 +485,92 @@ button, [role="button"], a.btn, input[type="button"], input[type="submit"] {
 }
 
 /* ========================================================================== */
+/* Suggestion Menu / Slash Commands Modal Mobile Optimization                */
+/* ========================================================================== */
+
+.bn-suggestion-menu,
+.bn-mantine .bn-suggestion-menu {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 12px !important;
+  background-color: #ffffff !important;
+  z-index: 9999 !important;
+}
+
+.dark .bn-suggestion-menu,
+.dark .bn-mantine .bn-suggestion-menu {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  background-color: #111827 !important;
+  border-color: #1f2937 !important;
+}
+
+@media (max-width: 639px) {
+  /* Enhanced touch targets for + and :: side-menu buttons on mobile */
+  .bn-side-menu {
+    gap: 4px !important;
+  }
+
+  .bn-side-menu .mantine-UnstyledButton-root,
+  .bn-side-menu button,
+  .bn-side-menu .bn-button {
+    width: 26px !important;
+    height: 26px !important;
+    touch-action: manipulation !important;
+  }
+
+  .bn-side-menu svg,
+  .bn-side-menu button svg,
+  .bn-side-menu .mantine-UnstyledButton-root svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  /* Ensure suggestion menu modal fits cleanly on mobile screens without overflowing */
+  .bn-suggestion-menu,
+  .bn-mantine .bn-suggestion-menu {
+    max-width: min(320px, calc(100vw - 24px)) !important;
+    max-height: min(300px, 46vh) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    border-radius: 14px !important;
+    padding: 6px 4px !important;
+  }
+
+  /* Comfortable 44px touch targets for menu items */
+  .bn-suggestion-menu-item {
+    min-height: 44px !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
+    touch-action: manipulation !important;
+    margin-bottom: 2px !important;
+  }
+
+  .bn-suggestion-menu-item .bn-mt-suggestion-menu-item-title {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+
+  .bn-suggestion-menu-item .bn-mt-suggestion-menu-item-subtitle {
+    font-size: 11px !important;
+    opacity: 0.75 !important;
+  }
+
+  /* Hide physical keyboard shortcuts (e.g. CTRL-ALT-1) on mobile touchscreens */
+  .bn-suggestion-menu-item .bn-mt-suggestion-menu-item-section[data-position="right"],
+  .bn-suggestion-menu-item kbd,
+  .bn-suggestion-menu-item [data-shortcut] {
+    display: none !important;
+  }
+
+  .bn-suggestion-menu-label {
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+  }
+}
+
+/* ========================================================================== */
 /* Scaled Typography for BlockNote (Compact, Crisp, Balanced for PC & Mobile) */
 /* ========================================================================== */
 
