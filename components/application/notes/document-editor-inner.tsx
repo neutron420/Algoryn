@@ -260,9 +260,9 @@ export default function DocumentEditorInner({
           editor.focus();
         }
       }}
-      className="w-full flex-1 overflow-y-auto bg-white dark:bg-[#0c101c] py-4 sm:py-8 px-2 sm:px-8 flex justify-center cursor-text"
+      className="w-full flex-1 overflow-y-auto bg-slate-50/70 dark:bg-[#090d16] py-3 sm:py-6 px-2 sm:px-6 flex justify-center cursor-text"
     >
-      <div className="w-full max-w-4xl cursor-default">
+      <div className="w-full max-w-4xl h-fit bg-white dark:bg-[#0e1322] border border-slate-300 dark:border-zinc-700/80 rounded-2xl shadow-xs px-3 sm:px-8 md:px-10 py-5 sm:py-8 cursor-default transition-colors">
         <BlockNoteView
           editor={editor}
           theme={isDark ? "dark" : "light"}
