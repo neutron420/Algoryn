@@ -9,8 +9,23 @@ import { NotesCanvas } from "@/components/application/notes/notes-canvas";
 import { DocumentEditor } from "@/components/application/notes/document-editor";
 import { RiLoader4Line, RiErrorWarningLine } from "@remixicon/react";
 import { Button } from "@/components/base/buttons/button";
+import { DeleteNoteDialog } from "@/components/application/notes/delete-note-dialog";
 import type { BinaryFiles, AppState } from "@excalidraw/excalidraw/types";
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
+
+// If this page loaded as a popup from libraries.excalidraw.com with #addLibrary,
+// forward the hash to the opener and close this tab immediately
+if (typeof window !== "undefined" && window.location.hash.includes("addLibrary")) {
+  if (window.opener && !window.opener.closed) {
+    // Navigate the opener to include the hash so useHandleLibrary picks it up
+    try {
+      window.opener.location.hash = window.location.hash;
+    } catch {
+      // cross-origin fallback — shouldn't happen for same-origin
+    }
+    window.close();
+  }
+}
 
 interface NoteData {
   id: string;
@@ -37,6 +52,7 @@ export default function NoteCanvasPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   // Export & Clear callback refs from child canvas/document
   const exportHandlerRef = useRef<((format: string) => Promise<void>) | null>(null);
@@ -94,9 +110,8 @@ export default function NoteCanvasPage({
   };
 
   // Delete note handler
-  const handleDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!user?.uid) return;
-    if (!confirm("Are you sure you want to delete this note? This action cannot be undone.")) return;
 
     try {
       const res = await fetch(`/api/notes/${noteId}?userId=${encodeURIComponent(user.uid)}`, {
@@ -162,7 +177,7 @@ export default function NoteCanvasPage({
         }}
         onClearCanvas={() => clearHandlerRef.current?.()}
         onExport={(fmt) => exportHandlerRef.current?.(fmt)}
-        onDelete={handleDelete}
+        onDelete={() => setDeleteModalOpen(true)}
       />
 
       {/* Main workspace (Excalidraw Infinite Canvas OR BlockNote Document Note) */}
@@ -196,6 +211,14 @@ export default function NoteCanvasPage({
           }}
         />
       )}
+
+      {/* Custom Delete Modal Dialog */}
+      <DeleteNoteDialog
+        isOpen={deleteModalOpen}
+        noteTitle={note.title}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

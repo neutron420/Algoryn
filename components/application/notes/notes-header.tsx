@@ -73,7 +73,7 @@ export function NotesHeader({
           <button
             type="button"
             onClick={onBack}
-            className="size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
+            className="size-9 sm:size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
             title="Back to all notes"
           >
             <RiArrowLeftLine className="size-4" />
@@ -81,7 +81,7 @@ export function NotesHeader({
         ) : (
           <Link
             href="/dashboard/notes"
-            className="size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+            className="size-9 sm:size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
             title="Back to all notes"
           >
             <RiArrowLeftLine className="size-4" />
@@ -196,7 +196,7 @@ export function NotesHeader({
             onClick={onClearCanvas}
             aria-label="Clear workspace"
             title={isInfinite ? "Clear canvas" : "Clear document"}
-            className="p-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer hidden md:flex"
+            className="size-9 sm:size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer hidden md:flex"
           >
             <RiEraserLine className="size-4" />
           </button>
@@ -209,7 +209,7 @@ export function NotesHeader({
             onClick={() => onExport(isInfinite ? "png" : "markdown")}
             aria-label={isInfinite ? "Export canvas image" : "Export markdown"}
             title={isInfinite ? "Export as PNG image" : "Export as Markdown (.md)"}
-            className="p-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="size-9 sm:size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <RiDownload2Line className="size-4" />
           </button>
@@ -222,7 +222,7 @@ export function NotesHeader({
             onClick={onDelete}
             aria-label="Delete note"
             title="Delete this note"
-            className="p-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+            className="size-9 sm:size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
           >
             <RiDeleteBinLine className="size-4" />
           </button>

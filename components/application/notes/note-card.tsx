@@ -173,6 +173,28 @@ function extractDocumentImage(elements: unknown): string | null {
   return null;
 }
 
+function getBlockColorClass(color?: string): string {
+  if (!color || color === "default") return "";
+  switch (color) {
+    case "orange":
+      return "bg-amber-500/15 text-amber-950 dark:text-amber-200 border border-amber-500/25";
+    case "green":
+      return "bg-emerald-500/15 text-emerald-950 dark:text-emerald-200 border border-emerald-500/25";
+    case "blue":
+      return "bg-sky-500/15 text-sky-950 dark:text-sky-200 border border-sky-500/25";
+    case "yellow":
+      return "bg-yellow-500/15 text-yellow-950 dark:text-yellow-200 border border-yellow-500/25";
+    case "red":
+      return "bg-rose-500/15 text-rose-950 dark:text-rose-200 border border-rose-500/25";
+    case "purple":
+      return "bg-purple-500/15 text-purple-950 dark:text-purple-200 border border-purple-500/25";
+    case "gray":
+      return "bg-slate-100 text-slate-800 dark:bg-zinc-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700";
+    default:
+      return "bg-amber-500/10 text-amber-900 dark:text-amber-200 border border-amber-500/20";
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Document Preview: Authentic Miniature Document Page Layout (Matches Spec)  */
 /* -------------------------------------------------------------------------- */
@@ -229,18 +251,31 @@ function DocumentSheetPreview({ elements }: { elements: unknown }) {
         </p>
       )}
 
-      {/* Key bullet points */}
+      {/* Key bullet points with authentic block colors */}
       {bulletBlocks.length > 0 && (
         <div className="mt-2.5 flex flex-col gap-1.5 w-full">
-          {bulletBlocks.map((b) => (
-            <div
-              key={b.id}
-              className="flex items-start gap-1.5 text-xs text-slate-700 dark:text-zinc-300 leading-normal"
-            >
-              <span className="font-bold text-slate-400 dark:text-zinc-500 shrink-0">•</span>
-              <span className="truncate">{b.text}</span>
-            </div>
-          ))}
+          {bulletBlocks.map((b) => {
+            const colorClass = getBlockColorClass(b.backgroundColor);
+            return (
+              <div
+                key={b.id}
+                className={cx(
+                  "flex items-start gap-1.5 text-xs leading-normal rounded-md px-1.5 py-0.5",
+                  colorClass || "text-slate-700 dark:text-zinc-300"
+                )}
+              >
+                <span
+                  className={cx(
+                    "font-bold shrink-0",
+                    colorClass ? "opacity-70" : "text-slate-400 dark:text-zinc-500"
+                  )}
+                >
+                  •
+                </span>
+                <span className="truncate">{b.text}</span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -468,11 +503,11 @@ export function NoteCard({ note, onDelete, onRename }: NoteCardProps) {
         </span>
       </div>
 
-      {/* Card Actions Footer */}
+      {/* Card Actions Footer - Mobile Optimized Touch Targets (>= 36px) */}
       <div className="mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs">
         <Link
           href={`/dashboard/notes/${note.id}`}
-          className="font-medium text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+          className="font-medium text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 min-h-[36px] py-1"
         >
           {isInfinite ? "Open Canvas" : "Open Note"}
         </Link>
@@ -482,18 +517,18 @@ export function NoteCard({ note, onDelete, onRename }: NoteCardProps) {
             onClick={() => onRename(note.id, note.title)}
             aria-label="Rename workspace"
             title="Rename workspace"
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="p-2 sm:p-1.5 min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
-            <RiPencilLine className="size-3.5" />
+            <RiPencilLine className="size-4 sm:size-3.5" />
           </button>
           <button
             type="button"
             onClick={() => onDelete(note.id)}
             aria-label="Delete workspace"
             title="Delete workspace"
-            className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+            className="p-2 sm:p-1.5 min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
           >
-            <RiDeleteBinLine className="size-3.5" />
+            <RiDeleteBinLine className="size-4 sm:size-3.5" />
           </button>
         </div>
       </div>

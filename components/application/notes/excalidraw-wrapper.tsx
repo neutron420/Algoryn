@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Excalidraw, useHandleLibrary } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI, BinaryFiles, AppState, LibraryItems } from "@excalidraw/excalidraw/types";
 import type { ExcalidrawElement, OrderedExcalidrawElement } from "@excalidraw/excalidraw/element/types";
@@ -27,6 +27,14 @@ export default function ExcalidrawWrapper({
   onChange,
 }: ExcalidrawWrapperProps) {
   const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null);
+
+  // Give this window a name so libraries.excalidraw.com redirects back to THIS tab
+  // instead of opening a new one (Excalidraw passes window.name as the "target" param)
+  useEffect(() => {
+    if (!window.name) {
+      window.name = "_excalidraw_app";
+    }
+  }, []);
 
   // Hook up Excalidraw library handling - listens for URL hash on return from libraries.excalidraw.com!
   useHandleLibrary({ excalidrawAPI: api });
