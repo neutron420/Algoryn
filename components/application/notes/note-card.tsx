@@ -148,24 +148,50 @@ function pointsToPath(points?: [number, number][], originX = 0, originY = 0): st
     .join(" ");
 }
 
+function extractDocumentImage(elements: unknown): string | null {
+  if (!Array.isArray(elements) || elements.length === 0) return null;
+  for (const b of elements) {
+    if (!b || typeof b !== "object") continue;
+    const block = b as { type?: string; props?: { url?: unknown } };
+    if (block.type === "image" && typeof block.props?.url === "string" && block.props.url.trim()) {
+      return block.props.url.trim();
+    }
+  }
+  return null;
+}
+
 /* -------------------------------------------------------------------------- */
-/* Document Preview: Clean, Uncluttered, Harmonious Layout                    */
+/* Document Preview: Pure White Clean Layout with Image Support               */
 /* -------------------------------------------------------------------------- */
 function DocumentSheetPreview({ elements }: { elements: unknown }) {
   const blocks = useMemo(() => parseDocumentBlocks(elements), [elements]);
+  const docImage = useMemo(() => extractDocumentImage(elements), [elements]);
+
+  if (docImage) {
+    return (
+      <div className="relative w-full h-full bg-white dark:bg-[#0c101c] overflow-hidden flex items-center justify-center">
+        <img
+          src={docImage}
+          alt={blocks[0]?.text || "Document preview"}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover/preview:scale-105"
+        />
+        {/* Soft bottom overlay with title and badge */}
+        <div className="absolute inset-x-0 bottom-0 p-2.5 bg-linear-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between text-white text-[10px] font-medium z-10">
+          <span className="flex items-center gap-1.5 truncate">
+            <RiDraftLine className="size-3.5 text-emerald-400 shrink-0" />
+            <span className="truncate">{blocks[0]?.text || "Document"}</span>
+          </span>
+          <span className="shrink-0 text-[9px] font-mono bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-xs">
+            {blocks.length} blocks
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-full p-3.5 bg-slate-50/90 dark:bg-zinc-900/70 overflow-hidden flex flex-col justify-between">
-      {/* Subtle Dot Grid matching the app theme */}
-      <div
-        className="absolute inset-0 opacity-40 dark:opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: "radial-gradient(#10b981 1px, transparent 1px)",
-          backgroundSize: "14px 14px",
-        }}
-      />
-
-      {/* Clean Document Content */}
+    <div className="relative w-full h-full p-3.5 bg-white dark:bg-[#0c101c] overflow-hidden flex flex-col justify-between">
+      {/* Clean Pure White Document Content (NO DOTS) */}
       <div className="relative z-10 flex flex-col gap-1.5 overflow-hidden">
         {blocks.length > 0 ? (
           <>
@@ -209,10 +235,10 @@ function DocumentSheetPreview({ elements }: { elements: unknown }) {
       </div>
 
       {/* Bottom Soft Gradient Fade */}
-      <div className="absolute inset-x-0 bottom-7 h-6 bg-linear-to-t from-slate-50 dark:from-zinc-900 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-7 h-6 bg-linear-to-t from-white dark:from-[#0c101c] to-transparent pointer-events-none" />
 
       {/* Bottom Harmonious Info Pill */}
-      <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-emerald-700 dark:text-emerald-400 pt-1 border-t border-slate-200/60 dark:border-zinc-800/60">
+      <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-emerald-700 dark:text-emerald-400 pt-1 border-t border-slate-100 dark:border-zinc-800">
         <span className="flex items-center gap-1 font-semibold">
           <span className="size-1.5 rounded-full bg-emerald-500" />
           <span>Rich Document</span>
@@ -224,7 +250,7 @@ function DocumentSheetPreview({ elements }: { elements: unknown }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Infinite Canvas Vector Preview: Harmonious Theme-Adaptive Layout          */
+/* Infinite Canvas Vector Preview: Clean Whiteboard Layout (NO DOTS)          */
 /* -------------------------------------------------------------------------- */
 function CanvasVectorPreview({
   elements,
@@ -264,16 +290,8 @@ function CanvasVectorPreview({
   }, [validElements]);
 
   return (
-    <div className="relative w-full h-full p-2 bg-slate-50/90 dark:bg-zinc-900/70 overflow-hidden flex flex-col justify-between">
-      {/* Blueprint Dot Grid - Theme adaptive */}
-      <div
-        className="absolute inset-0 opacity-40 dark:opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: "radial-gradient(#3b82f6 1px, transparent 1px)",
-          backgroundSize: "14px 14px",
-        }}
-      />
-
+    <div className="relative w-full h-full p-2 bg-white dark:bg-[#0c101c] overflow-hidden flex flex-col justify-between">
+      {/* Clean Pure Whiteboard Surface (NO DOTS) */}
       <div className="relative z-10 flex-1 w-full h-full flex items-center justify-center overflow-hidden">
         {thumbnailUrl ? (
           <img
@@ -404,7 +422,7 @@ function CanvasVectorPreview({
       </div>
 
       {/* Bottom Harmonious Info Pill */}
-      <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-blue-700 dark:text-blue-400 pt-1 border-t border-slate-200/60 dark:border-zinc-800/60">
+      <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-blue-700 dark:text-blue-400 pt-1 border-t border-slate-100 dark:border-zinc-800">
         <span className="flex items-center gap-1 font-semibold">
           <span className="size-1.5 rounded-full bg-blue-500" />
           <span>Infinite Canvas</span>
