@@ -420,86 +420,99 @@ button, [role="button"], a.btn, input[type="button"], input[type="submit"] {
   border-radius: 10px !important;
 }
 
-/* Scaled Typography for BlockNote (Balanced & Sleek for both Desktop & Mobile) */
-.bn-container {
-  font-size: 14.5px !important;
-}
+/* ========================================================================== */
+/* Scaled Typography for BlockNote (Compact, Crisp, Balanced for PC & Mobile) */
+/* ========================================================================== */
 
+.algoryn-blocknote-view,
+.bn-container,
 .bn-editor {
-  font-size: 14.5px !important;
-  line-height: 1.6 !important;
-}
-
-/* Paragraphs & List Items */
-.bn-block-content[data-content-type="paragraph"],
-.bn-block-content[data-content-type="bulletListItem"],
-.bn-block-content[data-content-type="numberedListItem"],
-.bn-block-content[data-content-type="checkListItem"] {
-  font-size: 13.5px !important;
+  font-size: 14px !important;
   line-height: 1.55 !important;
 }
 
-@media (min-width: 640px) {
-  .bn-block-content[data-content-type="paragraph"],
-  .bn-block-content[data-content-type="bulletListItem"],
-  .bn-block-content[data-content-type="numberedListItem"],
-  .bn-block-content[data-content-type="checkListItem"] {
-    font-size: 14.5px !important;
-    line-height: 1.6 !important;
-  }
+/* Headings: Override BlockNote's default --level (3em/2em/1.3em) directly */
+[data-content-type="heading"],
+.algoryn-blocknote-view [data-content-type="heading"],
+.algoryn-blocknote-view .bn-block-content[data-content-type="heading"],
+.bn-editor [data-content-type="heading"] {
+  --level: 1.35em !important;
+  padding-top: 10px !important;
 }
 
-/* Headings: scaled down from oversized 48px/32px to balanced, modern proportions */
-.bn-block-content[data-content-type="heading"][data-level="1"] {
-  font-size: 1.45rem !important; /* ~23px on mobile */
+[data-content-type="heading"][data-level="2"],
+.algoryn-blocknote-view [data-content-type="heading"][data-level="2"],
+.algoryn-blocknote-view .bn-block-content[data-content-type="heading"][data-level="2"],
+.bn-editor [data-content-type="heading"][data-level="2"] {
+  --level: 1.15em !important;
+  padding-top: 8px !important;
+}
+
+[data-content-type="heading"][data-level="3"],
+.algoryn-blocknote-view [data-content-type="heading"][data-level="3"],
+.algoryn-blocknote-view .bn-block-content[data-content-type="heading"][data-level="3"],
+.bn-editor [data-content-type="heading"][data-level="3"] {
+  --level: 1.02em !important;
+  padding-top: 6px !important;
+}
+
+/* Direct Heading typography targeting the h1, h2, h3 elements and content wrappers */
+.algoryn-blocknote-view h1,
+.algoryn-blocknote-view .bn-editor h1,
+.algoryn-blocknote-view .bn-block-content[data-content-type="heading"] h1,
+.bn-editor .bn-block-content[data-content-type="heading"] {
+  font-size: 1.35rem !important; /* ~21.5px */
   font-weight: 700 !important;
-  letter-spacing: -0.025em !important;
-  line-height: 1.25 !important;
-  margin-top: 0.5rem !important;
-}
-
-.bn-block-content[data-content-type="heading"][data-level="2"] {
-  font-size: 1.2rem !important; /* ~19px on mobile */
-  font-weight: 650 !important;
-  letter-spacing: -0.02em !important;
   line-height: 1.3 !important;
-  margin-top: 0.35rem !important;
+  letter-spacing: -0.02em !important;
 }
 
-.bn-block-content[data-content-type="heading"][data-level="3"] {
-  font-size: 1.05rem !important; /* ~17px on mobile */
-  font-weight: 600 !important;
-  letter-spacing: -0.015em !important;
+.algoryn-blocknote-view h2,
+.algoryn-blocknote-view .bn-editor h2,
+.algoryn-blocknote-view .bn-block-content[data-content-type="heading"] h2,
+.bn-editor .bn-block-content[data-content-type="heading"][data-level="2"] {
+  font-size: 1.15rem !important; /* ~18.5px */
+  font-weight: 650 !important;
   line-height: 1.35 !important;
-  margin-top: 0.25rem !important;
+  letter-spacing: -0.015em !important;
 }
 
-@media (min-width: 640px) {
-  .bn-block-content[data-content-type="heading"][data-level="1"] {
-    font-size: 1.75rem !important; /* ~28px on PC instead of 48px */
-    line-height: 1.25 !important;
-  }
+.algoryn-blocknote-view h3,
+.algoryn-blocknote-view .bn-editor h3,
+.algoryn-blocknote-view .bn-block-content[data-content-type="heading"] h3,
+.bn-editor .bn-block-content[data-content-type="heading"][data-level="3"] {
+  font-size: 1.02rem !important; /* ~16px */
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.01em !important;
+}
 
-  .bn-block-content[data-content-type="heading"][data-level="2"] {
-    font-size: 1.35rem !important; /* ~21.5px on PC instead of 32px */
-    line-height: 1.3 !important;
-  }
-
-  .bn-block-content[data-content-type="heading"][data-level="3"] {
-    font-size: 1.12rem !important; /* ~18px on PC instead of 21px */
-    line-height: 1.35 !important;
-  }
+/* Paragraphs, Inline text, and List Items (Neat & Clean like Note Cards) */
+.algoryn-blocknote-view p,
+.algoryn-blocknote-view .bn-editor p,
+.algoryn-blocknote-view .bn-inline-content,
+.algoryn-blocknote-view .bn-block-content[data-content-type="paragraph"],
+.algoryn-blocknote-view .bn-block-content[data-content-type="bulletListItem"],
+.algoryn-blocknote-view .bn-block-content[data-content-type="numberedListItem"],
+.algoryn-blocknote-view .bn-block-content[data-content-type="checkListItem"],
+.bn-editor .bn-block-content[data-content-type="paragraph"],
+.bn-editor .bn-block-content[data-content-type="bulletListItem"],
+.bn-editor .bn-block-content[data-content-type="numberedListItem"],
+.bn-editor .bn-block-content[data-content-type="checkListItem"] {
+  font-size: 0.875rem !important; /* 14px */
+  line-height: 1.55 !important;
 }
 
 /* Code block typography */
-.bn-block-content[data-content-type="codeBlock"] {
+.algoryn-blocknote-view .bn-block-content[data-content-type="codeBlock"],
+.bn-editor .bn-block-content[data-content-type="codeBlock"] {
   font-size: 12.5px !important;
+  line-height: 1.5 !important;
 }
 
-@media (min-width: 640px) {
-  .bn-block-content[data-content-type="codeBlock"] {
-    font-size: 13.5px !important;
-  }
+/* Block padding for compact, sleek document aesthetic */
+.algoryn-blocknote-view .bn-block-content {
+  padding: 2px 0 !important;
 }
 
 .dark .bn-container {
