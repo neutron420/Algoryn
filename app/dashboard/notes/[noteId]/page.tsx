@@ -160,7 +160,7 @@ export default function NoteCanvasPage({
   const isCanvas = note.mode === "INFINITE_CANVAS";
 
   return (
-    <div className="flex-1 flex flex-col w-full h-[calc(100svh-4.5rem)] md:h-[calc(100svh-5rem)] overflow-hidden">
+    <div className="flex-1 flex flex-col w-full h-full min-h-0 overflow-hidden">
       {/* Top action header */}
       <NotesHeader
         title={note.title}

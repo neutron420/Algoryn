@@ -288,7 +288,7 @@ export function NotesCanvas({
   const isDark = resolvedTheme === "dark";
 
   return (
-    <div className="relative flex-1 w-full h-[calc(100vh-140px)] min-h-[550px] overflow-hidden bg-white dark:bg-[#0c101c]">
+    <div className="relative flex-1 w-full h-full min-h-0 overflow-hidden bg-white dark:bg-[#0c101c]">
       <ExcalidrawWrapper
         initialElements={preparedElements}
         initialAppState={initialAppState}

@@ -94,7 +94,7 @@ export default async function DashboardLayout({
 
           {/* Floating Separate Rounded Dashboard Content Island */}
           <SidebarInset className="rounded-xl sm:rounded-2xl md:rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] shadow-xs overflow-hidden flex flex-col flex-1 min-w-0 min-h-[calc(100svh-5.5rem)] md:min-h-[calc(100svh-6rem)]">
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex flex-col h-full">
               {children}
             </div>
           </SidebarInset>
