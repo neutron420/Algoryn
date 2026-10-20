@@ -779,40 +779,88 @@ button, [role="button"], a.btn, input[type="button"], input[type="submit"] {
     border-bottom-right-radius: 0 !important;
   }
 
-  /* Excalidraw Mobile Hamburger Menu - Proper sizing, elevation & touch targets */
+  /* Excalidraw Mobile Hamburger Menu - Native fixed bottom-sheet layout & explicit touch sizing */
   .excalidraw .App-toolbar-content .dropdown-menu--mobile {
-    bottom: 58px !important;
-    left: 0 !important;
-    width: 100% !important;
-    z-index: 50 !important;
+    position: fixed !important;
+    bottom: 74px !important;
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+    max-width: 440px !important;
+    margin: 0 auto !important;
+    z-index: 99999 !important;
   }
 
   .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-container {
-    max-height: min(70svh, 480px) !important;
+    max-height: min(75svh, 520px) !important;
+    min-height: 220px !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    background-color: var(--island-bg-color, #ffffff) !important;
-    border: 1px solid var(--default-border-color, #e2e8f0) !important;
-    border-radius: 1rem !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
-    padding: 8px 6px !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 20px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+    padding: 12px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
   }
 
   .dark .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-container {
-    background-color: #1a202c !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
+    background-color: #161b26 !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
   }
 
   .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-item {
-    height: 2.625rem !important;
-    min-height: 2.625rem !important;
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
     font-size: 0.9375rem !important;
     font-weight: 500 !important;
     display: flex !important;
     align-items: center !important;
-    border-radius: 0.625rem !important;
+    border-radius: 0.75rem !important;
     padding: 0 0.875rem !important;
     margin: 2px 0 !important;
+    color: #1e293b !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .dark .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-item {
+    color: #f1f5f9 !important;
+  }
+
+  .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-item:hover,
+  .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-item:active {
+    background-color: #f1f5f9 !important;
+  }
+
+  .dark .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-item:hover,
+  .dark .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-item:active {
+    background-color: #242c3d !important;
+  }
+
+  .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-item svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    margin-right: 0.75rem !important;
+    color: #475569 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dark .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-item svg {
+    color: #94a3b8 !important;
+  }
+
+  .excalidraw .App-toolbar-content .dropdown-menu--mobile .dropdown-menu-item .dropdown-menu-item__text {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 0.9375rem !important;
+    font-weight: 500 !important;
+    color: inherit !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 }
 
