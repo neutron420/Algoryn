@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useMemo } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { useCreateBlockNote } from "@blocknote/react";
+import { useCreateBlockNote, useEditorChange } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import type { PartialBlock, Block } from "@blocknote/core";
 import type { SaveStatus } from "./notes-header";
@@ -36,7 +36,7 @@ export default function DocumentEditorInner({
       {
         type: "heading",
         props: { level: 1 },
-        content: "Untitled Document",
+        content: "Untitled Note",
       },
       {
         type: "paragraph",
@@ -81,6 +81,7 @@ export default function DocumentEditorInner({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
+          keepalive: true,
         });
 
         if (!res.ok) {
@@ -101,7 +102,7 @@ export default function DocumentEditorInner({
     [noteId, userId, onSaveStatusChange]
   );
 
-  // Handle editor content changes with debounce
+  // Handle editor content changes with responsive 600ms debounce
   const handleChange = useCallback(() => {
     if (!editor) return;
     onSaveStatusChange("unsaved");
@@ -112,8 +113,29 @@ export default function DocumentEditorInner({
 
     saveTimeoutRef.current = setTimeout(() => {
       performSave(editor.document);
-    }, 1200);
+    }, 600);
   }, [editor, onSaveStatusChange, performSave]);
+
+  // Hook into BlockNote's document change event on every stroke/block modification
+  useEditorChange(() => {
+    handleChange();
+  }, editor);
+
+  // Keyboard shortcut Ctrl+S / Cmd+S for instant saving
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        if (editor) {
+          if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+          performSave(editor.document);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editor, performSave]);
 
   // Flush pending save on page leave / unmount
   useEffect(() => {
@@ -133,11 +155,13 @@ export default function DocumentEditorInner({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      if (saveTimeoutRef.current) {
+      // Immediately flush save on unmount/navigation with keepalive fetch
+      if (saveTimeoutRef.current && editor) {
         clearTimeout(saveTimeoutRef.current);
+        performSave(editor.document);
       }
     };
-  }, [noteId, userId, editor]);
+  }, [noteId, userId, editor, performSave]);
 
   // Register Export Handler with parent header
   useEffect(() => {
@@ -150,17 +174,17 @@ export default function DocumentEditorInner({
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `document-note-${noteId}.md`;
+        a.download = `note-${noteId}.md`;
         a.click();
         URL.revokeObjectURL(url);
       } else if (format === "html") {
         const html = await editor.blocksToHTMLLossy(editor.document);
-        const styledHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Algoryn Note</title><style>body{font-family:system-ui,-apple-system,sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6;color:#1e293b;}</style></head><body>${html}</body></html>`;
+        const styledHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Note</title><style>body{font-family:system-ui,-apple-system,sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6;color:#1e293b;}</style></head><body>${html}</body></html>`;
         const blob = new Blob([styledHtml], { type: "text/html;charset=utf-8" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `document-note-${noteId}.html`;
+        a.download = `note-${noteId}.html`;
         a.click();
         URL.revokeObjectURL(url);
       } else if (format === "json") {
@@ -169,7 +193,7 @@ export default function DocumentEditorInner({
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `document-note-${noteId}.json`;
+        a.download = `note-${noteId}.json`;
         a.click();
         URL.revokeObjectURL(url);
       }

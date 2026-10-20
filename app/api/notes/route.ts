@@ -42,6 +42,7 @@ export async function GET(req: Request) {
         userId: true,
         title: true,
         mode: true,
+        elements: true,
         thumbnailUrl: true,
         createdAt: true,
         updatedAt: true,

@@ -145,6 +145,14 @@ export async function PATCH(
   }
 }
 
+// Support sendBeacon on page unload
+export async function POST(
+  req: Request,
+  context: { params: Promise<{ noteId: string }> }
+) {
+  return PATCH(req, context);
+}
+
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ noteId: string }> }

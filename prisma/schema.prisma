@@ -396,4 +396,3 @@ model Note {
   @@index([userId, updatedAt])
   @@index([userId, isArchived])
 }
-

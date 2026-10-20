@@ -121,6 +121,7 @@ export function NotesCanvas({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        keepalive: true,
       });
 
       if (!res.ok) {
@@ -140,7 +141,7 @@ export function NotesCanvas({
     }
   }, [noteId, userId, onSaveStatusChange]);
 
-  // Debounce autosave triggers
+  // Debounce autosave triggers with responsive 700ms duration
   const triggerDebouncedSave = useCallback(() => {
     onSaveStatusChange("unsaved");
     if (saveTimeoutRef.current) {
@@ -148,7 +149,7 @@ export function NotesCanvas({
     }
     saveTimeoutRef.current = setTimeout(() => {
       performSave();
-    }, 1500); // 1.5s debounced autosave
+    }, 700);
   }, [onSaveStatusChange, performSave]);
 
   // Listen to Excalidraw scene changes
@@ -168,6 +169,20 @@ export function NotesCanvas({
     [triggerDebouncedSave]
   );
 
+  // Keyboard shortcut Ctrl+S / Cmd+S for instant saving
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        performSave();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [performSave]);
+
   // Flush pending save before unmounting or navigating away
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -186,11 +201,13 @@ export function NotesCanvas({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      // Immediately flush pending changes on client navigation
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
+        performSave();
       }
     };
-  }, [noteId, userId]);
+  }, [noteId, userId, performSave]);
 
   // Register Export Handler with parent header
   useEffect(() => {
