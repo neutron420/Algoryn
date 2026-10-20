@@ -195,12 +195,25 @@ function getBlockColorClass(color?: string): string {
   }
 }
 
+function computeNumberedBlocks(raw: ParsedDocBlock[]) {
+  let counter = 0;
+  return raw.map((b) => {
+    if (b.type === "numberedListItem") {
+      counter += 1;
+      return { ...b, numberedIndex: counter };
+    }
+    counter = 0;
+    return { ...b, numberedIndex: 0 };
+  });
+}
+
 /* -------------------------------------------------------------------------- */
-/* Document Preview: Authentic Miniature Document Page Layout (Matches Spec)  */
+/* Document Preview: Faithful Miniature Document Page (all block types)       */
 /* -------------------------------------------------------------------------- */
 function DocumentSheetPreview({ elements }: { elements: unknown }) {
-  const blocks = useMemo(() => parseDocumentBlocks(elements), [elements]);
+  const rawBlocks = useMemo(() => parseDocumentBlocks(elements), [elements]);
   const docImage = useMemo(() => extractDocumentImage(elements), [elements]);
+  const blocks = useMemo(() => computeNumberedBlocks(rawBlocks), [rawBlocks]);
 
   // If document contains an uploaded/pasted image, display it as a rich visual cover
   if (docImage) {
@@ -220,67 +233,145 @@ function DocumentSheetPreview({ elements }: { elements: unknown }) {
       <div className="relative w-full h-full p-4 bg-white dark:bg-[#0c101c] flex flex-col justify-center items-start text-slate-400 dark:text-zinc-500">
         <span className="font-semibold text-xs text-slate-600 dark:text-zinc-400">Empty Document</span>
         <p className="text-xs text-slate-400 dark:text-zinc-500 italic mt-1">
-          Click to write notes & algorithm solutions...
+          Click to write notes &amp; algorithm solutions...
         </p>
       </div>
     );
   }
 
-  // 1. Document title (first block)
-  const titleText = blocks[0]?.text || "Untitled Note";
-
-  // 2. First descriptive paragraph
-  const paragraphBlock = blocks.find((b, idx) => idx > 0 && b.type === "paragraph");
-
-  // 3. Up to 2 bullet key items
-  const bulletBlocks = blocks
-    .filter((b, idx) => idx > 0 && b.type === "bulletListItem")
-    .slice(0, 2);
-
   return (
-    <div className="relative w-full h-full p-4 bg-white dark:bg-[#0c101c] overflow-hidden select-none flex flex-col justify-start">
-      {/* Title */}
-      <h3 className="font-bold text-sm sm:text-[15px] leading-snug text-slate-900 dark:text-zinc-100 tracking-tight line-clamp-2">
-        {titleText}
-      </h3>
+    <div className="relative w-full h-full px-4 py-3 bg-white dark:bg-[#0c101c] overflow-hidden select-none flex flex-col justify-start gap-[3px]">
+      {blocks.map((b) => {
+        const colorClass = getBlockColorClass(b.backgroundColor);
 
-      {/* Paragraph snippet */}
-      {paragraphBlock && (
-        <p className="mt-2 text-xs text-slate-600 dark:text-zinc-400 font-sans leading-normal line-clamp-2">
-          {paragraphBlock.text}
-        </p>
-      )}
-
-      {/* Key bullet points with authentic block colors */}
-      {bulletBlocks.length > 0 && (
-        <div className="mt-2.5 flex flex-col gap-1.5 w-full">
-          {bulletBlocks.map((b) => {
-            const colorClass = getBlockColorClass(b.backgroundColor);
+        // --- Headings ---
+        if (b.type === "heading") {
+          if (b.level === 1) {
             return (
-              <div
+              <h3
                 key={b.id}
+                className="font-bold text-[13px] sm:text-sm leading-snug text-slate-900 dark:text-zinc-100 tracking-tight truncate mt-0.5"
+              >
+                {b.text}
+              </h3>
+            );
+          }
+          if (b.level === 2) {
+            return (
+              <h4
+                key={b.id}
+                className="font-semibold text-[11px] sm:text-xs leading-snug text-slate-800 dark:text-zinc-200 truncate mt-1"
+              >
+                {b.text}
+              </h4>
+            );
+          }
+          return (
+            <h5
+              key={b.id}
+              className="font-medium text-[10px] sm:text-[11px] leading-snug text-slate-700 dark:text-zinc-300 truncate mt-0.5"
+            >
+              {b.text}
+            </h5>
+          );
+        }
+
+        // --- Paragraph ---
+        if (b.type === "paragraph") {
+          return (
+            <p
+              key={b.id}
+              className={cx(
+                "text-[10px] sm:text-[11px] leading-normal truncate",
+                colorClass ? `rounded px-1.5 py-px ${colorClass}` : "text-slate-600 dark:text-zinc-400"
+              )}
+            >
+              {b.text}
+            </p>
+          );
+        }
+
+        // --- Bullet list item ---
+        if (b.type === "bulletListItem") {
+          return (
+            <div
+              key={b.id}
+              className={cx(
+                "flex items-start gap-1.5 text-[10px] sm:text-[11px] leading-normal pl-1",
+                colorClass ? `rounded px-1.5 py-px ${colorClass}` : "text-slate-700 dark:text-zinc-300"
+              )}
+            >
+              <span
                 className={cx(
-                  "flex items-start gap-1.5 text-xs leading-normal rounded-md px-1.5 py-0.5",
-                  colorClass || "text-slate-700 dark:text-zinc-300"
+                  "font-bold shrink-0 mt-px",
+                  colorClass ? "opacity-70" : "text-slate-400 dark:text-zinc-500"
                 )}
               >
-                <span
-                  className={cx(
-                    "font-bold shrink-0",
-                    colorClass ? "opacity-70" : "text-slate-400 dark:text-zinc-500"
-                  )}
-                >
-                  •
-                </span>
-                <span className="truncate">{b.text}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                •
+              </span>
+              <span className="truncate">{b.text}</span>
+            </div>
+          );
+        }
+
+        // --- Numbered list item ---
+        if (b.type === "numberedListItem") {
+          return (
+            <div
+              key={b.id}
+              className={cx(
+                "flex items-start gap-1.5 text-[10px] sm:text-[11px] leading-normal pl-1",
+                colorClass ? `rounded px-1.5 py-px ${colorClass}` : "text-slate-700 dark:text-zinc-300"
+              )}
+            >
+              <span
+                className={cx(
+                  "shrink-0 mt-px font-medium tabular-nums",
+                  colorClass ? "opacity-70" : "text-slate-400 dark:text-zinc-500"
+                )}
+              >
+                {b.numberedIndex}.
+              </span>
+              <span className="truncate">{b.text}</span>
+            </div>
+          );
+        }
+
+        // --- Check list item ---
+        if (b.type === "checkListItem") {
+          return (
+            <div
+              key={b.id}
+              className={cx(
+                "flex items-start gap-1.5 text-[10px] sm:text-[11px] leading-normal pl-1",
+                colorClass ? `rounded px-1.5 py-px ${colorClass}` : "text-slate-700 dark:text-zinc-300"
+              )}
+            >
+              <span className="shrink-0 mt-px text-slate-400 dark:text-zinc-500">☐</span>
+              <span className="truncate">{b.text}</span>
+            </div>
+          );
+        }
+
+        // --- Fallback (any other block type) ---
+        return (
+          <p
+            key={b.id}
+            className="text-[10px] sm:text-[11px] leading-normal text-slate-600 dark:text-zinc-400 truncate"
+          >
+            {b.text}
+          </p>
+        );
+      })}
+
+      {/* Subtle fade-out on bottom */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-white dark:from-[#0c101c] to-transparent" />
     </div>
   );
 }
+
+
+
 
 /* -------------------------------------------------------------------------- */
 /* Infinite Canvas Vector Preview: Clean Whiteboard Layout (NO DOTS)          */
