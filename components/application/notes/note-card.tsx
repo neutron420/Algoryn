@@ -555,11 +555,11 @@ export function NoteCard({ note, onDelete, onRename }: NoteCardProps) {
   const isInfinite = note.mode === "INFINITE_CANVAS";
 
   return (
-    <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] p-3 sm:p-4 shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+    <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-[#0c101c] p-3 sm:p-4 shadow-xs hover:shadow-md hover:border-slate-400 dark:hover:border-zinc-500 transition-all duration-300 hover:-translate-y-0.5">
       {/* Visual Live Preview Header */}
       <Link
         href={`/dashboard/notes/${note.id}`}
-        className="block relative h-44 sm:h-48 w-full rounded-xl overflow-hidden mb-3 border border-slate-200/70 dark:border-zinc-800/60 transition-all duration-300 group/preview"
+        className="block relative h-44 sm:h-48 w-full rounded-xl overflow-hidden mb-3 border border-slate-200 dark:border-zinc-750 transition-all duration-300 group/preview bg-slate-50/30 dark:bg-zinc-900/30"
       >
         {isInfinite ? (
           <CanvasVectorPreview elements={note.elements} thumbnailUrl={note.thumbnailUrl} />
@@ -595,7 +595,7 @@ export function NoteCard({ note, onDelete, onRename }: NoteCardProps) {
       </div>
 
       {/* Card Actions Footer - Mobile Optimized Touch Targets (>= 36px) */}
-      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs">
+      <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-zinc-750 flex items-center justify-between text-xs">
         <Link
           href={`/dashboard/notes/${note.id}`}
           className="font-medium text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 min-h-[36px] py-1"
