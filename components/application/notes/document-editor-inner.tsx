@@ -254,13 +254,20 @@ export default function DocumentEditorInner({
   }, [editor, handleChange, onRegisterClearHandler]);
 
   return (
-    <div className="w-full flex-1 overflow-y-auto bg-slate-50/50 dark:bg-[#0c101c] py-2 sm:py-8 px-1 sm:px-6 flex justify-center">
-      <div className="w-full max-w-4xl min-h-[calc(100svh-140px)] bg-white dark:bg-[#0e1322] border border-slate-200/80 dark:border-zinc-800/80 rounded-xl sm:rounded-2xl shadow-sm px-1.5 sm:px-8 md:px-12 py-4 sm:py-10">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && editor) {
+          editor.focus();
+        }
+      }}
+      className="w-full flex-1 overflow-y-auto bg-white dark:bg-[#0c101c] py-4 sm:py-8 px-2 sm:px-8 flex justify-center cursor-text"
+    >
+      <div className="w-full max-w-4xl cursor-default">
         <BlockNoteView
           editor={editor}
           theme={isDark ? "dark" : "light"}
           onChange={handleChange}
-          className="algoryn-blocknote-view min-h-[500px]"
+          className="algoryn-blocknote-view"
         />
       </div>
     </div>

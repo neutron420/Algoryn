@@ -40,7 +40,7 @@ export function DocumentEditor({
   const isDark = resolvedTheme === "dark";
 
   return (
-    <div className="relative flex-1 w-full h-[calc(100svh-140px)] flex flex-col overflow-hidden bg-slate-50/50 dark:bg-[#0c101c]">
+    <div className="relative flex-1 w-full h-[calc(100svh-3.5rem)] flex flex-col overflow-hidden bg-white dark:bg-[#0c101c]">
       <DocumentEditorInner
         noteId={noteId}
         userId={userId}
