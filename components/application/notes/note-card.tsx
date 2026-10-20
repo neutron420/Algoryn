@@ -4,10 +4,8 @@ import Link from "next/link";
 import { useMemo } from "react";
 import {
   RiCompass3Line,
-  RiDraftLine,
   RiDeleteBinLine,
   RiPencilLine,
-  RiArrowRightUpLine,
 } from "@remixicon/react";
 import { Badge } from "@/components/base/badges/badge";
 import { cx } from "@/utils/cx";
@@ -45,6 +43,9 @@ interface ParsedDocBlock {
   id: string;
   type: string;
   text: string;
+  level?: number;
+  backgroundColor?: string;
+  textColor?: string;
 }
 
 function parseDocumentBlocks(elements: unknown): ParsedDocBlock[] {
@@ -56,6 +57,7 @@ function parseDocumentBlocks(elements: unknown): ParsedDocBlock[] {
     const blockObj = b as {
       id?: string;
       type?: string;
+      props?: { level?: number; backgroundColor?: string; textColor?: string };
       content?: unknown;
     };
     if (Array.isArray(blockObj.content)) {
@@ -79,9 +81,12 @@ function parseDocumentBlocks(elements: unknown): ParsedDocBlock[] {
       id: String(blockObj.id || Math.random()),
       type: String(blockObj.type || "paragraph"),
       text,
+      level: blockObj.props?.level,
+      backgroundColor: blockObj.props?.backgroundColor,
+      textColor: blockObj.props?.textColor,
     });
 
-    if (results.length >= 5) break;
+    if (results.length >= 8) break;
   }
   return results;
 }
@@ -153,98 +158,91 @@ function extractDocumentImage(elements: unknown): string | null {
   for (const b of elements) {
     if (!b || typeof b !== "object") continue;
     const block = b as { type?: string; props?: { url?: unknown } };
-    if (block.type === "image" && typeof block.props?.url === "string" && block.props.url.trim()) {
-      return block.props.url.trim();
+    if (block.type === "image" && typeof block.props?.url === "string") {
+      const u = block.props.url.trim();
+      if (
+        u.startsWith("http://") ||
+        u.startsWith("https://") ||
+        u.startsWith("data:image/") ||
+        u.startsWith("/")
+      ) {
+        return u;
+      }
     }
   }
   return null;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Document Preview: Pure White Clean Layout with Image Support               */
+/* Document Preview: Authentic Miniature Document Page Layout (Matches Spec)  */
 /* -------------------------------------------------------------------------- */
 function DocumentSheetPreview({ elements }: { elements: unknown }) {
   const blocks = useMemo(() => parseDocumentBlocks(elements), [elements]);
   const docImage = useMemo(() => extractDocumentImage(elements), [elements]);
 
+  // If document contains an uploaded/pasted image, display it as a rich visual cover
   if (docImage) {
     return (
-      <div className="relative w-full h-full bg-white dark:bg-[#0c101c] overflow-hidden flex items-center justify-center">
+      <div className="relative w-full h-full bg-slate-50 dark:bg-[#0c101c] overflow-hidden flex items-center justify-center">
         <img
           src={docImage}
           alt={blocks[0]?.text || "Document preview"}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover/preview:scale-105"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover/preview:scale-[1.02]"
         />
-        {/* Soft bottom overlay with title and badge */}
-        <div className="absolute inset-x-0 bottom-0 p-2.5 bg-linear-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between text-white text-[10px] font-medium z-10">
-          <span className="flex items-center gap-1.5 truncate">
-            <RiDraftLine className="size-3.5 text-emerald-400 shrink-0" />
-            <span className="truncate">{blocks[0]?.text || "Document"}</span>
-          </span>
-          <span className="shrink-0 text-[9px] font-mono bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-xs">
-            {blocks.length} blocks
-          </span>
-        </div>
       </div>
     );
   }
 
+  if (blocks.length === 0) {
+    return (
+      <div className="relative w-full h-full p-4 bg-white dark:bg-[#0c101c] flex flex-col justify-center items-start text-slate-400 dark:text-zinc-500">
+        <span className="font-semibold text-xs text-slate-600 dark:text-zinc-400">Empty Document</span>
+        <p className="text-xs text-slate-400 dark:text-zinc-500 italic mt-1">
+          Click to write notes & algorithm solutions...
+        </p>
+      </div>
+    );
+  }
+
+  // 1. Document title (first block)
+  const titleText = blocks[0]?.text || "Untitled Note";
+
+  // 2. First descriptive paragraph
+  const paragraphBlock = blocks.find((b, idx) => idx > 0 && b.type === "paragraph");
+
+  // 3. Up to 2 bullet key items
+  const bulletBlocks = blocks
+    .filter((b, idx) => idx > 0 && b.type === "bulletListItem")
+    .slice(0, 2);
+
   return (
-    <div className="relative w-full h-full p-3.5 bg-white dark:bg-[#0c101c] overflow-hidden flex flex-col justify-between">
-      {/* Clean Pure White Document Content (NO DOTS) */}
-      <div className="relative z-10 flex flex-col gap-1.5 overflow-hidden">
-        {blocks.length > 0 ? (
-          <>
-            {/* Top Heading */}
-            {blocks[0] && (
-              <h4 className="font-bold text-xs text-slate-900 dark:text-zinc-100 truncate tracking-tight flex items-center gap-1.5">
-                <RiDraftLine className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span className="truncate">{blocks[0].text}</span>
-              </h4>
-            )}
+    <div className="relative w-full h-full p-4 bg-white dark:bg-[#0c101c] overflow-hidden select-none flex flex-col justify-start">
+      {/* Title */}
+      <h3 className="font-bold text-sm sm:text-[15px] leading-snug text-slate-900 dark:text-zinc-100 tracking-tight line-clamp-2">
+        {titleText}
+      </h3>
 
-            {/* Subtitle / Paragraph snippet */}
-            {blocks[1] && (
-              <p className="text-[11px] text-slate-600 dark:text-zinc-400 line-clamp-2 leading-relaxed font-sans">
-                {blocks[1].text}
-              </p>
-            )}
+      {/* Paragraph snippet */}
+      {paragraphBlock && (
+        <p className="mt-2 text-xs text-slate-600 dark:text-zinc-400 font-sans leading-normal line-clamp-2">
+          {paragraphBlock.text}
+        </p>
+      )}
 
-            {/* Clean Key Bullet Items */}
-            {blocks.slice(2, 4).map((b) => (
-              <div
-                key={b.id}
-                className="flex items-center gap-1.5 text-[10px] text-slate-700 dark:text-zinc-300 truncate"
-              >
-                <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
-                <span className="truncate">{b.text}</span>
-              </div>
-            ))}
-          </>
-        ) : (
-          <div className="flex flex-col justify-center gap-1 py-4 text-slate-400 dark:text-zinc-500">
-            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
-              <RiDraftLine className="size-3.5" />
-              <span>Empty Document</span>
+      {/* Key bullet points */}
+      {bulletBlocks.length > 0 && (
+        <div className="mt-2.5 flex flex-col gap-1.5 w-full">
+          {bulletBlocks.map((b) => (
+            <div
+              key={b.id}
+              className="flex items-start gap-1.5 text-xs text-slate-700 dark:text-zinc-300 leading-normal"
+            >
+              <span className="font-bold text-slate-400 dark:text-zinc-500 shrink-0">•</span>
+              <span className="truncate">{b.text}</span>
             </div>
-            <p className="text-[11px] text-slate-400 dark:text-zinc-500 italic">
-              Click to write notes & algorithm solutions...
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom Soft Gradient Fade */}
-      <div className="absolute inset-x-0 bottom-7 h-6 bg-linear-to-t from-white dark:from-[#0c101c] to-transparent pointer-events-none" />
-
-      {/* Bottom Harmonious Info Pill */}
-      <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-emerald-700 dark:text-emerald-400 pt-1 border-t border-slate-100 dark:border-zinc-800">
-        <span className="flex items-center gap-1 font-semibold">
-          <span className="size-1.5 rounded-full bg-emerald-500" />
-          <span>Rich Document</span>
-        </span>
-        {blocks.length > 0 && <span>{blocks.length} blocks</span>}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -410,7 +408,7 @@ function CanvasVectorPreview({
             })}
           </svg>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-1.5 text-center p-3">
+          <div className="flex flex-col items-center justify-center gap-1.5 text-center p-3 select-none">
             <div className="size-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
               <RiCompass3Line className="size-4" />
             </div>
@@ -419,15 +417,6 @@ function CanvasVectorPreview({
             </p>
           </div>
         )}
-      </div>
-
-      {/* Bottom Harmonious Info Pill */}
-      <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-blue-700 dark:text-blue-400 pt-1 border-t border-slate-100 dark:border-zinc-800">
-        <span className="flex items-center gap-1 font-semibold">
-          <span className="size-1.5 rounded-full bg-blue-500" />
-          <span>Infinite Canvas</span>
-        </span>
-        {validElements.length > 0 && <span>{validElements.length} elements</span>}
       </div>
     </div>
   );
@@ -444,18 +433,13 @@ export function NoteCard({ note, onDelete, onRename }: NoteCardProps) {
       {/* Visual Live Preview Header */}
       <Link
         href={`/dashboard/notes/${note.id}`}
-        className="block relative h-32 sm:h-36 w-full rounded-xl overflow-hidden mb-3 border border-slate-200/70 dark:border-zinc-800/60 transition-all duration-300 group/preview"
+        className="block relative h-44 sm:h-48 w-full rounded-xl overflow-hidden mb-3 border border-slate-200/70 dark:border-zinc-800/60 transition-all duration-300 group/preview"
       >
         {isInfinite ? (
           <CanvasVectorPreview elements={note.elements} thumbnailUrl={note.thumbnailUrl} />
         ) : (
           <DocumentSheetPreview elements={note.elements} />
         )}
-
-        {/* Floating Open Hover Button */}
-        <span className="absolute top-2 right-2 size-6 rounded-full bg-white/95 dark:bg-zinc-800/95 shadow-sm flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-all duration-200 z-20">
-          <RiArrowRightUpLine className="size-3.5 text-slate-700 dark:text-zinc-200" />
-        </span>
       </Link>
 
       {/* Note Info */}

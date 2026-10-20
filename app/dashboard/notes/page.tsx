@@ -15,6 +15,8 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { NoteCard, type NoteCardItem } from "@/components/application/notes/note-card";
 import { CreateNoteDialog, type NoteWorkspaceModeType } from "@/components/application/notes/create-note-dialog";
+import { DeleteNoteDialog } from "@/components/application/notes/delete-note-dialog";
+import { RenameNoteDialog } from "@/components/application/notes/rename-note-dialog";
 import { cx } from "@/utils/cx";
 
 type ModeFilter = "ALL" | "CANVAS" | "DOCUMENT";
@@ -28,6 +30,8 @@ export default function NotesDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [modeFilter, setModeFilter] = useState<ModeFilter>("ALL");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [renameTarget, setRenameTarget] = useState<{ id: string; title: string } | null>(null);
 
   // Fetch user notes on auth ready
   useEffect(() => {
@@ -90,37 +94,47 @@ export default function NotesDashboardPage() {
     }
   };
 
-  // Delete note
-  const handleDeleteNote = async (noteId: string) => {
-    if (!user?.uid) return;
-    if (!window.confirm("Are you sure you want to delete this note?")) return;
+  // Trigger custom delete modal
+  const handleDeleteNote = (noteId: string) => {
+    const target = notes.find((n) => n.id === noteId);
+    if (target) {
+      setDeleteTarget({ id: target.id, title: target.title });
+    }
+  };
+
+  // Confirm delete handler
+  const handleConfirmDelete = async () => {
+    if (!user?.uid || !deleteTarget) return;
 
     try {
-      const res = await fetch(`/api/notes/${noteId}?userId=${encodeURIComponent(user.uid)}`, {
+      const res = await fetch(`/api/notes/${deleteTarget.id}?userId=${encodeURIComponent(user.uid)}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete note");
-      setNotes((prev) => prev.filter((n) => n.id !== noteId));
+      setNotes((prev) => prev.filter((n) => n.id !== deleteTarget.id));
       toast.success("Note deleted");
     } catch {
       toast.error("Could not delete note");
     }
   };
 
-  // Rename note
-  const handleRenameNote = async (noteId: string, currentTitle: string) => {
-    if (!user?.uid) return;
-    const newTitle = window.prompt("Enter new title:", currentTitle);
-    if (!newTitle || newTitle.trim() === currentTitle) return;
+  // Trigger custom rename modal
+  const handleRenameNote = (noteId: string, currentTitle: string) => {
+    setRenameTarget({ id: noteId, title: currentTitle });
+  };
+
+  // Confirm rename handler
+  const handleConfirmRename = async (newTitle: string) => {
+    if (!user?.uid || !renameTarget) return;
 
     try {
       setNotes((prev) =>
-        prev.map((n) => (n.id === noteId ? { ...n, title: newTitle.trim() } : n))
+        prev.map((n) => (n.id === renameTarget.id ? { ...n, title: newTitle } : n))
       );
-      const res = await fetch(`/api/notes/${noteId}`, {
+      const res = await fetch(`/api/notes/${renameTarget.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.uid, title: newTitle.trim() }),
+        body: JSON.stringify({ userId: user.uid, title: newTitle }),
       });
       if (!res.ok) throw new Error("Failed to rename");
       toast.success("Renamed");
@@ -288,6 +302,22 @@ export default function NotesDashboardPage() {
         isOpen={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onCreate={handleCreateNote}
+      />
+
+      {/* Custom Delete Modal Dialog */}
+      <DeleteNoteDialog
+        isOpen={!!deleteTarget}
+        noteTitle={deleteTarget?.title || ""}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
+
+      {/* Custom Rename Modal Dialog */}
+      <RenameNoteDialog
+        isOpen={!!renameTarget}
+        currentTitle={renameTarget?.title || ""}
+        onClose={() => setRenameTarget(null)}
+        onConfirm={handleConfirmRename}
       />
     </div>
   );

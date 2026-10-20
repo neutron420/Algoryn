@@ -45,9 +45,43 @@ export default function DocumentEditorInner({
     ];
   }, [initialContent]);
 
+  // Dedicated image file upload handler for BlockNote
+  // Enables:
+  // 1. Browsing and selecting local files directly from disk
+  // 2. Dragging and dropping images from OS into the editor
+  // 3. Pasting images directly from clipboard (Ctrl+V / Cmd+V)
+  const handleUploadFile = useCallback(async (file: File): Promise<string> => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "notes");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) return data.url;
+      }
+    } catch (err) {
+      console.warn("[DocumentEditor] Cloudflare R2 upload error, falling back to data URL:", err);
+    }
+
+    // Direct FileReader fallback to base64 Data URL so local images always work
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
   // Instantiate BlockNote editor
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
+    uploadFile: handleUploadFile,
   });
 
   // Autosave references
