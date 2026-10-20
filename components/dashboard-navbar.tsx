@@ -43,6 +43,8 @@ export function DashboardNavbar({ companies }: DashboardNavbarProps) {
     breadcrumbLabel = "Interview Experiences";
   } else if (pathname.startsWith("/dashboard/system-design")) {
     breadcrumbLabel = "System Design";
+  } else if (pathname.startsWith("/dashboard/notes")) {
+    breadcrumbLabel = "Notes & Canvas";
   }
 
   return (

@@ -34,6 +34,7 @@ import {
   RiGlobalLine,
   RiBookOpenLine,
   RiStackLine,
+  RiDraftLine,
 } from "@remixicon/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -277,6 +278,7 @@ export function DashboardSidebar({
   else if (pathname?.startsWith("/dashboard/interview-experiences")) defaultSelected = "interviews";
   else if (pathname?.startsWith("/roadmap") || pathname?.startsWith("/dashboard/roadmap")) defaultSelected = "roadmap";
   else if (pathname?.startsWith("/dashboard/system-design")) defaultSelected = "system-design";
+  else if (pathname?.startsWith("/dashboard/notes")) defaultSelected = "notes";
   else if (pathname?.startsWith("/dashboard/leaderboard")) defaultSelected = "leaderboard";
 
   const effectiveSelected = selected || defaultSelected;
@@ -862,7 +864,20 @@ export function DashboardSidebar({
                   />
                 )}
 
-                {/* 7. Leaderboard */}
+                {/* 7. Notes & Canvas */}
+                {matches("Notes") && (
+                  <NavItem
+                    icon={RiDraftLine}
+                    label="Notes & Canvas"
+                    href="/dashboard/notes"
+                    badge={<Badge color="primary" className="text-[9px] font-mono font-bold px-1.5 py-0.2">Draw</Badge>}
+                    isSelected={effectiveSelected === "notes"}
+                    collapsed={collapsed}
+                    onClick={() => mobile && onClose && onClose()}
+                  />
+                )}
+
+                {/* 8. Leaderboard */}
                 {matches("Leaderboard") && (
                   <NavItem
                     icon={RiTrophyLine}
@@ -1025,6 +1040,7 @@ export const DASHBOARD_NAV: DashboardNavItem[] = [
   { key: "discussions", label: "Discussions", icon: RiMessage2Line, href: "/dashboard/discussions", badge: "New" },
   { key: "interviews", label: "Interview Hub", icon: RiFileTextLine, href: "/dashboard/interview-experiences", badge: "New" },
   { key: "roadmap", label: "DSA Roadmap", icon: RiGitBranchLine, href: "/dashboard/roadmap", badge: "Tree" },
+  { key: "notes", label: "Notes", icon: RiDraftLine, href: "/dashboard/notes", badge: "Draw" },
   { key: "leaderboard", label: "Leaderboard", icon: RiTrophyLine, href: "/dashboard/leaderboard", badge: "Soon" },
   { key: "bookmarks", label: "Bookmarks", icon: RiBookmarkLine, href: "/dashboard?status=BOOKMARKED" },
   { key: "profile", label: "My Profile", icon: RiUserSmileLine, href: "/dashboard/profile" },

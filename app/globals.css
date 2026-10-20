@@ -365,4 +365,30 @@ button, [role="button"], a.btn, input[type="button"], input[type="submit"] {
 .dsa-edge-enter {
   animation: dsaEdgeEnter 200ms ease-out both;
 }
+
+/* BlockNote Algoryn Theme & Mobile Optimization */
+.bn-container {
+  background: transparent !important;
+  font-family: inherit !important;
+}
+
+.bn-editor {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+@media (min-width: 640px) {
+  .bn-editor {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+}
+
+.dark .bn-container {
+  color: #f4f4f5 !important;
+}
+
+.dark .bn-container [data-mantine-color-scheme] {
+  color-scheme: dark !important;
+}
 
