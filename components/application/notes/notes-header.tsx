@@ -22,6 +22,7 @@ interface NotesHeaderProps {
   mode: "INFINITE_CANVAS" | "FIXED_WHITEBOARD" | "DOCUMENT_NOTE";
   saveStatus: SaveStatus;
   onRename: (newTitle: string) => void;
+  onBack?: () => void;
   onManualSave?: () => void;
   onClearCanvas?: () => void;
   onExport?: (format: string) => void;
@@ -33,6 +34,8 @@ export function NotesHeader({
   mode,
   saveStatus,
   onRename,
+  onBack,
+  onManualSave,
   onClearCanvas,
   onExport,
   onDelete,
@@ -66,13 +69,24 @@ export function NotesHeader({
     <header className="h-14 w-full px-3 sm:px-5 flex items-center justify-between gap-3 border-b border-slate-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-[#0c101c]/80 backdrop-blur-md z-20 shrink-0">
       {/* Left: Navigation and Title */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        <Link
-          href="/dashboard/notes"
-          className="size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
-          title="Back to all notes"
-        >
-          <RiArrowLeftLine className="size-4" />
-        </Link>
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
+            title="Back to all notes"
+          >
+            <RiArrowLeftLine className="size-4" />
+          </button>
+        ) : (
+          <Link
+            href="/dashboard/notes"
+            className="size-8 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-center text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+            title="Back to all notes"
+          >
+            <RiArrowLeftLine className="size-4" />
+          </Link>
+        )}
 
         <div className="flex items-center gap-2 min-w-0">
           {isEditingTitle ? (
@@ -125,36 +139,55 @@ export function NotesHeader({
 
       {/* Right: Autosave status & Actions */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Autosave Status Pill */}
-        <div
-          className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-100/70 dark:bg-zinc-800/60 text-[11px] font-medium"
-          title={`Autosave status: ${saveStatus}`}
+        {/* Autosave Status Interactive Pill */}
+        <button
+          type="button"
+          onClick={onManualSave}
+          disabled={saveStatus === "saving"}
+          className={cx(
+            "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-200 cursor-pointer select-none border",
+            saveStatus === "saved" &&
+              "bg-slate-100/90 dark:bg-zinc-800/90 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60 hover:bg-slate-200/60 dark:hover:bg-zinc-700/60",
+            saveStatus === "saving" &&
+              "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-500/30",
+            saveStatus === "unsaved" &&
+              "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-900/40",
+            saveStatus === "error" &&
+              "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-900/40"
+          )}
+          title={
+            saveStatus === "unsaved"
+              ? "Unsaved changes • Click to save now"
+              : saveStatus === "error"
+              ? "Autosave error • Click to retry"
+              : "Autosave active • All changes saved"
+          }
         >
           {saveStatus === "saving" && (
             <>
-              <RiLoader4Line className="size-3 text-blue-500 animate-spin" />
-              <span className="text-slate-500 dark:text-zinc-400 hidden xs:inline">Saving...</span>
+              <RiLoader4Line className="size-3 text-blue-500 animate-spin shrink-0" />
+              <span className="font-medium">Saving...</span>
             </>
           )}
           {saveStatus === "saved" && (
             <>
-              <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
-              <span className="text-slate-500 dark:text-zinc-400 hidden xs:inline">Saved</span>
+              <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
+              <span className="font-medium text-slate-500 dark:text-zinc-400">Saved</span>
             </>
           )}
           {saveStatus === "unsaved" && (
             <>
-              <span className="size-2 rounded-full bg-amber-500 shrink-0" />
-              <span className="text-slate-500 dark:text-zinc-400 hidden xs:inline">Unsaved</span>
+              <span className="size-1.5 rounded-full bg-amber-500 shrink-0 animate-pulse" />
+              <span className="font-semibold">Save</span>
             </>
           )}
           {saveStatus === "error" && (
             <>
-              <span className="size-2 rounded-full bg-rose-500 shrink-0" />
-              <span className="text-rose-600 dark:text-rose-400 hidden xs:inline">Save error</span>
+              <span className="size-1.5 rounded-full bg-rose-500 shrink-0" />
+              <span className="font-semibold">Retry</span>
             </>
           )}
-        </div>
+        </button>
 
         {/* Clear workspace */}
         {onClearCanvas && (

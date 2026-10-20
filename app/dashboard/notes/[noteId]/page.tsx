@@ -152,6 +152,14 @@ export default function NoteCanvasPage({
         mode={note.mode}
         saveStatus={saveStatus}
         onRename={handleRename}
+        onBack={() => router.push("/dashboard/notes")}
+        onManualSave={() => {
+          if (saveStatus === "unsaved") {
+            toast.info("Saving in background...");
+          } else {
+            toast.success("All changes are saved");
+          }
+        }}
         onClearCanvas={() => clearHandlerRef.current?.()}
         onExport={(fmt) => exportHandlerRef.current?.(fmt)}
         onDelete={handleDelete}

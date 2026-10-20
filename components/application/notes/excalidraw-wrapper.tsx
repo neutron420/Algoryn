@@ -61,6 +61,27 @@ export default function ExcalidrawWrapper({
     }
   };
 
+  // Sanitize initialAppState so non-serializable fields (like collaborators) never crash Excalidraw
+  const cleanAppState = useMemo<Partial<AppState>>(() => {
+    const base: Partial<AppState> = {
+      theme: isDark ? "dark" : "light",
+      viewBackgroundColor: isDark ? "#0c101c" : "#ffffff",
+    };
+    if (!initialAppState || typeof initialAppState !== "object") {
+      return base;
+    }
+    const state = initialAppState as Partial<AppState>;
+    return {
+      ...base,
+      viewBackgroundColor:
+        typeof state.viewBackgroundColor === "string" ? state.viewBackgroundColor : base.viewBackgroundColor,
+      zoom: state.zoom,
+      scrollX: typeof state.scrollX === "number" ? state.scrollX : undefined,
+      scrollY: typeof state.scrollY === "number" ? state.scrollY : undefined,
+      gridSize: typeof state.gridSize === "number" ? state.gridSize : undefined,
+    };
+  }, [initialAppState, isDark]);
+
   return (
     <Excalidraw
       excalidrawAPI={handleAPI}
@@ -69,11 +90,7 @@ export default function ExcalidrawWrapper({
       onLibraryChange={handleLibraryChange}
       initialData={{
         elements: initialElements,
-        appState: {
-          theme: isDark ? "dark" : "light",
-          viewBackgroundColor: isDark ? "#0c101c" : "#ffffff",
-          ...(initialAppState || {}),
-        },
+        appState: cleanAppState,
         files: initialFiles || {},
         libraryItems: cachedLibraryItems,
       }}

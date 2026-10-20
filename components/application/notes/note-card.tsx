@@ -41,15 +41,25 @@ function formatRelativeTime(dateString: string): string {
   }
 }
 
-function extractDocumentSnippet(elements: unknown): { title?: string; body?: string } {
-  if (!Array.isArray(elements) || elements.length === 0) return {};
-  const texts: string[] = [];
-  for (const block of elements) {
-    if (!block || typeof block !== "object") continue;
-    let blockText = "";
-    const b = block as { content?: unknown };
-    if (Array.isArray(b.content)) {
-      blockText = b.content
+interface ParsedDocBlock {
+  id: string;
+  type: string;
+  text: string;
+}
+
+function parseDocumentBlocks(elements: unknown): ParsedDocBlock[] {
+  if (!Array.isArray(elements) || elements.length === 0) return [];
+  const results: ParsedDocBlock[] = [];
+  for (const b of elements) {
+    if (!b || typeof b !== "object") continue;
+    let text = "";
+    const blockObj = b as {
+      id?: string;
+      type?: string;
+      content?: unknown;
+    };
+    if (Array.isArray(blockObj.content)) {
+      text = blockObj.content
         .map((c: unknown) => {
           if (typeof c === "string") return c;
           if (c && typeof c === "object" && "text" in c) {
@@ -59,121 +69,374 @@ function extractDocumentSnippet(elements: unknown): { title?: string; body?: str
         })
         .join("")
         .trim();
-    } else if (typeof b.content === "string") {
-      blockText = b.content.trim();
+    } else if (typeof blockObj.content === "string") {
+      text = blockObj.content.trim();
     }
-    if (blockText) texts.push(blockText);
-    if (texts.length >= 3) break;
+
+    if (!text) continue;
+
+    results.push({
+      id: String(blockObj.id || Math.random()),
+      type: String(blockObj.type || "paragraph"),
+      text,
+    });
+
+    if (results.length >= 5) break;
   }
-  return {
-    title: texts[0] || undefined,
-    body: texts.slice(1).join(" • ") || undefined,
-  };
+  return results;
 }
 
-function extractCanvasSummary(elements: unknown): { count: number; labels: string[] } {
-  if (!Array.isArray(elements) || elements.length === 0) return { count: 0, labels: [] };
-  const labels: string[] = [];
-  for (const el of elements) {
-    if (el && typeof el === "object" && "type" in el && "text" in el) {
-      const item = el as { type: unknown; text: unknown };
-      if (item.type === "text" && typeof item.text === "string" && item.text.trim()) {
-        labels.push(item.text.trim());
-        if (labels.length >= 2) break;
+interface ParsedCanvasElement {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  strokeColor?: string;
+  backgroundColor?: string;
+  strokeWidth?: number;
+  text?: string;
+  fontSize?: number;
+  points?: [number, number][];
+  opacity?: number;
+  isDeleted?: boolean;
+}
+
+function parseCanvasElements(elements: unknown): ParsedCanvasElement[] {
+  if (!Array.isArray(elements) || elements.length === 0) return [];
+  const results: ParsedCanvasElement[] = [];
+  for (const item of elements) {
+    if (!item || typeof item !== "object") continue;
+    const el = item as ParsedCanvasElement;
+    if (el.isDeleted) continue;
+    if (
+      [
+        "rectangle",
+        "ellipse",
+        "diamond",
+        "line",
+        "arrow",
+        "freedraw",
+        "text",
+        "frame",
+      ].includes(el.type)
+    ) {
+      results.push(el);
+      if (results.length >= 35) break;
+    }
+  }
+  return results;
+}
+
+function normalizeStroke(color?: string): string {
+  if (!color || color === "#000000" || color === "#1e1e1e" || color === "#000" || color === "black") {
+    return "#2563eb";
+  }
+  return color;
+}
+
+function normalizeFill(bg?: string): string {
+  if (!bg || bg === "transparent" || bg === "none") return "none";
+  return bg;
+}
+
+function pointsToPath(points?: [number, number][], originX = 0, originY = 0): string {
+  if (!Array.isArray(points) || points.length === 0) return "";
+  return points
+    .map((p, idx) => `${idx === 0 ? "M" : "L"} ${originX + p[0]} ${originY + p[1]}`)
+    .join(" ");
+}
+
+/* -------------------------------------------------------------------------- */
+/* Document Preview: Clean, Uncluttered, Harmonious Layout                    */
+/* -------------------------------------------------------------------------- */
+function DocumentSheetPreview({ elements }: { elements: unknown }) {
+  const blocks = useMemo(() => parseDocumentBlocks(elements), [elements]);
+
+  return (
+    <div className="relative w-full h-full p-3.5 bg-slate-50/90 dark:bg-zinc-900/70 overflow-hidden flex flex-col justify-between">
+      {/* Subtle Dot Grid matching the app theme */}
+      <div
+        className="absolute inset-0 opacity-40 dark:opacity-20 pointer-events-none"
+        style={{
+          backgroundImage: "radial-gradient(#10b981 1px, transparent 1px)",
+          backgroundSize: "14px 14px",
+        }}
+      />
+
+      {/* Clean Document Content */}
+      <div className="relative z-10 flex flex-col gap-1.5 overflow-hidden">
+        {blocks.length > 0 ? (
+          <>
+            {/* Top Heading */}
+            {blocks[0] && (
+              <h4 className="font-bold text-xs text-slate-900 dark:text-zinc-100 truncate tracking-tight flex items-center gap-1.5">
+                <RiDraftLine className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="truncate">{blocks[0].text}</span>
+              </h4>
+            )}
+
+            {/* Subtitle / Paragraph snippet */}
+            {blocks[1] && (
+              <p className="text-[11px] text-slate-600 dark:text-zinc-400 line-clamp-2 leading-relaxed font-sans">
+                {blocks[1].text}
+              </p>
+            )}
+
+            {/* Clean Key Bullet Items */}
+            {blocks.slice(2, 4).map((b) => (
+              <div
+                key={b.id}
+                className="flex items-center gap-1.5 text-[10px] text-slate-700 dark:text-zinc-300 truncate"
+              >
+                <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="truncate">{b.text}</span>
+              </div>
+            ))}
+          </>
+        ) : (
+          <div className="flex flex-col justify-center gap-1 py-4 text-slate-400 dark:text-zinc-500">
+            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
+              <RiDraftLine className="size-3.5" />
+              <span>Empty Document</span>
+            </div>
+            <p className="text-[11px] text-slate-400 dark:text-zinc-500 italic">
+              Click to write notes & algorithm solutions...
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Soft Gradient Fade */}
+      <div className="absolute inset-x-0 bottom-7 h-6 bg-linear-to-t from-slate-50 dark:from-zinc-900 to-transparent pointer-events-none" />
+
+      {/* Bottom Harmonious Info Pill */}
+      <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-emerald-700 dark:text-emerald-400 pt-1 border-t border-slate-200/60 dark:border-zinc-800/60">
+        <span className="flex items-center gap-1 font-semibold">
+          <span className="size-1.5 rounded-full bg-emerald-500" />
+          <span>Rich Document</span>
+        </span>
+        {blocks.length > 0 && <span>{blocks.length} blocks</span>}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Infinite Canvas Vector Preview: Harmonious Theme-Adaptive Layout          */
+/* -------------------------------------------------------------------------- */
+function CanvasVectorPreview({
+  elements,
+  thumbnailUrl,
+}: {
+  elements: unknown;
+  thumbnailUrl?: string | null;
+}) {
+  const validElements = useMemo(() => parseCanvasElements(elements), [elements]);
+
+  const viewBox = useMemo(() => {
+    if (validElements.length === 0) return "0 0 400 240";
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const el of validElements) {
+      minX = Math.min(minX, el.x);
+      minY = Math.min(minY, el.y);
+      maxX = Math.max(maxX, el.x + (el.width || 0));
+      maxY = Math.max(maxY, el.y + (el.height || 0));
+      if (Array.isArray(el.points)) {
+        for (const pt of el.points) {
+          minX = Math.min(minX, el.x + pt[0]);
+          minY = Math.min(minY, el.y + pt[1]);
+          maxX = Math.max(maxX, el.x + pt[0]);
+          maxY = Math.max(maxY, el.y + pt[1]);
+        }
       }
     }
-  }
-  return {
-    count: elements.length,
-    labels,
-  };
+
+    const w = Math.max(20, maxX - minX);
+    const h = Math.max(20, maxY - minY);
+    const pad = Math.max(24, Math.min(80, Math.max(w, h) * 0.15));
+    return `${minX - pad} ${minY - pad} ${w + pad * 2} ${h + pad * 2}`;
+  }, [validElements]);
+
+  return (
+    <div className="relative w-full h-full p-2 bg-slate-50/90 dark:bg-zinc-900/70 overflow-hidden flex flex-col justify-between">
+      {/* Blueprint Dot Grid - Theme adaptive */}
+      <div
+        className="absolute inset-0 opacity-40 dark:opacity-20 pointer-events-none"
+        style={{
+          backgroundImage: "radial-gradient(#3b82f6 1px, transparent 1px)",
+          backgroundSize: "14px 14px",
+        }}
+      />
+
+      <div className="relative z-10 flex-1 w-full h-full flex items-center justify-center overflow-hidden">
+        {thumbnailUrl ? (
+          <img
+            src={thumbnailUrl}
+            alt="Canvas preview"
+            className="w-full h-full object-contain p-2"
+          />
+        ) : validElements.length > 0 ? (
+          <svg
+            viewBox={viewBox}
+            preserveAspectRatio="xMidYMid meet"
+            className="w-full h-full max-h-[105px] filter drop-shadow-2xs transition-transform duration-300 group-hover/preview:scale-[1.02]"
+          >
+            {validElements.map((el) => {
+              const stroke = normalizeStroke(el.strokeColor);
+              const fill = normalizeFill(el.backgroundColor);
+              const sw = Math.max(2, el.strokeWidth || 2);
+              const op = (el.opacity ?? 100) / 100;
+
+              if (el.type === "rectangle" || el.type === "frame") {
+                return (
+                  <rect
+                    key={el.id}
+                    x={el.x}
+                    y={el.y}
+                    width={el.width}
+                    height={el.height}
+                    rx={6}
+                    stroke={stroke}
+                    strokeWidth={sw}
+                    fill={fill}
+                    opacity={op}
+                  />
+                );
+              }
+
+              if (el.type === "ellipse") {
+                return (
+                  <ellipse
+                    key={el.id}
+                    cx={el.x + el.width / 2}
+                    cy={el.y + el.height / 2}
+                    rx={Math.abs(el.width / 2)}
+                    ry={Math.abs(el.height / 2)}
+                    stroke={stroke}
+                    strokeWidth={sw}
+                    fill={fill}
+                    opacity={op}
+                  />
+                );
+              }
+
+              if (el.type === "diamond") {
+                return (
+                  <polygon
+                    key={el.id}
+                    points={`${el.x + el.width / 2},${el.y} ${el.x + el.width},${el.y + el.height / 2} ${el.x + el.width / 2},${el.y + el.height} ${el.x},${el.y + el.height / 2}`}
+                    stroke={stroke}
+                    strokeWidth={sw}
+                    fill={fill}
+                    opacity={op}
+                  />
+                );
+              }
+
+              if (el.type === "line" || el.type === "arrow") {
+                return (
+                  <path
+                    key={el.id}
+                    d={
+                      pointsToPath(el.points, el.x, el.y) ||
+                      `M ${el.x} ${el.y} L ${el.x + el.width} ${el.y + el.height}`
+                    }
+                    stroke={stroke}
+                    strokeWidth={sw}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity={op}
+                  />
+                );
+              }
+
+              if (el.type === "freedraw") {
+                return (
+                  <path
+                    key={el.id}
+                    d={pointsToPath(el.points, el.x, el.y)}
+                    stroke={stroke}
+                    strokeWidth={sw}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity={op}
+                  />
+                );
+              }
+
+              if (el.type === "text" && el.text) {
+                return (
+                  <text
+                    key={el.id}
+                    x={el.x}
+                    y={el.y + (el.fontSize || 16) * 0.8}
+                    fontSize={el.fontSize || 16}
+                    fill={stroke}
+                    fontWeight="bold"
+                    fontFamily="system-ui, -apple-system, sans-serif"
+                  >
+                    {el.text}
+                  </text>
+                );
+              }
+
+              return null;
+            })}
+          </svg>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-1.5 text-center p-3">
+            <div className="size-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+              <RiCompass3Line className="size-4" />
+            </div>
+            <p className="text-[11px] text-slate-400 dark:text-zinc-500 italic">
+              Click to sketch & diagram...
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Harmonious Info Pill */}
+      <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-blue-700 dark:text-blue-400 pt-1 border-t border-slate-200/60 dark:border-zinc-800/60">
+        <span className="flex items-center gap-1 font-semibold">
+          <span className="size-1.5 rounded-full bg-blue-500" />
+          <span>Infinite Canvas</span>
+        </span>
+        {validElements.length > 0 && <span>{validElements.length} elements</span>}
+      </div>
+    </div>
+  );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Main NoteCard Component                                                     */
+/* -------------------------------------------------------------------------- */
 export function NoteCard({ note, onDelete, onRename }: NoteCardProps) {
   const isInfinite = note.mode === "INFINITE_CANVAS";
 
-  const docSnippet = useMemo(() => {
-    return isInfinite ? {} : extractDocumentSnippet(note.elements);
-  }, [isInfinite, note.elements]);
-
-  const canvasSummary = useMemo(() => {
-    return isInfinite ? extractCanvasSummary(note.elements) : { count: 0, labels: [] };
-  }, [isInfinite, note.elements]);
-
   return (
-    <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] p-4 shadow-xs hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
-      {/* Decorative Canvas / Note Preview Header */}
+    <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#0c101c] p-3 sm:p-4 shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+      {/* Visual Live Preview Header */}
       <Link
         href={`/dashboard/notes/${note.id}`}
-        className="block relative h-28 w-full rounded-xl overflow-hidden mb-3 border border-slate-100 dark:border-zinc-800/60 transition-colors group/preview"
+        className="block relative h-32 sm:h-36 w-full rounded-xl overflow-hidden mb-3 border border-slate-200/70 dark:border-zinc-800/60 transition-all duration-300 group/preview"
       >
         {isInfinite ? (
-          /* Infinite Canvas Preview Box */
-          <div className="absolute inset-0 p-3 bg-linear-to-b from-blue-50/40 via-slate-50 to-white dark:from-blue-950/20 dark:via-zinc-900/40 dark:to-[#0c101c] flex flex-col justify-between overflow-hidden">
-            {/* Blueprint Grid Pattern */}
-            <div
-              className="absolute inset-0 opacity-25 dark:opacity-15 pointer-events-none"
-              style={{
-                backgroundImage: "radial-gradient(#3b82f6 1px, transparent 1px)",
-                backgroundSize: "12px 12px",
-              }}
-            />
-            <div className="relative z-10 flex flex-col gap-1 overflow-hidden">
-              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold text-[11px]">
-                <RiCompass3Line className="size-3.5 shrink-0" />
-                <span>Canvas Diagram</span>
-              </div>
-              {canvasSummary.labels.length > 0 ? (
-                <div className="flex flex-wrap gap-1 mt-0.5">
-                  {canvasSummary.labels.map((lbl, i) => (
-                    <span
-                      key={i}
-                      className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20 truncate max-w-[140px]"
-                    >
-                      {lbl}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[10px] text-slate-400 dark:text-zinc-500 italic mt-0.5">
-                  {canvasSummary.count > 0 ? `${canvasSummary.count} drawing objects` : "Empty canvas • Click to sketch..."}
-                </p>
-              )}
-            </div>
-            <div className="relative z-10 flex items-center justify-between text-[9px] text-slate-400 dark:text-zinc-500 pt-1 border-t border-slate-100 dark:border-zinc-800/60">
-              <span className="flex items-center gap-1">
-                <span className="size-1.5 rounded-full bg-blue-500" />
-                <span>Infinite canvas</span>
-              </span>
-              {canvasSummary.count > 0 && (
-                <span className="font-mono text-[9px] font-medium text-slate-500 dark:text-zinc-400">
-                  {canvasSummary.count} elements
-                </span>
-              )}
-            </div>
-          </div>
+          <CanvasVectorPreview elements={note.elements} thumbnailUrl={note.thumbnailUrl} />
         ) : (
-          /* Document Note Live Text Preview Box */
-          <div className="absolute inset-0 p-3 bg-linear-to-b from-slate-50/90 to-white dark:from-zinc-900/90 dark:to-[#0c101c] flex flex-col justify-between overflow-hidden">
-            <div className="flex flex-col gap-1 overflow-hidden">
-              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
-                <RiDraftLine className="size-3.5 shrink-0" />
-                <span className="truncate">{docSnippet.title || "Note Content"}</span>
-              </div>
-              <p className="text-[10px] text-slate-600 dark:text-zinc-300 line-clamp-2 leading-relaxed font-sans">
-                {docSnippet.body || docSnippet.title ? (docSnippet.body || "...") : "Empty document • Click to start writing..."}
-              </p>
-            </div>
-            <div className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-zinc-500 pt-1 border-t border-slate-100 dark:border-zinc-800/60">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
-              <span>Rich block note</span>
-            </div>
-          </div>
+          <DocumentSheetPreview elements={note.elements} />
         )}
 
         {/* Floating Open Hover Button */}
-        <span className="absolute top-2 right-2 size-6 rounded-full bg-white/90 dark:bg-zinc-800/90 shadow-xs flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity z-20">
-          <RiArrowRightUpLine className="size-3.5 text-slate-600 dark:text-zinc-300" />
+        <span className="absolute top-2 right-2 size-6 rounded-full bg-white/95 dark:bg-zinc-800/95 shadow-sm flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-all duration-200 z-20">
+          <RiArrowRightUpLine className="size-3.5 text-slate-700 dark:text-zinc-200" />
         </span>
       </Link>
 
@@ -217,7 +480,7 @@ export function NoteCard({ note, onDelete, onRename }: NoteCardProps) {
             onClick={() => onRename(note.id, note.title)}
             aria-label="Rename workspace"
             title="Rename workspace"
-            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <RiPencilLine className="size-3.5" />
           </button>
@@ -226,7 +489,7 @@ export function NoteCard({ note, onDelete, onRename }: NoteCardProps) {
             onClick={() => onDelete(note.id)}
             aria-label="Delete workspace"
             title="Delete workspace"
-            className="p-1 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
           >
             <RiDeleteBinLine className="size-3.5" />
           </button>
